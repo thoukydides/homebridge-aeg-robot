@@ -1,0 +1,33 @@
+{
+  "files.eol": "\n",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.rulers": [ 80 ],
+  "eslint.enable": true,
+  "cSpell.words": [
+    "AEGAPI",
+    "AEGO",
+    "Childrens",
+    "Cleanings",
+    "DTOs",
+    "Electrolux",
+    "Fanv",
+    "fieldset",
+    "legaldocument",
+    "legaldocuments",
+    "nbsp",
+    "notitle",
+    "Passw",
+    "Pitstop",
+    "purei",
+    "rawgzip",
+    "SHALEGREY",
+    "Thoukydides",
+    "Unconfigured",
+    "undici",
+    "vars",
+    "wellbeing",
+    "Zanussi"
+  ]
+}

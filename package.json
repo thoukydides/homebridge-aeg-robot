@@ -1,0 +1,70 @@
+{
+    "name": "homebridge-aeg-robot",
+    "displayName": "Homebridge AEG Robot Vacuum",
+    "version": "0.0.0",
+    "description": "AEG RX9 / Electrolux Pure i9 robot vacuum plugin for Homebridge",
+    "license": "ISC",
+    "keywords": [
+        "Homebridge",
+        "homebridge-plugin",
+        "AEG",
+        "Electrolux",
+        "RX9",
+        "RX9.1",
+        "RX9.2",
+        "Pure i9",
+        "Pure i9.1",
+        "Pure i9.2",
+        "robot",
+        "vacuum",
+        "cleaner"
+    ],
+    "author": {
+        "name": "Alexander Thoukydides",
+        "url": "https://www.thouky.co.uk/"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/thoukydides/homebridge-aeg-robot.git"
+    },
+    "main": "dist/index.js",
+    "bugs": {
+        "url": "https://github.com/thoukydides/homebridge-aeg-robot/issues"
+    },
+    "engines": {
+        "node": ">=18.12.1 || ^16.18.1 || ^14.21.2",
+        "homebridge": ">=1.4.0"
+    },
+    "dependencies": {
+        "node-persist": "^3.1.0",
+        "semver": "^7.3.7",
+        "ts-interface-checker": "^1.0.2",
+        "undici": "^5.8.0"
+    },
+    "devDependencies": {
+        "@tsconfig/node14": "^1.0.3",
+        "@types/node": "^16.18.11",
+        "@types/node-persist": "^3.1.3",
+        "@types/semver": "^7.3.13",
+        "@typescript-eslint/eslint-plugin": "^5.48.0",
+        "@typescript-eslint/parser": "^5.48.0",
+        "eslint": "^8.31.0",
+        "homebridge": "^1.6.0",
+        "homebridge-config-ui-x": "^4.50.2",
+        "nodemon": "^2.0.20",
+        "rimraf": "^4.1.1",
+        "ts-interface-builder": "^0.3.3",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.4"
+    },
+    "scripts": {
+        "lint": "npm run checkers && eslint src/**.ts --max-warnings=0",
+        "watch": "npm run build && nodemon",
+        "checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts",
+        "build": "rimraf ./dist && npm run checkers && tsc",
+        "prepublishOnly": "npm run lint && npm run build"
+    },
+    "optionalDependencies": {
+        "fsevents": "^2.3.2"
+    }
+}

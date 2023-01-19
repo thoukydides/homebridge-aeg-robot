@@ -1,0 +1,123 @@
+{
+    "pluginAlias": "Homebridge AEG Robot Vacuum",
+    "pluginType": "platform",
+    "singular": true,
+    "headerDisplay": "For help please refer to the [README](https://github.com/thoukydides/homebridge-aeg-robot/blob/master/README.md).",
+    "footerDisplay": "© 2022-2023 [Alexander Thoukydides](https://www.thouky.co.uk/)",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "username": {
+                "type": "string",
+                "required": true,
+                "format": "email"
+            },
+            "password": {
+                "type": "string",
+                "required": true
+            },
+            "pollIntervals": {
+                "type": "object",
+                "properties": {
+                    "statusSeconds": {
+                        "type": "integer",
+                        "placeholder": 5,
+                        "minimum": 1,
+                        "maximum": 600
+                    },
+                    "serverHealthSeconds": {
+                        "type": "integer",
+                        "placeholder": 60,
+                        "minimum": 60,
+                        "maximum": 3600
+                    }
+                }
+            },
+            "hideServices": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "Battery",
+                        "Contact Sensor",
+                        "Fan",
+                        "Filter Maintenance",
+                        "Occupancy Sensor",
+                        "Switch Clean",
+                        "Switch Home"
+                    ]
+                }
+            },
+            "debug": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "Run API Tests",
+                        "Run Unsafe API Tests",
+                        "Log API Headers",
+                        "Log API Bodies",
+                        "Log Debug as Info"
+                    ]
+                }
+            }
+        }
+    },
+    "form": [{
+        "type": "fieldset",
+        "title": "AEG / Electrolux Account",
+        "expandable": false,
+        "items": [{
+            "key": "username",
+            "title": "Username (email address)",
+            "placeholder": "e.g. rx@gmail.com"
+        },{
+            "key": "password",
+            "title": "Password",
+            "placeholder": "e.g. Passw0rd!"
+        }]
+    },{
+        "type": "fieldset",
+        "title": "Disable Unwanted Features",
+        "expandable": false,
+        "expanded": true,
+        "items": [{
+            "key": "hideServices",
+            "notitle": true,
+            "description": "Checking an option <b>disables</b> the corresponding HomeKit Service"
+        }]
+    },{
+        "type": "fieldset",
+        "title": "Advanced Settings",
+        "expandable": true,
+        "expanded": false,
+        "items": [{
+            "key": "pollIntervals.statusSeconds",
+            "title": "Interval between polling for appliance status updates",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 600,
+            "fieldAddonRight": "&nbsp;seconds"
+        },{
+            "key": "pollIntervals.serverHealthSeconds",
+            "title": "Interval between API server health checks",
+            "type": "number",
+            "minimum": 60,
+            "maximum": 3600,
+            "fieldAddonRight": "&nbsp;seconds"
+        }]
+    },{
+        "type": "fieldset",
+        "title": "Debug Options",
+        "expandable": true,
+        "expanded": false,
+        "items": [{
+            "key": "debug",
+            "notitle": true,
+            "description": "Leave all options unchecked unless debugging a problem"
+        }]
+    }],
+    "display": null
+}

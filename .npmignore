@@ -1,0 +1,9 @@
+src
+.*
+nodemon.json
+tsconfig.json
+/*.mjs
+/*.txt
+/*.png
+*~
+[#]*[#]
