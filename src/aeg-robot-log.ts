@@ -3,7 +3,8 @@
 
 import { LogLevel } from 'homebridge';
 import { AEGRobot } from './aeg-robot';
-import { Activity, Battery, Dustbin, PowerMode } from './aegapi-types';
+import { Activity, Battery, Dustbin, FeedItem, Message, PowerMode } from './aegapi-types';
+import { formatDuration } from './utils';
 
 // Descriptions of the robot activity
 const activityNames: Record<Activity, string | null> = {
@@ -48,6 +49,9 @@ const powerModeNames: Record<PowerMode, string> = {
     [PowerMode.Power]:  'POWER (optimal cleaning performance, higher energy consumption)'
 };
 
+// Robot tick duration
+const TICK_MS = 1e-4;
+
 // Logging of information about a robot
 export class AEGRobotLog {
 
@@ -61,6 +65,7 @@ export class AEGRobotLog {
     constructor(readonly robot: AEGRobot) {
         this.logOnce();
         this.logStatus();
+        this.logMessages();
     }
 
     // Log static information about the robot once at startup
@@ -113,5 +118,35 @@ export class AEGRobotLog {
             this.loggedHealthErrors.clear();
             this.log.info('Successfully connected to cloud servers');
         }
+    }
+
+    // Log messages from the robot
+    logMessages(): void {
+        this.robot.on('message', (message: Message) => {
+            const age = `${formatDuration(Date.now() - message.timestamp * 1000)} ago`;
+            const bits = [`type=${message.type}`];
+            if (message.userErrorID)     bits.push(`user-error=${message.userErrorID}`);
+            if (message.internalErrorID) bits.push(`internal-error=${message.internalErrorID}`);
+            this.log.warn(`Message: ${message.text} (${age})`);
+            this.log.debug(`Message: ${bits.join(', ')}`);
+        }).on('feed', (item: FeedItem) => {
+            const age = `${formatDuration(Date.now() - Date.parse(item.createdAtUTC))} ago`;
+            switch (item.feedDataType) {
+            case 'RVCLastWeekCleanedArea':
+                this.log.info(`Weekly insight (${age}):`);
+                this.log.info(`    Worked for ${formatDuration(item.data.cleaningDurationTicks * TICK_MS)}`);
+                this.log.info(`    Worked for ${item.data.cleaningDurationTicks} ticks`);
+                this.log.info(`    ${item.data.cleanedAreaSquareMeter} m² cleaned`);
+                this.log.info(`    Cleaned ${item.data.sessionCount} times`);
+                this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
+                break;
+            case 'RVCSurfaceFilterMaintenance':
+                this.log.info(`${item.data.cardTitle} (${age})`);
+                break;
+            default:
+                this.log.warn(`Unrecognised feed item type "${item['feedDataType']}" (${age})`);
+                this.log.warn(JSON.stringify(item, null, 4));
+            }
+        });
     }
 }

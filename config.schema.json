@@ -30,6 +30,12 @@
                         "placeholder": 60,
                         "minimum": 60,
                         "maximum": 3600
+                    },
+                    "feedSeconds": {
+                        "type": "integer",
+                        "placeholder": 300,
+                        "minimum": 60,
+                        "maximum": 3600
                     }
                 }
             },

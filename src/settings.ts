@@ -18,7 +18,8 @@ export const REQUIRED_HOMEBRIDGE_API = '^2.7';
 export const DEFAULT_CONFIG: Partial<Config> = {
     pollIntervals: {
         statusSeconds:          5,
-        serverHealthSeconds:    60
+        serverHealthSeconds:    60,
+        feedSeconds:            5 * 60
     },
     hideServices:               [],
     debug:                      []

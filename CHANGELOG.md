@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Added
+* Log feed items and appliance messages provided by the AEG API.
 
 ## [v0.1.0] - 2023-01-19
 * Initial version.

@@ -5,7 +5,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 
 import { AEGAccessory } from './accessory';
 import { AEGPlatform } from './platform';
-import { AEGRobot, DynamicStatus, DynamicStatusKey,
+import { AEGRobot, DynamicStatus, StatusEvent,
          SimpleActivity } from './aeg-robot';
 import { Battery, PowerMode, CleaningCommand } from './aegapi-types';
 import { HideService } from './config-types';
@@ -265,7 +265,7 @@ export class AEGRobotAccessory extends AEGAccessory {
     }
 
     // Install a handler for a robot event and call it immediately with the current status
-    onRobot<Key extends DynamicStatusKey>(event: Key, listener: (newValue: DynamicStatus[Key]) => void): this {
+    onRobot<Event extends StatusEvent>(event: Event, listener: (newValue: DynamicStatus[Event]) => void): this {
         this.robot.on(event, listener);
         listener(this.robot.status[event]);
         return this;

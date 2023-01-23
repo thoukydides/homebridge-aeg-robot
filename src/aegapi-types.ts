@@ -462,7 +462,7 @@ export interface RVCLastWeekCleanedArea extends FeedItemBase {
         pitstopCount:           number;     // e.g. 3 (times recharged during cleaning)
         cleanedAreaSquareMeter: number;     // e.g. 40 (m^2)
         sessionCount:           number;     // e.g. 5 (cleanings)
-        cleaningDurationTicks:  number;     // e.g. 99920000000 (microseconds)
+        cleaningDurationTicks:  number;     // e.g. 99920000000 (0.1µs ticks?)
     };
 }
 export interface RVCSurfaceFilterMaintenance extends FeedItemBase {

@@ -51,6 +51,30 @@ export function logError(log: Logger, when: string, err: unknown): void {
     } catch { /*empty */ }
 }
 
+// Format a millisecond duration
+export function formatDuration(ms: number, maxParts = 2): string {
+    if (ms < 1) return 'n/a';
+
+    // Split the duration into components
+    const duration: Record<string, number> = {
+        day:            Math.floor(ms / (24 * 60 * 60 * 1000)),
+        hour:           Math.floor(ms /      (60 * 60 * 1000)) % 24,
+        minute:         Math.floor(ms /           (60 * 1000)) % 60,
+        second:         Math.floor(ms /                 1000 ) % 60,
+        millisecond:    Math.floor(ms                        ) % 1000
+    };
+
+    // Remove any leading zero components
+    const keys = Object.keys(duration);
+    while (keys.length && duration[keys[0]] === 0) keys.shift();
+
+    // Combine the required number of remaining components
+    return keys.slice(0, maxParts)
+        .filter(key => duration[key] !== 0)
+        .map(key => `${duration[key]} ${key}${duration[key] === 1 ? '' : 's'}`)
+        .join(', ');
+}
+
 // Format strings in columns
 export function columns(rows: string[][], separator = '  '): string[] {
     // Determine the required column widths

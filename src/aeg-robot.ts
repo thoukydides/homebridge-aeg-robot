@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import { AEGAccount } from './aeg-account';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Activity, Appliance, ApplianceNamePatch, Battery, CleaningCommand,
-         Connection, DomainAppliance, Dustbin, PowerMode, Status } from './aegapi-types';
+         Connection, DomainAppliance, Dustbin, FeedItem, Message, PowerMode, Status } from './aegapi-types';
 import { PrefixLogger } from './logger';
 import { logError } from './utils';
 import { AEGRobotLog } from './aeg-robot-log';
@@ -48,8 +48,19 @@ export interface DynamicStatus {
     name:               string;
     power?:             PowerMode;
 }
-export type DynamicStatusKey = keyof DynamicStatus;
-export type EventName = 'info' | 'appliance' | 'preUpdate';
+export type StatusEvent = keyof DynamicStatus;
+
+// Other event types
+interface DataEventType {
+    message:    Message;
+    feed:       FeedItem;
+}
+type DataEvent = keyof DataEventType;
+type VoidEvent = 'info' | 'appliance' | 'preUpdate';
+
+// A generic event listener, compatible with all prototypes
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Listener = (...args: any[]) => void;
 
 // An AEG RX 9 / Electrolux Pure i9 robot manager
 export class AEGRobot extends EventEmitter {
@@ -76,6 +87,10 @@ export class AEGRobot extends EventEmitter {
     // Dynamic information about the robot
     readonly status: DynamicStatus = { rawName: '', firmware: '', enabled: false, connected: false, name: '' };
     private emittedStatus: Partial<DynamicStatus> = {};
+
+    // Messages about the robot
+    private readonly emittedMessages = new Set<number>();
+    private readonly emittedFeed     = new Set<string>();
 
     // Promise that is resolved by successful initialisation
     private readonly readyPromise: Promise<void>;
@@ -148,7 +163,7 @@ export class AEGRobot extends EventEmitter {
     // Update dynamic robot state
     updateFromAppliances(appliance: Appliance): void {
         // Extract the relevant information
-        const reported = appliance.properties.reported;
+        const { reported } = appliance.properties;
         this.updateStatus({
             // Status that is always provided
             rawName:        appliance.applianceData.applianceName,
@@ -162,6 +177,9 @@ export class AEGRobot extends EventEmitter {
             dustbin:        reported.dustbinStatus,
             rawPower:       reported.powerMode
         });
+
+        // Extract any new messages
+        this.emitMessages(reported.messageList?.messages);
 
         // Generate derived state
         this.updateDerivedAndEmit();
@@ -249,7 +267,7 @@ export class AEGRobot extends EventEmitter {
     // Apply updates to the robot status and emit events for changes
     emitChangeEvents(): void {
         // Identify the values that have changed
-        const keys = Object.keys(this.status) as DynamicStatusKey[];
+        const keys = Object.keys(this.status) as StatusEvent[];
         const changed = keys.filter(key => this.status[key] !== this.emittedStatus[key]);
         if (!changed.length) return;
 
@@ -270,23 +288,56 @@ export class AEGRobot extends EventEmitter {
         this.emittedStatus = {...this.status};
     }
 
+    // Emit events for any new messages
+    emitMessages(messages: Message[] = []) {
+        // If there are no current messages then just flush the cache
+        if (!messages.length) return this.emittedMessages.clear();
+
+        // Emit events for any new messages
+        messages.forEach(message => {
+            const { id } = message;
+            if (!(this.emittedMessages.has(id))) {
+                this.emittedMessages.add(id);
+                this.emit('message', message);
+            }
+        });
+    }
+
+    // Update feed items
+    updateFromFeed(feed: FeedItem[]) {
+        // If there are no current feed items then just flush the cache
+        if (!feed.length) return this.emittedFeed.clear();
+
+        // Emit events for any new feed items
+        feed.forEach(item => {
+            const { id } = item;
+            if (!(this.emittedFeed.has(id))) {
+                this.emittedFeed.add(id);
+                this.emit('feed', item);
+            }
+        });
+    }
+
     // Install a handler for a robot status event
-    on(event: EventName, listener: () => void): this;
-    on<Key extends DynamicStatusKey>(event: Key, listener: (newValue: DynamicStatus[Key], oldValue: DynamicStatus[Key]) => void): this;
-    on(event: string, listener: (...args: unknown[]) => void): this {
+    on                           (event: VoidEvent, listener: () => void): this;
+    on<Event extends DataEvent>  (event: Event, listener: (value: DataEventType[Event]) => void): this;
+    on<Event extends StatusEvent>(event: Event, listener: (newValue: DynamicStatus[Event], oldValue: DynamicStatus[Event]) => void): this;
+    on(event: string, listener: Listener): this {
         return super.on(event, listener);
     }
 
     // Install a single-shot handler for a robot status event
-    once(event: EventName, listener: () => void): this;
-    once<Key extends DynamicStatusKey>(event: Key, listener: (newValue: DynamicStatus[Key], oldValue: DynamicStatus[Key]) => void): this;
-    once(event: string, listener: (...args: unknown[]) => void): this {
+    once                           (event: VoidEvent, listener: () => void): this;
+    once<Event extends DataEvent>  (event: Event, listener: (value: DataEventType[Event]) => void): this;
+    once<Event extends StatusEvent>(event: Event, listener: (newValue: DynamicStatus[Event], oldValue: DynamicStatus[Event]) => void): this;
+    once(event: string, listener: Listener): this {
         return super.once(event, listener);
     }
 
     // Emit an event
-    emit(event: EventName): boolean;
-    emit<Key extends keyof DynamicStatus>(event: Key, newValue: DynamicStatus[Key], oldValue: DynamicStatus[Key]): boolean;
+    emit                           (event: VoidEvent): boolean;
+    emit<Event extends DataEvent>  (event: Event, value: DataEventType[Event]): boolean;
+    emit<Event extends StatusEvent>(event: Event, newValue: DynamicStatus[Event], oldValue: DynamicStatus[Event]): boolean;
     emit(event: string, ...args: unknown[]): boolean {
         return super.emit(event, ...args);
     }

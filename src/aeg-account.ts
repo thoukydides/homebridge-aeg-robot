@@ -78,7 +78,8 @@ export class AEGAccount {
         const intervals = this.config.pollIntervals;
         const poll: [string, number, () => Promise<void>][] = [
             ['Appliances',      intervals.statusSeconds,        this.pollAppliances],
-            ['Server health',   intervals.serverHealthSeconds,  this.pollServerHealth]
+            ['Server health',   intervals.serverHealthSeconds,  this.pollServerHealth],
+            ['Feed',            intervals.feedSeconds,          this.pollFeed]
         ];
         this.heartbeats = poll.map(action =>
             new Heartbeat(this.log, action[0], action[1] * 1000, action[2].bind(this),
@@ -140,5 +141,14 @@ export class AEGAccount {
 
         // Throw an error if any servers have problems
         if (failed) throw new Error(`AEG API servers are reporting issues (${failed} of ${servers.length})`);
+    }
+
+    // Poll for new feed items
+    async pollFeed(): Promise<void> {
+        const feed = (await this.api.getFeed()).feedItemResponseDetailDTOs;
+        Object.entries(this.robots).forEach(([applianceId, robot]) => {
+            const items = feed.filter(item => item.data.pncId === applianceId);
+            robot.updateFromFeed(items);
+        });
     }
 }
