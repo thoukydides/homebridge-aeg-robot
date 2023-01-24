@@ -3,7 +3,7 @@
 
 import { LogLevel } from 'homebridge';
 import { AEGRobot } from './aeg-robot';
-import { Activity, Battery, Dustbin, FeedItem, Message, PowerMode } from './aegapi-types';
+import { Activity, Battery, Capability, Dustbin, FeedItem, Message, PowerMode } from './aegapi-types';
 import { formatDuration } from './utils';
 
 // Descriptions of the robot activity
@@ -83,6 +83,8 @@ export class AEGRobotLog {
     logStatus(): void {
         this.robot.on('rawName', (name: string) => {
             this.log.info(`My name is "${name}"`);
+        }).on('capabilities', (capabilities: Capability[]) => {
+            this.log.info(`Supported capabilities: ${capabilities.join(', ')}`);
         }).on('firmware', (firmware: string) => {
             this.log.info(`Firmware version ${firmware} installed`);
         }).on('battery', (battery?: Battery) => {

@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 
 import { AEGAccount } from './aeg-account';
 import { AEGApplianceAPI } from './aegapi-appliance';
-import { Activity, Appliance, ApplianceNamePatch, Battery, CleaningCommand,
+import { Activity, Appliance, ApplianceNamePatch, Battery, Capability, CleaningCommand,
          Connection, DomainAppliance, Dustbin, FeedItem, Message, PowerMode, Status } from './aegapi-types';
 import { PrefixLogger } from './logger';
 import { logError } from './utils';
@@ -29,6 +29,7 @@ export interface DynamicStatus {
     rawName:            string;
     firmware:           string;
     timezone?:          string | null;
+    capabilities:       Capability[];
     battery?:           Battery;
     activity?:          Activity;
     dustbin?:           Dustbin;
@@ -85,7 +86,7 @@ export class AEGRobot extends EventEmitter {
     model       = '';
 
     // Dynamic information about the robot
-    readonly status: DynamicStatus = { rawName: '', firmware: '', enabled: false, connected: false, name: '' };
+    readonly status: DynamicStatus = { rawName: '', firmware: '', capabilities: [], enabled: false, connected: false, name: '' };
     private emittedStatus: Partial<DynamicStatus> = {};
 
     // Messages about the robot
@@ -171,6 +172,7 @@ export class AEGRobot extends EventEmitter {
             connected:      appliance.connectionState === Connection.Connected,
 
             // Other details may be absent if the robot is not reachable
+            capabilities:   Object.keys(reported.capabilities ?? {}),
             firmware:       reported.firmwareVersion || '',
             battery:        reported.batteryStatus,
             activity:       reported.robotStatus,
@@ -268,7 +270,15 @@ export class AEGRobot extends EventEmitter {
     emitChangeEvents(): void {
         // Identify the values that have changed
         const keys = Object.keys(this.status) as StatusEvent[];
-        const changed = keys.filter(key => this.status[key] !== this.emittedStatus[key]);
+        const changed = keys.filter(key => {
+            const a = this.status[key], b = this.emittedStatus[key];
+            if (Array.isArray(a) && Array.isArray(b)) {
+                return a.length !== b.length
+                    || a.some((element, index) => element !== b[index]);
+            } else {
+                return a !== b;
+            }
+        });
         if (!changed.length) return;
 
         // Log a summary of the changes
