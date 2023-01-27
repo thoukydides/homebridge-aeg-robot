@@ -455,7 +455,7 @@ export interface FeedItemBase {
     createdAtUTC:               string;     // e.g. '2022-12-24T15:57:24.8144471Z'
     feedDataType:               string;     // e.g. 'RVCLastWeekCleanedArea'
 }
-export interface RVCLastWeekCleanedArea extends FeedItemBase {
+export interface FeedItemLastWeekCleanedArea extends FeedItemBase {
     feedDataType:               'RVCLastWeekCleanedArea';
     data: {
         pncId:                  string;     // e.g. '900277479937001234567890'
@@ -465,10 +465,10 @@ export interface RVCLastWeekCleanedArea extends FeedItemBase {
         cleaningDurationTicks:  number;     // e.g. 99920000000 (0.1µs ticks?)
     };
 }
-export interface RVCSurfaceFilterMaintenance extends FeedItemBase {
-    feedDataType:               'RVCSurfaceFilterMaintenance';
+export interface FeedItemMaintenance extends FeedItemBase {
+    feedDataType:               'RVCSurfaceFilterMaintenance' | 'RVCBrushRollMaintenance' | 'RVCSideBrushMaintenance';
     data: {
-        pncId:                  string;     // e.g. '900277479937001234567890'
+        pncId?:                 string;     // e.g. '900277479937001234567890'
         cardTitle:              string;     // e.g. 'Time to clean the filter'
         cardDescription:        string;     // e.g. 'Clean your filter and get optimal performance...'
         iconUrl:                string;     // e.g. 'https://cdn.sanity.io/images/...-48x48.png'
@@ -479,7 +479,7 @@ export interface RVCSurfaceFilterMaintenance extends FeedItemBase {
         webShopDescription:     string;     // e.g. 'Confirm new password'
     };
 }
-export type FeedItem = RVCLastWeekCleanedArea | RVCSurfaceFilterMaintenance;
+export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemMaintenance;
 export interface Feed {
     feedItemResponseDetailDTOs: FeedItem[];
 }

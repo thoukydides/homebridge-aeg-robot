@@ -143,7 +143,10 @@ export class AEGRobotLog {
                 this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
                 break;
             case 'RVCSurfaceFilterMaintenance':
+            case 'RVCBrushRollMaintenance':
+            case 'RVCSideBrushMaintenance':
                 this.log.info(`${item.data.cardTitle} (${age})`);
+                if (item.data.cardDescription.length) this.log.info(`    ${item.data.cardDescription}`);
                 break;
             default:
                 this.log.warn(`Unrecognised feed item type "${item['feedDataType']}" (${age})`);
