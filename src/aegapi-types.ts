@@ -137,6 +137,20 @@ export interface User {
     enabledMarketingChannels:   string[];   // e.g. ['EMAIL']
 }
 
+// PATCH /one-account-user/api/v1/users/current
+export interface PatchUser {
+    firstName?:                 string;
+    lastName?:                  string;
+    countryCode?:               string;     // e.g. 'GB'
+    measurementUnits?:          MeasurementUnits;
+}
+
+// PUT /one-account-user/api/v1/users/current/change-password
+export interface PutChangePassword {
+    password:                   string;
+    newPassword:                string;
+}
+
 // GET /country/api/v1/countries
 export interface Country {
     id:                         number;     // e.g. 43               or 16

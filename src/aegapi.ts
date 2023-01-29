@@ -7,7 +7,8 @@ import { createCheckers } from 'ts-interface-checker';
 import { AEGAuthoriseUserAgent } from './aegapi-ua-auth';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Appliances, Countries, Domains, FAQ, Feed, HealthChecks,
-         LegalDocuments, PostWebShop, User, WebShop } from './aegapi-types';
+         LegalDocuments, MeasurementUnits, PatchUser, PostWebShop,
+         PutChangePassword, User, WebShop } from './aegapi-types';
 import { AEG_APP } from './settings';
 import aegapiTI from './ti/aegapi-types-ti';
 import { Config } from './config-types';
@@ -69,6 +70,26 @@ export class AEGAPI {
         const user = await this.ua.getJSON<User>(checkers.User, '/one-account-user/api/v1/users/current');
         this.language = { countryCode: user.countryCode, languageCode: user.locale };
         return user;
+    }
+
+    setUserName(firstName: string, lastName = ''): Promise<User> {
+        const patchBody: PatchUser = { firstName, lastName };
+        return this.ua.patchJSON(checkers.User, '/one-account-user/api/v1/users/current', patchBody);
+    }
+
+    setCountry(countryCode: string): Promise<User> {
+        const patchBody: PatchUser = { countryCode };
+        return this.ua.patchJSON(checkers.User, '/one-account-user/api/v1/users/current', patchBody);
+    }
+
+    setMeasurementUnits(measurementUnits: MeasurementUnits): Promise<User> {
+        const patchBody: PatchUser = { measurementUnits };
+        return this.ua.patchJSON(checkers.User, '/one-account-user/api/v1/users/current', patchBody);
+    }
+
+    changePassword(password: string, newPassword: string): Promise<void> {
+        const putBody: PutChangePassword = { password, newPassword };
+        return this.ua.put('/one-account-user/api/v1/users/current/change-password', putBody);
     }
 
     getAppliances(): Promise<Appliances> {

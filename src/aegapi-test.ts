@@ -6,7 +6,7 @@ import { Logger } from 'homebridge';
 import { AEGAPI } from './aegapi';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Appliance, Appliances, CleaningCommand, DomainAppliance, Domains,
-         NewTask, PowerMode, SettableProperties } from './aegapi-types';
+         NewTask, PowerMode, SettableProperties, User } from './aegapi-types';
 import { logError } from './utils';
 
 // A test failure
@@ -41,7 +41,10 @@ export class AEGAPITest {
     async runAllTests(): Promise<void> {
         try {
             // Global tests
-            const { appliances, domains } = await this.runSafeGlobalTests();
+            const { appliances, domains, user } = await this.runSafeGlobalTests();
+            if (this.unsafe && user) {
+                await this.runUnsafeGlobalTests(user);
+            }
 
             // Appliance tests
             const { appliance, domainAppliance } = this.selectRobot(appliances, domains);
@@ -60,7 +63,7 @@ export class AEGAPITest {
     }
 
     // Run safe global tests
-    async runSafeGlobalTests(): Promise<{ appliances?: Appliances; domains?: Domains }> {
+    async runSafeGlobalTests(): Promise<{ appliances?: Appliances; domains?: Domains; user?: User }> {
         const test = this.makeTester(this.api);
 
         // Run the tests
@@ -69,14 +72,28 @@ export class AEGAPITest {
         await test(this.api.getLegalDocuments);
         await test(this.api.getHealthChecks);
         await test(this.api.getFeed);
-        await test(this.api.getCurrentUser);
+        const user       = await test(this.api.getCurrentUser);
         const appliances = await test(this.api.getAppliances);
         const domains    = await test(this.api.getDomains);
         const applianceIds = (appliances || []).map(a => a.applianceId);
         await test(this.api.getWebShopURLs, applianceIds);
 
         // Return results required for other tests
-        return { appliances, domains };
+        return { appliances, domains, user };
+    }
+
+    // Run unsafe global tests
+    async runUnsafeGlobalTests(user: User): Promise<void> {
+        const test = this.makeTester(this.api);
+
+        // Run the tests
+        await test(this.api.setUserName, user.firstName, user.lastName);
+        await test(this.api.setCountry, user.countryCode);
+        if (user.measurementUnits !== null) {
+            await test(this.api.setMeasurementUnits, user.measurementUnits);
+        } else {
+            this.log.warn('No measurement units found for API test');
+        }
     }
 
     // Run safe appliance tests
@@ -109,7 +126,7 @@ export class AEGAPITest {
         }
     }
 
-    // Run safe appliance tests
+    // Run unsafe appliance tests
     async runUnsafeApplianceTests(appliance: Appliance, domainAppliance: DomainAppliance): Promise<void> {
         const applianceAPI = this.api.applianceAPI(appliance.applianceId);
         const test = this.makeTester(applianceAPI);
