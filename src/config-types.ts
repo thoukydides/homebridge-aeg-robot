@@ -6,6 +6,7 @@ export interface PollIntervals {
     statusSeconds:          number;
     serverHealthSeconds:    number;
     feedSeconds:            number;
+    cleanedAreasSeconds:    number;
 }
 
 // Services that can be hidden

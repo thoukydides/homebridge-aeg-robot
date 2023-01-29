@@ -54,9 +54,12 @@ export enum Activity {
     FirmwareUpgrade             = 14
 }
 
-// Cleaning result (probably not an exhaustive list, so allow any string for validation)
-export type Completion = 'endedNotFindingCharger' | 'cleaningFinishedSuccessfulInCharger'
-                       | 'cleaningFinishedSuccessfulInStartPose' | 'abortedByUser' | string;
+// Cleaning result
+export type Completion = 'abortedByUser'
+                       | 'cleaningFinishedSuccessful'
+                       | 'cleaningFinishedSuccessfulInCharger'
+                       | 'cleaningFinishedSuccessfulInStartPose'
+                       | 'endedNotFindingCharger';
 
 // Capabilities supported by an appliance
 export type Capability = 'CustomPlay' | 'InteractiveMap' | 'InteractiveMaps'
@@ -349,7 +352,7 @@ export type InteractiveMaps = InteractiveMap[];
 
 // GET /purei/api/v2/appliances/${applianceId}/lifetime
 export interface Lifetime {
-    cleaningDuration:           number;     // e.g. 9750000000 (microseconds)
+    cleaningDuration:           number;     // e.g. 9750000000 (0.1µs ticks?)
     cleanedArea:                number;     // e.g. 102.28999996185294 (m^2)
     sessionCount:               number;     // e.g. 8 (cleanings)
 }
@@ -358,7 +361,7 @@ export interface Lifetime {
 // GET /purei/api/v2/appliances/${applianceId}/history?
 export interface ZoneStatus {
     id:                         string;     // e.g. '8dc4b1f2-74cc-46a9-a68e-a0ddcb937cbf'
-    status:                     string;     // e.g. 'finished' ???
+    status:                     'finished';
     powerMode:                  PowerMode;
 }
 export interface Zone {
@@ -369,15 +372,15 @@ export interface Zone {
 export interface CleanedAreaSession {
     id:                         string;     // e.g. 'si_17'
     sessionId:                  number;     // e.g. 17
-    action:                     string;     // e.g. 'update' ???
+    action:                     'update';
     lastUpdate:                 string;     // e.g. '2022-12-29T15:01:19.123
     startTime:                  string;     // e.g. '2022-12-29T14:13:56'
     eventTime:                  string;     // e.g. '2022-12-29T15:00:41'
-    pitstopDuration:            number;     // e.g. 7620000000 (microseconds)
-    cleaningDuration:           number;     // e.g. 9750000000 (microseconds)
+    pitstopDuration:            number;     // e.g. 7620000000 (0.1µs ticks?)
+    cleaningDuration:           number;     // e.g. 9750000000 (0.1µs ticks?)
     areaCovered:                number;     // e.g. 9.64 (m^2)
     isTimeReliable:             boolean;
-    messageType:                string;     // e.g. 'normal' ???
+    messageType:                'normal';
     completion?:                Completion;
     pitstopCount:               number;     // e.g. 1
     persistentMapId?:           string;     // e.g. 'b3c9558f-5326-40dc-b8d8-a5ad334d62f2'

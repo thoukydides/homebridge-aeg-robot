@@ -3,7 +3,8 @@
 
 import { LogLevel } from 'homebridge';
 import { AEGRobot } from './aeg-robot';
-import { Activity, Battery, Capability, Dustbin, FeedItem, Message, PowerMode } from './aegapi-types';
+import { Activity, Battery, Capability, CleanedArea, Completion, Dustbin,
+         FeedItem, Message, PowerMode } from './aegapi-types';
 import { formatDuration } from './utils';
 
 // Descriptions of the robot activity
@@ -49,6 +50,15 @@ const powerModeNames: Record<PowerMode, string> = {
     [PowerMode.Power]:  'POWER (optimal cleaning performance, higher energy consumption)'
 };
 
+// Description of cleaned area completion statuses
+const completionNames: Record<Completion, string> = {
+    abortedByUser:                          'Cleaning aborted by the user',
+    cleaningFinishedSuccessful:             'Successfully cleaned',
+    cleaningFinishedSuccessfulInCharger:    'Successfully cleaned and returned to charger',
+    cleaningFinishedSuccessfulInStartPose:  'Successfully cleaned and returned to starting location',
+    endedNotFindingCharger:                 'Failed to return home to charger'
+};
+
 // Robot tick duration
 const TICK_MS = 1e-4;
 
@@ -66,6 +76,7 @@ export class AEGRobotLog {
         this.logOnce();
         this.logStatus();
         this.logMessages();
+        this.logCleanedAreas();
     }
 
     // Log static information about the robot once at startup
@@ -137,7 +148,6 @@ export class AEGRobotLog {
             case 'RVCLastWeekCleanedArea':
                 this.log.info(`Weekly insight (${age}):`);
                 this.log.info(`    Worked for ${formatDuration(item.data.cleaningDurationTicks * TICK_MS)}`);
-                this.log.info(`    Worked for ${item.data.cleaningDurationTicks} ticks`);
                 this.log.info(`    ${item.data.cleanedAreaSquareMeter} m² cleaned`);
                 this.log.info(`    Cleaned ${item.data.sessionCount} times`);
                 this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
@@ -151,6 +161,26 @@ export class AEGRobotLog {
             default:
                 this.log.warn(`Unrecognised feed item type "${item['feedDataType']}" (${age})`);
                 this.log.warn(JSON.stringify(item, null, 4));
+            }
+        });
+    }
+
+    // Log cleaned areas
+    logCleanedAreas(): void {
+        this.robot.on('cleanedArea', (cleanedArea: CleanedArea) => {
+            const { cleaningSession } = cleanedArea;
+            const date = new Date(cleaningSession?.startTime ?? cleanedArea.timeStamp);
+            this.log.info(`Cleaned area ${date.toLocaleDateString()}:`);
+            this.log.info(`    Cleaned ${cleanedArea.cleanedArea} m²`);
+            if (cleaningSession) {
+                const formatTime = (time: string) => new Date(time).toLocaleTimeString();
+                this.log.info(`    ${formatTime(cleaningSession.startTime)} - ${formatTime(cleaningSession.eventTime)}`);
+                this.log.info(`    Cleaned for ${formatDuration(cleaningSession.cleaningDuration * TICK_MS)}`);
+                if (cleaningSession.pitstopCount) {
+                    this.log.info(`    Recharged ${cleaningSession.pitstopCount} times while cleaning`);
+                    this.log.info(`    Charged for ${formatDuration(cleaningSession.pitstopDuration * TICK_MS)}`);
+                }
+                if (cleaningSession.completion) this.log.info(`    ${completionNames[cleaningSession.completion]}`);
             }
         });
     }

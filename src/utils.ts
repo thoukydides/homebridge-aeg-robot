@@ -72,7 +72,7 @@ export function formatDuration(ms: number, maxParts = 2): string {
     return keys.slice(0, maxParts)
         .filter(key => duration[key] !== 0)
         .map(key => `${duration[key]} ${key}${duration[key] === 1 ? '' : 's'}`)
-        .join(', ');
+        .join(' ');
 }
 
 // Format strings in columns

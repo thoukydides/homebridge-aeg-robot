@@ -51,7 +51,8 @@ Additional settings can be included in `config.json` to customise the behaviour 
         "pollIntervals": {
             "statusSeconds":        5,
             "serverHealthSeconds":  60,
-            "feedSeconds":          300
+            "feedSeconds":          300,
+            "cleanedAreaSeconds":   60,
         },
         "hideServices":   ["Battery", "Contact Sensor", "Fan", "Filter Maintenance", "Occupancy Sensor", "Switch Clean", "Switch Home"],
         "debug":          ["Run API Tests", "Run Unsafe API Tests", "Log API Headers", "Log API Bodies", "Log Debug as Info"]
@@ -59,7 +60,7 @@ Additional settings can be included in `config.json` to customise the behaviour 
 }
 ```
 
-The `pollIntervals` specify the time in seconds between successive polls of the AEG/Electrolux cloud API for appliance status updates (`statusSeconds`, default 5 seconds), the health of the cloud servers (`serverHealthSeconds`, default 60 seconds), or the information feed (`feedSeconds`, default 300 seconds).
+The `pollIntervals` specify the time in seconds between successive polls of the AEG/Electrolux cloud API for appliance status updates (`statusSeconds`, default 5 seconds), the health of the cloud servers (`serverHealthSeconds`, default 60 seconds), the information feed (`feedSeconds`, default 300 seconds), or the history of cleaning sessions (`cleanedAreaSeconds`, default 60 seconds).
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 

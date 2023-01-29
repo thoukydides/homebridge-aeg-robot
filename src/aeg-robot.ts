@@ -6,13 +6,14 @@ import { EventEmitter } from 'events';
 
 import { AEGAccount } from './aeg-account';
 import { AEGApplianceAPI } from './aegapi-appliance';
-import { Activity, Appliance, ApplianceNamePatch, Battery, Capability, CleaningCommand,
+import { Activity, Appliance, ApplianceNamePatch, Battery, Capability, CleanedArea, CleaningCommand,
          Connection, DomainAppliance, Dustbin, FeedItem, Message, PowerMode, Status } from './aegapi-types';
 import { PrefixLogger } from './logger';
 import { logError } from './utils';
 import { AEGRobotLog } from './aeg-robot-log';
 import { AEGRobotCtrlActivity, AEGRobotCtrlName,
          AEGRobotCtrlPower } from './aeg-robot-ctrl';
+import { Heartbeat } from './heartbeat';
 
 // Simplified robot activities
 export enum SimpleActivity {
@@ -36,6 +37,9 @@ export interface DynamicStatus {
     rawPower?:          PowerMode;
     enabled:            boolean;
     connected:          boolean;
+    // API errors
+    isServerError?:     unknown;
+    isRobotError?:      unknown;
     // Derived values
     simpleActivity?:    SimpleActivity;
     isBatteryLow?:      boolean;
@@ -53,8 +57,9 @@ export type StatusEvent = keyof DynamicStatus;
 
 // Other event types
 interface DataEventType {
-    message:    Message;
-    feed:       FeedItem;
+    message:        Message;
+    feed:           FeedItem;
+    cleanedArea:    CleanedArea;
 }
 type DataEvent = keyof DataEventType;
 type VoidEvent = 'info' | 'appliance' | 'preUpdate';
@@ -63,8 +68,14 @@ type VoidEvent = 'info' | 'appliance' | 'preUpdate';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Listener = (...args: any[]) => void;
 
+// Maximum number of historial cleaned areas to retrieve
+const MAX_CLEANED_AREAS = 5;
+
 // An AEG RX 9 / Electrolux Pure i9 robot manager
 export class AEGRobot extends EventEmitter {
+
+    // Configuration
+    readonly config = this.account.config;
 
     // A custom logger
     readonly log: Logger;
@@ -90,8 +101,12 @@ export class AEGRobot extends EventEmitter {
     private emittedStatus: Partial<DynamicStatus> = {};
 
     // Messages about the robot
-    private readonly emittedMessages = new Set<number>();
-    private readonly emittedFeed     = new Set<string>();
+    private readonly emittedMessages    = new Set<number>();
+    private readonly emittedFeed        = new Set<string>();
+    private readonly emittedCleanedArea = new Set<string>();
+
+    // Periodic polling tasks
+    private heartbeats: Heartbeat[] = [];
 
     // Promise that is resolved by successful initialisation
     private readonly readyPromise: Promise<void>;
@@ -148,6 +163,15 @@ export class AEGRobot extends EventEmitter {
         } catch (err) {
             logError(this.log, 'Appliance info', err);
         }
+
+        // Start polling for interesting changes
+        const intervals = this.config.pollIntervals;
+        const poll: [string, number, () => Promise<void>][] = [
+            ['Cleaned areas',   intervals.cleanedAreasSeconds,  this.pollCleanedAreas]
+        ];
+        this.heartbeats = poll.map(action =>
+            new Heartbeat(this.log, action[0], action[1] * 1000, action[2].bind(this),
+                          (err) => this.heartbeat(err)));
     }
 
     // Describe this robot
@@ -197,9 +221,21 @@ export class AEGRobot extends EventEmitter {
         this.updateDerivedAndEmit();
     }
 
+    // Handle a status update for a periodic action
+    heartbeat(err?: unknown): void {
+        if (!err && this.heartbeats.some(heartbeat => heartbeat.lastError)) {
+            // This heartbeat indicates success, but there is still a failure
+            return;
+        }
+
+        // Update the robot health
+        this.status.isRobotError = err;
+        this.updateDerivedAndEmit();
+    }
+
     // Update server health
     updateServerHealth(err?: unknown): void {
-        this.status.isError = err;
+        this.status.isServerError = err;
         this.updateDerivedAndEmit();
     }
 
@@ -236,8 +272,11 @@ export class AEGRobot extends EventEmitter {
             ? [SimpleActivity.Other] : activityMap[this.status.activity];
         const isBusy = [SimpleActivity.Clean, SimpleActivity.Pitstop].includes(activity);
 
+        // Combine account and appliance errors
+        const isError = this.status.isServerError ?? this.status.isRobotError;
+
         // Any identified problem is treated as a fault
-        const isFault = this.status.isError !== undefined
+        const isFault = isError !== undefined
                      || !this.status.enabled
                      || !this.status.connected
                      || this.status.activity === Activity.Error
@@ -255,6 +294,7 @@ export class AEGRobot extends EventEmitter {
             isDocked:       isDocked ?? this.status.battery === Battery.FullyCharged,
             isActive:       isActive && !isFault,
             isBusy,
+            isError,
             isFault,
             name:           this.status.rawName,
             power:          isBusy ? this.status.rawPower : undefined
@@ -321,9 +361,21 @@ export class AEGRobot extends EventEmitter {
         // Emit events for any new feed items
         feed.forEach(item => {
             const { id } = item;
-            if (!(this.emittedFeed.has(id))) {
+            if (!this.emittedFeed.has(id)) {
                 this.emittedFeed.add(id);
                 this.emit('feed', item);
+            }
+        });
+    }
+
+    // Periodically check whether there are any new cleaning sessions
+    async pollCleanedAreas(): Promise<void> {
+        const cleanedAreas = await this.api.getApplianceCleanedAreas(MAX_CLEANED_AREAS);
+        cleanedAreas.forEach(cleanedArea => {
+            const {id} = cleanedArea;
+            if (!this.emittedCleanedArea.has(id)) {
+                this.emittedCleanedArea.add(id);
+                this.emit('cleanedArea', cleanedArea);
             }
         });
     }

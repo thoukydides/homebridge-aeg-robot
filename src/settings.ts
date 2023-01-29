@@ -19,7 +19,8 @@ export const DEFAULT_CONFIG: Partial<Config> = {
     pollIntervals: {
         statusSeconds:          5,
         serverHealthSeconds:    60,
-        feedSeconds:            5 * 60
+        feedSeconds:            5 * 60,
+        cleanedAreasSeconds:    60
     },
     hideServices:               [],
     debug:                      []
