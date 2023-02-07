@@ -5,7 +5,7 @@ import { LogLevel } from 'homebridge';
 import { AEGRobot } from './aeg-robot';
 import { Activity, Battery, Capability, CleanedArea, Completion, Dustbin,
          FeedItem, Message, PowerMode } from './aegapi-types';
-import { formatDuration } from './utils';
+import { columns, formatDuration } from './utils';
 
 // Descriptions of the robot activity
 const activityNames: Record<Activity, string | null> = {
@@ -134,7 +134,7 @@ export class AEGRobotLog {
     }
 
     // Log messages from the robot
-    logMessages(): void {
+    async logMessages(): Promise<void> {
         this.robot.on('message', (message: Message) => {
             const age = `${formatDuration(Date.now() - message.timestamp * 1000)} ago`;
             const bits = [`type=${message.type}`];
@@ -152,6 +152,16 @@ export class AEGRobotLog {
                 this.log.info(`    Cleaned ${item.data.sessionCount} times`);
                 this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
                 break;
+            case 'OsirisMonthlyJobDoneGlobalComparison': {
+                this.log.info('Comparison with robot vacuums around the world:');
+                const rows = columns([
+                    [this.robot.status.name,       `${item.data.sessionCount} sessions`],
+                    [item.data.minCountry.country, `${item.data.minCountry.sessionCount} sessions`],
+                    [item.data.maxCountry.country, `${item.data.maxCountry.sessionCount} sessions`]
+                ]);
+                rows.forEach(row => this.log.info(`    ${row}`));
+                break;
+            }
             case 'RVCSurfaceFilterMaintenance':
             case 'RVCBrushRollMaintenance':
             case 'RVCSideBrushMaintenance':

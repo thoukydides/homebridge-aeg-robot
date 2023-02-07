@@ -482,6 +482,23 @@ export interface FeedItemLastWeekCleanedArea extends FeedItemBase {
         cleaningDurationTicks:  number;     // e.g. 99920000000 (0.1µs ticks?)
     };
 }
+export interface FeedItemMonthlyJobDoneGlobalComparison extends FeedItemBase {
+    feedDataType:               'OsirisMonthlyJobDoneGlobalComparison';
+    data: {
+        pncId:                  string;     // e.g. '900277479937001234567890'
+        startDate:              string;     // e.g. '2023-01-01'
+        endDate:                string;     // e.g. '2023-01-31'
+        sessionCount:           number;     // e.g. 52
+        minCountry: {
+            country:            string;     // e.g. 'CN'
+            sessionCount:       number;     // e.g. 7.442623
+        };
+        maxCountry: {
+            country:            string;     // e.g. SG
+            sessionCount:       number;     // e.g. 19.711956
+        };
+    };
+}
 export interface FeedItemMaintenance extends FeedItemBase {
     feedDataType:               'RVCSurfaceFilterMaintenance' | 'RVCBrushRollMaintenance' | 'RVCSideBrushMaintenance';
     data: {
@@ -496,7 +513,7 @@ export interface FeedItemMaintenance extends FeedItemBase {
         webShopDescription:     string;     // e.g. 'Confirm new password'
     };
 }
-export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemMaintenance;
+export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemMonthlyJobDoneGlobalComparison | FeedItemMaintenance;
 export interface Feed {
     feedItemResponseDetailDTOs: FeedItem[];
 }
