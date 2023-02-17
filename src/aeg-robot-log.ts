@@ -56,7 +56,8 @@ const completionNames: Record<Completion, string> = {
     cleaningFinishedSuccessful:             'Successfully cleaned',
     cleaningFinishedSuccessfulInCharger:    'Successfully cleaned and returned to charger',
     cleaningFinishedSuccessfulInStartPose:  'Successfully cleaned and returned to starting location',
-    endedNotFindingCharger:                 'Failed to return home to charger'
+    endedNotFindingCharger:                 'Failed to return home to charger',
+    error:                                  'Error'
 };
 
 // Robot tick duration
@@ -152,6 +153,14 @@ export class AEGRobotLog {
                 this.log.info(`    Cleaned ${item.data.sessionCount} times`);
                 this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
                 break;
+            case 'OsirisBusierWeekJobDone': {
+                const formatHours = (hours: number) => formatDuration(hours * 60 * 60 * 1000);
+                this.log.info(`Worked more this week (${age}):`);
+                this.log.info(`    Worked ${formatHours(item.data.current)} this week`);
+                this.log.info(`    Worked ${formatHours(item.data.previous)} previous week`);
+                this.log.info(`    ${Math.round(item.data.relativeDifference * 100)}% increase`);
+                break;
+            }
             case 'OsirisMonthlyJobDoneGlobalComparison': {
                 this.log.info('Comparison with robot vacuums around the world:');
                 const rows = columns([
@@ -190,7 +199,9 @@ export class AEGRobotLog {
                     this.log.info(`    Recharged ${cleaningSession.pitstopCount} times while cleaning`);
                     this.log.info(`    Charged for ${formatDuration(cleaningSession.pitstopDuration * TICK_MS)}`);
                 }
-                if (cleaningSession.completion) this.log.info(`    ${completionNames[cleaningSession.completion]}`);
+                if (cleaningSession.completion) {
+                    this.log.info(`    ${completionNames[cleaningSession.completion]}`);
+                }
             }
         });
     }

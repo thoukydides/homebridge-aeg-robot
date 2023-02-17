@@ -59,7 +59,8 @@ export type Completion = 'abortedByUser'
                        | 'cleaningFinishedSuccessful'
                        | 'cleaningFinishedSuccessfulInCharger'
                        | 'cleaningFinishedSuccessfulInStartPose'
-                       | 'endedNotFindingCharger';
+                       | 'endedNotFindingCharger'
+                       | 'error';
 
 // Capabilities supported by an appliance
 export type Capability = 'CustomPlay' | 'InteractiveMap' | 'InteractiveMaps'
@@ -383,7 +384,7 @@ export interface Zone {
     type:                       CleanedZoneType;
     vertices:                   [Vertex, Vertex, Vertex, Vertex];
 }
-export interface CleanedAreaSession {
+export interface CleanedAreaSessionBase {
     id:                         string;     // e.g. 'si_17'
     sessionId:                  number;     // e.g. 17
     action:                     'update';
@@ -402,6 +403,12 @@ export interface CleanedAreaSession {
     zoneStatus?:                ZoneStatus[];
     zones?:                     Zone[];
 }
+export interface CleanedAreaSessionError extends CleanedAreaSessionBase {
+    completion:                 'error';
+    robotUserError:             number;     // e.g. 15
+    robotInternalError:         number;     // e.g. 10005
+}
+export type CleanedAreaSession = CleanedAreaSessionBase | CleanedAreaSessionError;
 export interface CleanedArea {
     id:                         string;     // e.g. '2517304033553327441-OWlIdQ=='
     sessionId:                  number;     // e.g. 12
@@ -482,6 +489,15 @@ export interface FeedItemLastWeekCleanedArea extends FeedItemBase {
         cleaningDurationTicks:  number;     // e.g. 99920000000 (0.1µs ticks?)
     };
 }
+export interface FeedItemBusierWeekJobDone extends FeedItemBase {
+    feedDataType:               'OsirisBusierWeekJobDone';
+    data: {
+        pncId:                  string;     // e.g. '900277479937001234567890'
+        relativeDifference:     number;     // e.g. 2.4116516 (current/previous-1)
+        previous:               number;     // e.g. 0.4338888888888889 (hours)
+        current:                number;     // e.g. 1.4802777777777778 (hours)
+    };
+}
 export interface FeedItemMonthlyJobDoneGlobalComparison extends FeedItemBase {
     feedDataType:               'OsirisMonthlyJobDoneGlobalComparison';
     data: {
@@ -513,7 +529,8 @@ export interface FeedItemMaintenance extends FeedItemBase {
         webShopDescription:     string;     // e.g. 'Confirm new password'
     };
 }
-export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemMonthlyJobDoneGlobalComparison | FeedItemMaintenance;
+export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemBusierWeekJobDone
+                     | FeedItemMonthlyJobDoneGlobalComparison | FeedItemMaintenance;
 export interface Feed {
     feedItemResponseDetailDTOs: FeedItem[];
 }
