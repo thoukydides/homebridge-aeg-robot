@@ -3,7 +3,7 @@
 
 import { Logger, LogLevel } from 'homebridge';
 
-import { IncomingHttpHeaders, STATUS_CODES } from 'http';
+import { STATUS_CODES } from 'http';
 import { Client, Dispatcher } from 'undici';
 import { Checker, IErrorDetail } from 'ts-interface-checker';
 
@@ -13,6 +13,7 @@ import { AEGAPIError, AEGAPIStatusCodeError,
          AEGAPIValidationError } from './aegapi-error';
 import { columns, getValidationTree, sleep } from './utils';
 import { Config } from './config-types';
+import { IncomingHttpHeaders } from 'undici/types/header';
 
 export type Binary     = Dispatcher.ResponseData['body'];
 export type Response   = Dispatcher.ResponseData;
@@ -118,9 +119,11 @@ export class AEGUserAgent {
         // https://github.com/nodejs/undici/blob/main/docs/api/Dispatcher.md#dispatcherrequestoptions-callback
         if (response.statusCode === 204)
             throw new AEGAPIError(request, response, 'Unexpected empty response (status code 204 No Content)');
-        const contentType = response.headers['content-type'] || 'header missing';
-        if (!contentType.startsWith('application/json'))
+        const contentType = response.headers['content-type'];
+        if (typeof contentType !== 'string'
+            || !contentType.startsWith('application/json')) {
             throw new AEGAPIError(request, response, `Unexpected response content-type (${contentType})`);
+        }
 
         // Retrieve and parse the response as JSON
         let json;
@@ -230,7 +233,7 @@ export class AEGUserAgent {
         try {
 
             // Attempt to issue the request
-            let response;
+            let response: Response;
             try {
                 this.log.debug(`${logPrefix} ${request.method} ${request.path}`);
                 this.logHeaders(`${logPrefix} Request`, request.headers);
