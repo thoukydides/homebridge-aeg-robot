@@ -9,6 +9,7 @@
 [![npm](https://badgen.net/npm/dt/homebridge-aeg-robot)](https://www.npmjs.com/package/homebridge-aeg-robot)
 [![npm](https://badgen.net/npm/dw/homebridge-aeg-robot)](https://www.npmjs.com/package/homebridge-aeg-robot)
 [![Build and Lint](https://github.com/thoukydides/homebridge-aeg-robot/actions/workflows/build.yml/badge.svg)](https://github.com/thoukydides/homebridge-aeg-robot/actions/workflows/build.yml)
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 
 AEG RX 9 / Electrolux Pure i9 robot vacuum plugin for [Homebridge](https://github.com/homebridge/homebridge).
 
