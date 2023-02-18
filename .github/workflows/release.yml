@@ -4,6 +4,10 @@ on:
   push:
     tags: ['v*.*.*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag'
+        required: true
 
 jobs:
   release:
@@ -16,6 +20,7 @@ jobs:
         with:
           begin-pattern: '/^## \\[v${RELEASE_VERSION}\\]/'
           link-pattern: '^\\[v${RELEASE_VERSION}\\]:'
+          version: "${{ github.event.inputs.version }}"
 
       - name: Create Release using GitHub CLI
         env:
