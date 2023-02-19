@@ -62,6 +62,7 @@
         "watch": "npm run build && nodemon",
         "checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts",
         "build": "rimraf ./dist && npm run checkers && tsc",
+        "postversion": "git push && git push --tags",
         "prepublishOnly": "npm run lint && npm run build"
     },
     "optionalDependencies": {
