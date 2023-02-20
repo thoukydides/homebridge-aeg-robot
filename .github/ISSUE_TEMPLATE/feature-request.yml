@@ -1,0 +1,26 @@
+name: 🚧 Feature request
+description: Suggest a new feature or other enhancement.
+labels: ["enhancement"]
+body:
+- type: textarea
+  id: description
+  attributes:
+    label: Description of Enhancement
+    description: "Please provide a clear and concise description of your proposed improvement."
+  validations:
+    required: true
+- type: textarea
+  id: hapmap
+  attributes:
+    label: HomeKit Mapping
+    description: "Please suggest how the requested functionality can be supported using the Apple-defined services and characteristics listed in the [HomeKit Accessory Protocol Specification (Non-Commercial Version)](https://developer.apple.com/apple-home/)."
+  validations:
+    required: false   
+- type: input
+  id: appliance
+  attributes:
+    label: AEG/Electrolux Appliance(s)
+    description: "If this issue relates to a specific appliance then please provide the manufacturer, model, and product number (PNC). These details can be found on the ratings label underneath the robot."
+    placeholder: "e.g. AEG RX9-2-4ANM 900 277 479"
+  validations:
+    required: false
