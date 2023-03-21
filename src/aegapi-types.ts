@@ -233,6 +233,7 @@ export interface ReportedProperties extends SettableProperties {
 export interface ApplianceProperties {
     desired:                    SettableProperties;
     reported:                   ReportedProperties;
+    metadata?:                  null;
 }
 export interface Appliance {
     applianceId:                string;     // e.g. '900277479937001234567890'
