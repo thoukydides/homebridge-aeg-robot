@@ -3,10 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [v0.2.4] - 2023-04-20
 ### Fixed
 * Accept a reported cleaned area zone status of `terminated`.
 ### Added
 * Added Node 20 to supported engines.
+### Changed
+* Updated dependencies to latest versions.
 
 ## [v0.2.3] - 2023-03-21
 ### Fixed
@@ -36,7 +40,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.4...HEAD
+[v0.2.4]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.3...v0.2.4
 [v0.2.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.2...v0.2.3
 [v0.2.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.1...v0.2.2
 [v0.2.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.0...v0.2.1
