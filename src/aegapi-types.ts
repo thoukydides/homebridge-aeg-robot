@@ -62,6 +62,9 @@ export type Completion = 'abortedByUser'
                        | 'endedNotFindingCharger'
                        | 'error';
 
+// Zone status
+export type ZoneStatusStatus = 'finished' | 'terminated';
+
 // Capabilities supported by an appliance
 export type Capability = 'CustomPlay' | 'InteractiveMap' | 'InteractiveMaps'
                          | 'FreezeMapOnDemand' | 'PowerLevels' | 'PowerZones'
@@ -377,7 +380,7 @@ export interface Lifetime {
 // GET /purei/api/v2/appliances/${applianceId}/history?
 export interface ZoneStatus {
     id:                         string;     // e.g. '8dc4b1f2-74cc-46a9-a68e-a0ddcb937cbf'
-    status:                     'finished';
+    status:                     ZoneStatusStatus;
     powerMode:                  PowerMode;
 }
 export interface Zone {

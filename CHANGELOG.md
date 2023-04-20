@@ -3,7 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-### Changed
+### Fixed
+* Accept a reported cleaned area zone status of `terminated`.
+### Added
 * Added Node 20 to supported engines.
 
 ## [v0.2.3] - 2023-03-21
