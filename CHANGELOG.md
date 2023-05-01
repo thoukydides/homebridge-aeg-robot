@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+###
+* Dropped Node 14 compatibility.
 
 ## [v0.2.4] - 2023-04-20
 ### Fixed
