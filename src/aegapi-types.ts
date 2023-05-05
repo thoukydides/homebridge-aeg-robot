@@ -1,6 +1,8 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
+import { PutCommandZone } from './ti/aegapi-types-ti';
+
 // Task schedule
 export type WeekdaysUC = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday'
                        | 'Friday' | 'Saturday' | 'Sunday';
@@ -63,7 +65,7 @@ export type Completion = 'abortedByUser'
                        | 'error';
 
 // Zone status
-export type ZoneStatusStatus = 'finished' | 'terminated';
+export type ZoneStatusStatus = 'finished' | 'terminated' | 'aborted';
 
 // Capabilities supported by an appliance
 export type Capability = 'CustomPlay' | 'InteractiveMap' | 'InteractiveMaps'
@@ -125,12 +127,22 @@ export enum AreaUnit {
     SquareMeter                 = 'SquareMeter',
     SquareFeet                  = 'SquareFeet'
 }
+export enum WeightUnit {
+    KiloGram                    = 'KiloGram',
+    Pound                       = 'Pound'
+}
+export enum VolumeUnit {
+    CentiLiter                  = 'CentiLiter',
+    FluidOunce                  = 'FluidOunce'
+}
 
 // GET /one-account-user/api/v1/users/current
 export interface MeasurementUnits {
     distanceMeasurementUnit:    DistanceUnit;
     tempMeasurementUnit:        TemperatureUnit;
     surfaceMeasurementUnit:     AreaUnit;
+    weightMeasurementUnit?:     WeightUnit;
+    volumeMeasurementUnit?:     VolumeUnit;
 }
 export interface User {
     firstName:                  string;

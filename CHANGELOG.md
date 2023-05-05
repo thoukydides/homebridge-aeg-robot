@@ -3,8 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-###
+
+## [v0.2.5] - 2023-05-05
+### Fixed
+* Accept a reported cleaned area zone status of `aborted`.
+* Accept weight and volume measurement units.
+### Changed
 * Dropped Node 14 compatibility.
+* Updated dependencies to latest versions.
 
 ## [v0.2.4] - 2023-04-20
 ### Fixed
@@ -42,7 +48,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.4...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.5...HEAD
+[v0.2.5]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.4...v0.2.5
 [v0.2.4]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.3...v0.2.4
 [v0.2.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.2...v0.2.3
 [v0.2.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.1...v0.2.2
