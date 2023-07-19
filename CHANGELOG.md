@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.6] - 2023-07-19
+### Fixed
+* Accept phone numbers in user information. ([#13])
+* Accept product area (`WELLBEING`) in appliance information. ([#13])
+
 ## [v0.2.5] - 2023-05-05
 ### Fixed
 * Accept a reported cleaned area zone status of `aborted`.
@@ -48,7 +53,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.5...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.6...HEAD
+[v0.2.6]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.5...v0.2.6
 [v0.2.5]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.4...v0.2.5
 [v0.2.4]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.3...v0.2.4
 [v0.2.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.2...v0.2.3
