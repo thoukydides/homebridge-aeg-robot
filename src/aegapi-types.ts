@@ -114,6 +114,12 @@ export enum CleaningCommand {
     Stop                        = 'stop'    // Stop any Clean/Spot/Return and Sleep
 }
 
+// Types of phone number
+export enum PhoneType {
+    Phone                       = 'Phone',
+    Mobile                      = 'Mobile'
+}
+
 // Measurement units
 export enum DistanceUnit {
     KM                          = 'KiloMeter',
@@ -137,6 +143,10 @@ export enum VolumeUnit {
 }
 
 // GET /one-account-user/api/v1/users/current
+export interface PhoneNumber {
+    type:                       PhoneType;
+    number:                     string | null;
+}
 export interface MeasurementUnits {
     distanceMeasurementUnit:    DistanceUnit;
     tempMeasurementUnit:        TemperatureUnit;
@@ -147,6 +157,7 @@ export interface MeasurementUnits {
 export interface User {
     firstName:                  string;
     lastName:                   string;
+    phoneNumbers?:              PhoneNumber[];
     countryCode:                string;     // e.g. 'GB'
     locale:                     string;     // e.g. 'en'
     measurementUnits:           MeasurementUnits | null;
@@ -266,6 +277,7 @@ export interface ApplianceInfo {
     pnc:                        string;     // e.g. '900277479'
     brand:                      string;     // e.g. 'AEG'
     market:                     string;     // e.g. 'EUROPE'
+    productArea?:               string;     // e.g. `WELLBEING`
     deviceType:                 string;     // e.g. 'ROBOTIC_VACUUM_CLEANER'
     project:                    string;     // e.g. 'CYCLOPS'
     model:                      string;     // e.g. 'rx92'
