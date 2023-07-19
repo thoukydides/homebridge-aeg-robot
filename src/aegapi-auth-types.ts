@@ -44,6 +44,8 @@ export interface AuthUser {
     idToken:                    string;
     countryCode:                string;     // e.g. 'GB'
     dataCenter:                 string;     // e.g. 'EU'
+    httpRegionalBaseUrl?:       string;
+    webSocketRegionalBaseUrl?:  string;
 }
 
 // Storage format for a token (with an absolute expiry time)
