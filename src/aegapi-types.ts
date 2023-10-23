@@ -456,6 +456,8 @@ export interface DomainAppliance extends ApplianceDataWithPNC {
 }
 export interface DomainUser {
     email:                      string;     // e.g. 'rx@gmail.com'
+    userId?:                    string;     // e.g. '123456789abcdef0123456789abcdef0'
+    name?:                      string | null;
 }
 export interface Domains {
     id:                         number;     // e.g. 815573
