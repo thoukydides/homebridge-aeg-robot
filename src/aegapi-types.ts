@@ -154,10 +154,19 @@ export interface MeasurementUnits {
     weightMeasurementUnit?:     WeightUnit;
     volumeMeasurementUnit?:     VolumeUnit;
 }
+export interface Address {
+    zipCode:                    string;     // e.g. 'SE1 8NW'
+    state:                      string;
+    city:                       string;     // e.g. 'London'
+    street:                     string;     // e.g. '240 Blackfriars Road'
+    apartmentNumber:            string;
+    contactCareOf:              string;
+}
 export interface User {
     firstName:                  string;
     lastName:                   string;
     phoneNumbers?:              PhoneNumber[];
+    address?:                   Address;
     countryCode:                string;     // e.g. 'GB'
     locale:                     string;     // e.g. 'en'
     measurementUnits:           MeasurementUnits | null;
