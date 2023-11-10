@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.3.0] - 2023-11-10
+### Fixed
+* Accept address in user information.
+### Changed
+* Dropped Node 14 compatibility.
+* Updated dependencies.
+
 ## [v0.2.9] - 2023-10-23
 ### Fixed
 * Accept user ID and name in domain user information.
@@ -69,7 +76,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.9...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.0...HEAD
+[v0.3.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.9...v0.3.0
 [v0.2.9]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.8...v0.2.9
 [v0.2.8]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.7...v0.2.8
 [v0.2.7]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.6...v0.2.7
