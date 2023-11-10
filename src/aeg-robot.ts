@@ -14,6 +14,7 @@ import { AEGRobotLog } from './aeg-robot-log';
 import { AEGRobotCtrlActivity, AEGRobotCtrlName,
          AEGRobotCtrlPower } from './aeg-robot-ctrl';
 import { Heartbeat } from './heartbeat';
+import { Config } from './config-types';
 
 // Simplified robot activities
 export enum SimpleActivity {
@@ -75,7 +76,7 @@ const MAX_CLEANED_AREAS = 5;
 export class AEGRobot extends EventEmitter {
 
     // Configuration
-    readonly config = this.account.config;
+    readonly config: Config;
 
     // A custom logger
     readonly log: Logger;
@@ -121,6 +122,7 @@ export class AEGRobot extends EventEmitter {
         super.on('error', err => logError(this.log, 'Event', err));
 
         // Construct a Logger and API for this robot
+        this.config = account.config;
         this.log = new PrefixLogger(log, appliance.applianceData.applianceName);
         this.api = account.api.applianceAPI(appliance.applianceId);
 

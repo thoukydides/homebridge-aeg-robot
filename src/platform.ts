@@ -32,7 +32,7 @@ interface AccessoryLinkage {
 
 // A Homebridge AEG RX 9 / Electrolux Pure i9 platform
 export class AEGPlatform implements DynamicPlatformPlugin {
-    readonly makeUUID = this.hb.hap.uuid.generate;
+    readonly makeUUID;
 
     // Custom logger
     readonly log: PrefixLogger;
@@ -49,6 +49,8 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         readonly platformConfig: PlatformConfig,
         readonly hb:             API
     ) {
+        this.makeUUID = hb.hap.uuid.generate;
+
         // Use a custom logger to filter-out sensitive information
         this.log = new PrefixLogger(log);
 

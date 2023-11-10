@@ -1,9 +1,13 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
+import { Logger } from 'homebridge';
+
 import { AEGRobot, SimpleActivity } from './aeg-robot';
+import { AEGApplianceAPI } from './aegapi-appliance';
 import { Activity, Appliance, CleaningCommand, PowerMode } from './aegapi-types';
 import { logError, sleep } from './utils';
+import { Config } from './config-types';
 
 // Timezone to use when changing name if unable to determine
 const DEFAULT_TIMEZONE = 'London/Europe';
@@ -16,13 +20,13 @@ const TIMEOUT_POLL_MULTIPLE = 3;
 abstract class AEGRobotCtrl<Type extends number | string> {
 
     // Plugin configuration
-    readonly config = this.robot.account.config;
+    readonly config: Config;
 
     // Logger
-    readonly log = this.robot.log;
+    readonly log: Logger;
 
     // AEG appliance API
-    readonly api = this.robot.api;
+    readonly api: AEGApplianceAPI;
 
     // The target value
     private target?: Type;
@@ -31,15 +35,19 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     private abort?: () => void;
 
     // Timeout waiting for status to reflect a requested change
-    private readonly timeout =
-        Math.max(TIMEOUT_MIN_MS, this.config.pollIntervals.statusSeconds
-                                 * 1000 * TIMEOUT_POLL_MULTIPLE);
+    private readonly timeout: number;
 
     // Optional mapping of enum target values to text
     readonly toText?: Record<Type, string>;
 
     // Create a new robot controller
     constructor(readonly robot: AEGRobot, readonly name: string) {
+        this.config = robot.account.config;
+        this.log = robot.log;
+        this.api = robot.api;
+        this.timeout = Math.max(TIMEOUT_MIN_MS,
+                                this.config.pollIntervals.statusSeconds
+                                * 1000 * TIMEOUT_POLL_MULTIPLE);
         robot.on('preUpdate', () => {
             if (this.target !== undefined) this.overrideStatus(this.target);
         });

@@ -1,7 +1,8 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
-import { LogLevel } from 'homebridge';
+import { Logger, LogLevel } from 'homebridge';
+
 import { AEGRobot } from './aeg-robot';
 import { Activity, Battery, Capability, CleanedArea, Completion, Dustbin,
          FeedItem, Message, PowerMode } from './aegapi-types';
@@ -67,13 +68,14 @@ const TICK_MS = 1e-4;
 export class AEGRobotLog {
 
     // Logger
-    readonly log = this.robot.log;
+    readonly log: Logger;
 
     // Reported error messages
     private readonly loggedHealthErrors = new Set<string>();
 
     // Construct a robot logger
     constructor(readonly robot: AEGRobot) {
+        this.log = robot.log;
         this.logOnce();
         this.logStatus();
         this.logMessages();

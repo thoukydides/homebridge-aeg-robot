@@ -21,13 +21,13 @@ type ServiceConstructor = typeof Service & {
 
 // A Homebridge platform accessory handler
 export class AEGAccessory {
-    readonly Service        = this.platform.hb.hap.Service;
-    readonly Characteristic = this.platform.hb.hap.Characteristic;
-    readonly HapStatusError = this.platform.hb.hap.HapStatusError;
-    log: Logger             = this.platform.log;
+    readonly Service;
+    readonly Characteristic;
+    readonly HapStatusError;
+    log: Logger;
 
     // Services restored from cache but not longer required
-    private readonly obsoleteServices = [...this.accessory.services];
+    private readonly obsoleteServices;
 
     // The primary service
     private primaryService?: Service;
@@ -40,7 +40,13 @@ export class AEGAccessory {
         readonly platform:  AEGPlatform,
         readonly accessory: PlatformAccessory,
         readonly name:      string
-    ) {}
+    ) {
+        this.Service          = platform.hb.hap.Service;
+        this.Characteristic   = platform.hb.hap.Characteristic;
+        this.HapStatusError   = platform.hb.hap.HapStatusError;
+        this.log              = platform.log;
+        this.obsoleteServices = [...this.accessory.services];
+    }
 
     // Get or add a service
     makeService(serviceConstructor: ServiceConstructor, displayName = '', subtype?: string): Service {
