@@ -568,8 +568,17 @@ export interface FeedItemMaintenance extends FeedItemBase {
         webShopDescription:     string;     // e.g. 'Confirm new password'
     };
 }
+export interface FeedItemSurvey extends FeedItemBase {
+    feedDataType:               'InAppSurveyEnabled';
+    id:                         string;     // e.g. 'InAppSurveyEnabled'
+    createdAtUTC:               string;     // e.g. '2023-11-15T14:53:30.984Z'
+    data: {
+        [index: string]:        never;
+    };
+}
 export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemBusierWeekJobDone
-                     | FeedItemMonthlyJobDoneGlobalComparison | FeedItemMaintenance;
+                     | FeedItemMonthlyJobDoneGlobalComparison | FeedItemMaintenance
+                     | FeedItemSurvey;
 export interface Feed {
     feedItemResponseDetailDTOs: FeedItem[];
 }
