@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.3.1] - 2023-11-16
+### Fixed
+* Accept an in-app survey trigger in the feed.
+### Changed
+* Updated dependencies.
+
 ## [v0.3.0] - 2023-11-10
 ### Fixed
 * Accept address in user information.
