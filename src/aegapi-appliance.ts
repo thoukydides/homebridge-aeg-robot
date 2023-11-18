@@ -4,10 +4,11 @@
 import { createCheckers } from 'ts-interface-checker';
 
 import { AEGAuthoriseUserAgent } from './aegapi-ua-auth';
-import { ApplianceInfo, ApplianceNamePatch, AppliancePut, Capabilities,
-         CleanedAreas, CleaningCommand, DeleteTask, InteractiveMaps, Lifetime,
+import { Appliance, ApplianceInfo, ApplianceNamePatch, AppliancePut,
+         Capabilities, CleanedAreas, CleanedAreaSessionMap, CleaningCommand,
+         DeleteTask, InteractiveMaps, InteractiveMapData, Lifetime,
          PowerMode, PutCommand, PutCommandZone, PutTask, PostNewTask, NewTask,
-         Task, Tasks, PatchApplianceName, PutAppliance, Appliance } from './aegapi-types';
+         Task, Tasks, PatchApplianceName, PutAppliance } from './aegapi-types';
 import aegapiTI from './ti/aegapi-types-ti';
 
 // Checkers for API responses
@@ -108,17 +109,19 @@ export class AEGApplianceAPI {
         return this.ua.getJSON(checkers.CleanedAreas, path);
     }
 
-    getApplianceSessionMap(sessionId: number) {
+    getApplianceSessionMap(sessionId: number): Promise<CleanedAreaSessionMap> {
         const path = `/purei/api/v2/appliances/${this.applianceId}/cleaning-sessions/${sessionId}/maps`;
         const query = { mapFormat: 'rawgzip' };
-        return this.ua.getBinary(path, { query });
+        const headers = { Accept: '*/*' };
+        return this.ua.getJSON(checkers.CleanedAreaSessionMap, path, { query, headers });
     }
 
-    getApplianceInteractiveMap(persistentMapId: string, sequenceNumber: number) {
+    async getApplianceInteractiveMap(persistentMapId: string, sequenceNumber: number): Promise<InteractiveMapData> {
         const path = `/purei/api/v2/appliances/${this.applianceId}/interactive-maps/`
                      + `${persistentMapId}/sequences/${sequenceNumber}/maps`;
         const query = { mapFormat: 'rawgzip' };
-        return this.ua.getBinary(path, { query });
+        const headers = { Accept: '*/*' };
+        return this.ua.getJSON(checkers.InteractiveMapData, path, { query, headers });
     }
 
     getApplianceCapabilities(): Promise<Capabilities> {

@@ -402,6 +402,35 @@ export interface InteractiveMap {
 }
 export type InteractiveMaps = InteractiveMap[];
 
+// GET /purei/api/v2/appliances/${applianceId}/interactive-maps/${persistentMapId}/sequences/${sequenceNumber}/maps
+export interface MapPoint {
+    t:                          number;     // e.g. 1000
+    xy:                         [number, number]; // e.g. [-0.24129055, 0.31136945]
+}
+export interface MapPointAngle {
+    t?:                         number;     // e.g. 1000
+    xya:                        [number, number, number];
+                                // e.g. [0.05495656, -0.03892141, -0.029699445]
+}
+export interface MapTransform {
+    t:                          number;     // e.g. 1000
+    xya:                        [number, number, number];
+                                // e.g. [0.05495656, -0.03892141, -0.029699445]
+}
+export interface InteractiveMapData {
+	uuid:                       string;     // e.g. '8f413222-546d-4c89-acbc-a47323236a4d'
+	mapState:                   number;     // e.g. 0
+	sequenceNo:                 number;     // e.g. 21
+	sessionId:                  number;     // e.g. 245
+	timestamp: {
+		isReliable:             boolean;
+		time:                   string;     // e.g. '2023-11-08T10:54:33+0000'
+	};
+    chargerPose:                MapPointAngle;
+    crumbs:                     MapPoint[];
+	transforms:                 MapTransform[];
+}
+
 // GET /purei/api/v2/appliances/${applianceId}/lifetime
 export interface Lifetime {
     cleaningDuration:           number;     // e.g. 9750000000 (0.1µs ticks?)
@@ -455,6 +484,37 @@ export interface CleanedArea {
     cleaningSession?:           CleanedAreaSession;
 }
 export type CleanedAreas = CleanedArea[];
+
+// GET /purei/api/v2/appliances/${applianceId}/cleaning-sessions/${sessionId}/maps
+export interface CleanedAreaSessionZone {
+    uuid:                       string;     // e.g. '172b79d6-96ce-469f-89c0-5bb9ed696810'
+    type:                       number;     // e.g. 0
+    vertices:                   MapPoint[];
+}
+export interface CleanedAreaSessionMapMatch {
+    uuid:                       string;     // e.g. 8f413222-546d-4c89-acbc-a47323236a4d
+    sequenceNo:                 number;     // e.g. 21,
+    zones:                      CleanedAreaSessionZone[];
+
+}
+export interface CleanedAreaSessionZoneStatus {
+    uuid:                       string;     // e.g. '172b79d6-96ce-469f-89c0-5bb9ed696810'
+    powerMode:                  PowerMode;
+    status:                     number;     // e.g. 4
+}
+export interface CleanedAreaSessionMap {
+    sessionId:                  number;     // e.g. 255
+    timestamp:                  string;     // e.g. '2023-11-18T10:14:09'
+    cleaningComplete:           number;     // e.g. 1
+    crumbs:                     MapPoint[];
+    crumbCollectionDelta:       boolean;
+    chargerPoses:               MapPointAngle[];
+    robotPose:                  MapPointAngle;
+    robotPoseReliable:          boolean;
+    transforms:                 MapTransform[];
+    mapMatch:                   CleanedAreaSessionMapMatch;
+    zoneStatus:                 CleanedAreaSessionZoneStatus[];
+}
 
 // GET /domain/api/v2/domains
 export interface DomainAppliance extends ApplianceDataWithPNC {

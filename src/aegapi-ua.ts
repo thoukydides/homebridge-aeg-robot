@@ -5,6 +5,8 @@ import { Logger, LogLevel } from 'homebridge';
 
 import { STATUS_CODES } from 'http';
 import { Client, Dispatcher } from 'undici';
+import { buffer } from 'stream/consumers';
+import { gunzipSync } from 'zlib';
 import { Checker, IErrorDetail } from 'ts-interface-checker';
 
 import { AEG_API_KEY, AEG_API_URL,
@@ -115,20 +117,30 @@ export class AEGUserAgent {
     async requestJSON<Type>(checker: Checker, ...params: RequestParams): Promise<Type> {
         const { request, response } = await this.request(...params, { Accept: 'application/json' });
 
-        // Check that a JSON response was returned
-        // https://github.com/nodejs/undici/blob/main/docs/api/Dispatcher.md#dispatcherrequestoptions-callback
+        // Check that the response was not empty
         if (response.statusCode === 204)
             throw new AEGAPIError(request, response, 'Unexpected empty response (status code 204 No Content)');
+
+        // Retrieve the response as JSON text
+        let text;
         const contentType = response.headers['content-type'];
-        if (typeof contentType !== 'string'
-            || !contentType.startsWith('application/json')) {
+        if (typeof contentType === 'string'
+            && contentType.startsWith('application/json')) {
+            text = await response.body.text();
+        } else if (contentType === 'application/octet-stream') {
+            try {
+                const gzipped = await buffer(response.body);
+                text = gunzipSync(gzipped).toString();
+            } catch (cause) {
+                throw new AEGAPIError(request, response, `Failed to gunzip binary response (${cause})`, { cause });
+            }
+        } else {
             throw new AEGAPIError(request, response, `Unexpected response content-type (${contentType})`);
         }
 
-        // Retrieve and parse the response as JSON
+        // Parse the response as JSON
         let json;
         try {
-            const text = await response.body.text();
             this.logBody('Response', text);
             json = JSON.parse(text);
         } catch (cause) {
@@ -151,13 +163,6 @@ export class AEGUserAgent {
 
         // Return the result
         return json;
-    }
-
-    // Requests that expect a binary response
-    getBinary(path: string, options?: UAOptions): Promise<Binary> { return this.requestBinary('GET', path, options, undefined); }
-    async requestBinary(...params: RequestParams): Promise<Binary> {
-        const { response } = await this.request(...params, { Accept: '*/*' });
-        return response.body;
     }
 
     // Construct and issue a request, retrying if appropriate
