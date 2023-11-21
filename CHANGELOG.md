@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.0] - 2023-11-21
+### Added
+* The map for the most recent cleaning session is written to the log.
+### Changed
+* Updated dependencies to latest versions.
+
 ## [v0.3.1] - 2023-11-16
 ### Fixed
 * Accept an in-app survey trigger in the feed.
@@ -82,7 +88,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.0...HEAD
+[v0.4.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.0...v0.4.0
 [v0.3.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.9...v0.3.0
 [v0.2.9]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.8...v0.2.9
 [v0.2.8]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.7...v0.2.8
