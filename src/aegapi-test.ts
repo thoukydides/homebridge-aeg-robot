@@ -120,7 +120,8 @@ export class AEGAPITest {
         }
         if (interactiveMaps?.length) {
             const { id, sequenceNumber } = interactiveMaps[0];
-            await test(applianceAPI.getApplianceInteractiveMap, id, sequenceNumber);
+            await test(applianceAPI.getApplianceInteractiveMap, id);
+            await test(applianceAPI.getApplianceInteractiveMapData, id, sequenceNumber);
         } else {
             this.log.warn('No interactive map found for API test');
         }

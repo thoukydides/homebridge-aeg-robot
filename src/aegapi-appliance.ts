@@ -8,7 +8,7 @@ import { Appliance, ApplianceInfo, ApplianceNamePatch, AppliancePut,
          Capabilities, CleanedAreas, CleanedAreaSessionMap, CleaningCommand,
          DeleteTask, InteractiveMaps, InteractiveMapData, Lifetime,
          PowerMode, PutCommand, PutCommandZone, PutTask, PostNewTask, NewTask,
-         Task, Tasks, PatchApplianceName, PutAppliance } from './aegapi-types';
+         Task, Tasks, PatchApplianceName, PutAppliance, InteractiveMap } from './aegapi-types';
 import aegapiTI from './ti/aegapi-types-ti';
 
 // Checkers for API responses
@@ -94,6 +94,11 @@ export class AEGApplianceAPI {
         return this.ua.getJSON(checkers.InteractiveMaps, path);
     }
 
+    getApplianceInteractiveMap(persistentMapId: string): Promise<InteractiveMap> {
+        const path = `/purei/api/v2/appliances/${this.applianceId}/interactive-maps/${persistentMapId}`;
+        return this.ua.getJSON(checkers.InteractiveMap, path);
+    }
+
     getApplianceLifetime(): Promise<Lifetime> {
         const path = `/purei/api/v2/appliances/${this.applianceId}/lifetime`;
         return this.ua.getJSON(checkers.Lifetime, path);
@@ -116,7 +121,7 @@ export class AEGApplianceAPI {
         return this.ua.getJSON(checkers.CleanedAreaSessionMap, path, { query, headers });
     }
 
-    async getApplianceInteractiveMap(persistentMapId: string, sequenceNumber: number): Promise<InteractiveMapData> {
+    async getApplianceInteractiveMapData(persistentMapId: string, sequenceNumber: number): Promise<InteractiveMapData> {
         const path = `/purei/api/v2/appliances/${this.applianceId}/interactive-maps/`
                      + `${persistentMapId}/sequences/${sequenceNumber}/maps`;
         const query = { mapFormat: 'rawgzip' };

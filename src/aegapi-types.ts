@@ -376,6 +376,7 @@ export interface PutCommandZones {
 export type PutCommand = PutCommandSimple | PutCommandZones;
 
 // GET /purei/api/v2/appliances/${applianceId}/interactive-maps
+// GET /purei/api/v2/appliances/${applianceId}/interactive-maps/${persistentMapId}
 export interface Vertex {
     x:                          number;     // e.g. 3.8988085
     y:                          number;     // e.g. -2.4282222
@@ -489,13 +490,12 @@ export type CleanedAreas = CleanedArea[];
 export interface CleanedAreaSessionZone {
     uuid:                       string;     // e.g. '172b79d6-96ce-469f-89c0-5bb9ed696810'
     type:                       number;     // e.g. 0
-    vertices:                   MapPoint[];
+    vertices:                   [MapPoint, MapPoint, MapPoint, MapPoint];
 }
 export interface CleanedAreaSessionMapMatch {
-    uuid:                       string;     // e.g. 8f413222-546d-4c89-acbc-a47323236a4d
+    uuid:                       string;     // e.g. '8f413222-546d-4c89-acbc-a47323236a4d'
     sequenceNo:                 number;     // e.g. 21,
     zones:                      CleanedAreaSessionZone[];
-
 }
 export interface CleanedAreaSessionZoneStatus {
     uuid:                       string;     // e.g. '172b79d6-96ce-469f-89c0-5bb9ed696810'
