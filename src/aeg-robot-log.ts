@@ -3,10 +3,11 @@
 
 import { Logger, LogLevel } from 'homebridge';
 
-import { AEGRobot } from './aeg-robot';
-import { Activity, Battery, Capability, CleanedArea, Completion, Dustbin,
+import { AEGRobot, CleanedAreaWithMap } from './aeg-robot';
+import { Activity, Battery, Capability, Completion, Dustbin,
          FeedItem, Message, PowerMode } from './aegapi-types';
 import { columns, formatDuration } from './utils';
+import { AEGRobotMap } from './aeg-map';
 
 // Descriptions of the robot activity
 const activityNames: Record<Activity, string | null> = {
@@ -188,7 +189,7 @@ export class AEGRobotLog {
 
     // Log cleaned areas
     logCleanedAreas(): void {
-        this.robot.on('cleanedArea', (cleanedArea: CleanedArea) => {
+        this.robot.on('cleanedArea', (cleanedArea: CleanedAreaWithMap) => {
             const { cleaningSession } = cleanedArea;
             const date = new Date(cleaningSession?.startTime ?? cleanedArea.timeStamp);
             this.log.info(`Cleaned area ${date.toLocaleDateString()}:`);
@@ -204,6 +205,11 @@ export class AEGRobotLog {
                 if (cleaningSession.completion) {
                     this.log.info(`    ${completionNames[cleaningSession.completion]}`);
                 }
+            }
+            const {map, interactive, interactiveMap} = cleanedArea;
+            if (map) {
+                const mapText = new AEGRobotMap(map, interactive, interactiveMap).renderText();
+                mapText.forEach(line => this.log.info(`    ${line}`));
             }
         });
     }

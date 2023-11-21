@@ -6,8 +6,10 @@ import { EventEmitter } from 'events';
 
 import { AEGAccount } from './aeg-account';
 import { AEGApplianceAPI } from './aegapi-appliance';
-import { Activity, Appliance, ApplianceNamePatch, Battery, Capability, CleanedArea, CleaningCommand,
-         Connection, DomainAppliance, Dustbin, FeedItem, Message, PowerMode, Status } from './aegapi-types';
+import { Activity, Appliance, ApplianceNamePatch, Battery, Capability,
+         CleanedArea, CleanedAreaSessionMap, CleaningCommand, Connection,
+         DomainAppliance, Dustbin, FeedItem, InteractiveMap, InteractiveMapData,
+         Message, PowerMode, Status } from './aegapi-types';
 import { PrefixLogger } from './logger';
 import { logError } from './utils';
 import { AEGRobotLog } from './aeg-robot-log';
@@ -56,11 +58,18 @@ export interface DynamicStatus {
 }
 export type StatusEvent = keyof DynamicStatus;
 
+// Optional map data to accompany cleaned area information
+export interface CleanedAreaWithMap extends CleanedArea {
+    map?:               CleanedAreaSessionMap;
+    interactive?:       InteractiveMap;
+    interactiveMap?:    InteractiveMapData;
+}
+
 // Other event types
 interface DataEventType {
     message:        Message;
     feed:           FeedItem;
-    cleanedArea:    CleanedArea;
+    cleanedArea:    CleanedAreaWithMap;
 }
 type DataEvent = keyof DataEventType;
 type VoidEvent = 'info' | 'appliance' | 'preUpdate';
@@ -372,7 +381,21 @@ export class AEGRobot extends EventEmitter {
 
     // Periodically check whether there are any new cleaning sessions
     async pollCleanedAreas(): Promise<void> {
-        const cleanedAreas = await this.api.getApplianceCleanedAreas(MAX_CLEANED_AREAS);
+        const cleanedAreas: CleanedAreaWithMap[] = await this.api.getApplianceCleanedAreas(MAX_CLEANED_AREAS);
+
+        // Retrieve any maps associated with the first (most recent) session
+        if (cleanedAreas.length) {
+            const recent = cleanedAreas[0];
+            const { sessionId } = recent;
+            recent.map = await this.api.getApplianceSessionMap(sessionId);
+            if (recent.cleaningSession?.persistentMapId !== undefined) {
+                const { persistentMapId, persistentMapSN } = recent.cleaningSession;
+                recent.interactive = await this.api.getApplianceInteractiveMap(persistentMapId);
+                recent.interactiveMap = await this.api.getApplianceInteractiveMapData(persistentMapId, persistentMapSN);
+            }
+        }
+
+        // Emit events for any new cleaned areas
         cleanedAreas.forEach(cleanedArea => {
             const {id} = cleanedArea;
             if (!this.emittedCleanedArea.has(id)) {
