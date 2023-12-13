@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.1] - 2023-12-13
+### Changed
+* Updated dependencies to latest versions.
+
 ## [v0.4.0] - 2023-11-21
 ### Added
 * The map for the most recent cleaning session is written to the log.
@@ -26,18 +30,10 @@ All notable changes to this project will be documented in this file.
 ## [v0.2.9] - 2023-10-23
 ### Fixed
 * Accept user ID and name in domain user information.
-### Changed
-* Updated dependencies to latest versions.
-
-## [v0.2.8] - 2023-08-29
-### Changed
-* Updated dependencies to latest versions.
 
 ## [v0.2.7] - 2023-07-19
 ### Fixed
 * Accept optional URLs in authentication responses. ([#13])
-### Changed
-* Updated dependencies to latest versions.
 
 ## [v0.2.6] - 2023-07-19
 ### Fixed
@@ -50,21 +46,16 @@ All notable changes to this project will be documented in this file.
 * Accept weight and volume measurement units.
 ### Changed
 * Dropped Node 14 compatibility.
-* Updated dependencies to latest versions.
 
 ## [v0.2.4] - 2023-04-20
 ### Fixed
 * Accept a reported cleaned area zone status of `terminated`.
 ### Added
 * Added Node 20 to supported engines.
-### Changed
-* Updated dependencies to latest versions.
 
 ## [v0.2.3] - 2023-03-21
 ### Fixed
 * Accept an optional `metadata` field returned by the API in appliance `properties`.
-### Changed
-* Updated dependencies to latest versions.
 
 ## [v0.2.2] - 2023-02-17
 ### Added
@@ -88,11 +79,12 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.0...HEAD
-[v0.4.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.0...v0.4.0
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.1...HEAD
+[v0.4.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.0...v0.4.1
+[v0.4.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.1...v0.4.0
+[v0.3.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.0...v0.3.1
 [v0.3.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.9...v0.3.0
-[v0.2.9]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.8...v0.2.9
-[v0.2.8]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.7...v0.2.8
+[v0.2.9]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.7...v0.2.9
 [v0.2.7]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.6...v0.2.7
 [v0.2.6]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.5...v0.2.6
 [v0.2.5]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.2.4...v0.2.5
