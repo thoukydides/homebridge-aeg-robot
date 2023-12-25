@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.3] - 2023-12-25
+### Fixed
+* Accept an optional `IsValudUUID` field returned by the API in a cleaned area session map match.
+
 ## [v0.4.2] - 2023-12-25
 ### Fixed
 * Accept an appliance birthday notification in the feed.
@@ -85,7 +89,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.2...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.3...HEAD
+[v0.4.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.2...v0.4.3
 [v0.4.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.1...v0.4.2
 [v0.4.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.0...v0.4.1
 [v0.4.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.3.1...v0.4.0

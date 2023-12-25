@@ -494,6 +494,7 @@ export interface CleanedAreaSessionZone {
 }
 export interface CleanedAreaSessionMapMatch {
     uuid:                       string;     // e.g. '8f413222-546d-4c89-acbc-a47323236a4d'
+    IsValidUUID?:               boolean;
     sequenceNo:                 number;     // e.g. 21,
     zones:                      CleanedAreaSessionZone[];
 }
