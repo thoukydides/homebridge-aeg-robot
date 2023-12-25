@@ -180,6 +180,14 @@ export class AEGRobotLog {
                 this.log.info(`${item.data.cardTitle} (${age})`);
                 if (item.data.cardDescription.length) this.log.info(`    ${item.data.cardDescription}`);
                 break;
+            case 'InAppSurveyEnabled':
+                this.log.info(`In-app survey active (${age})`);
+                break;
+            case 'ApplianceBirthday':
+                this.log.info(`Happy birthday! (${age})`);
+                this.log.info(`    Robot is ${item.data.age} year${item.data.age === 1 ? '' : 's'} old`);
+                this.log.info(`    First activated ${item.data.birthDay}`);
+                break;
             default:
                 this.log.warn(`Unrecognised feed item type "${item['feedDataType']}" (${age})`);
                 this.log.warn(JSON.stringify(item, null, 4));

@@ -630,15 +630,21 @@ export interface FeedItemMaintenance extends FeedItemBase {
 }
 export interface FeedItemSurvey extends FeedItemBase {
     feedDataType:               'InAppSurveyEnabled';
-    id:                         string;     // e.g. 'InAppSurveyEnabled'
-    createdAtUTC:               string;     // e.g. '2023-11-15T14:53:30.984Z'
     data: {
         [index: string]:        never;
     };
 }
+export interface FeedItemBirthday extends FeedItemBase {
+    feedDataType:               'ApplianceBirthday';
+    data: {
+        pncId:                  string;     // e.g. '900277479937001234567890'
+        birthDay:               string;     // e.g. '2022-12-22'
+        age:                    number;     // e.g. 1
+    };
+}
 export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemBusierWeekJobDone
                      | FeedItemMonthlyJobDoneGlobalComparison | FeedItemMaintenance
-                     | FeedItemSurvey;
+                     | FeedItemSurvey | FeedItemBirthday;
 export interface Feed {
     feedItemResponseDetailDTOs: FeedItem[];
 }
