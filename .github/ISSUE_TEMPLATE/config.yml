@@ -1,1 +1,5 @@
 blank_issues_enabled: false
+contact_links:
+  - name: 📧 Contact HOOBS support
+    url: https://support.hoobs.org/ticket
+    about: This is not a HOOBS plugin. Contact the HOOBS support team with any issues that cannot be reproduced via a vanilla (non-HOOBS) Homebridge installation.
