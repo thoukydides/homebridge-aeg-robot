@@ -8,12 +8,13 @@ import { Client, Dispatcher } from 'undici';
 import { buffer } from 'stream/consumers';
 import { gunzipSync } from 'zlib';
 import { Checker, IErrorDetail } from 'ts-interface-checker';
+import { setTimeout } from 'node:timers/promises';
 
 import { AEG_API_KEY, AEG_API_URL,
          PLUGIN_NAME, PLUGIN_VERSION } from './settings';
 import { AEGAPIError, AEGAPIStatusCodeError,
          AEGAPIValidationError } from './aegapi-error';
-import { columns, getValidationTree, sleep } from './utils';
+import { columns, getValidationTree, MS } from './utils';
 import { Config } from './config-types';
 import { IncomingHttpHeaders } from 'undici/types/header';
 
@@ -67,7 +68,7 @@ export class AEGUserAgent {
     // Delays between retries
     readonly retryDelay = {
         min:          500,
-        max:    60 * 1000,
+        max:      60 * MS,
         factor:       2.0
     };
 
@@ -187,7 +188,7 @@ export class AEGUserAgent {
                 ++retryCount;
 
                 // Delay before trying again
-                await sleep(retryDelay);
+                await setTimeout(retryDelay);
                 retryDelay = Math.min(retryDelay * this.retryDelay.factor, this.retryDelay.max);
             }
         }

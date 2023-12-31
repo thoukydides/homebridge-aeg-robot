@@ -6,7 +6,7 @@ import { Logger, LogLevel } from 'homebridge';
 import { AEGRobot, CleanedAreaWithMap } from './aeg-robot';
 import { Activity, Battery, Capability, Completion, Dustbin,
          FeedItem, Message, PowerMode } from './aegapi-types';
-import { columns, formatDuration } from './utils';
+import { columns, formatList, formatMilliseconds, formatSeconds, MS, plural } from './utils';
 import { AEGRobotMap } from './aeg-map';
 
 // Descriptions of the robot activity
@@ -63,7 +63,7 @@ const completionNames: Record<Completion, string> = {
 };
 
 // Robot tick duration
-const TICK_MS = 1e-4;
+const TICK_MS = 10 * MS;
 
 // Logging of information about a robot
 export class AEGRobotLog {
@@ -99,7 +99,7 @@ export class AEGRobotLog {
         this.robot.on('rawName', (name: string) => {
             this.log.info(`My name is "${name}"`);
         }).on('capabilities', (capabilities: Capability[]) => {
-            this.log.info(`Supported capabilities: ${capabilities.join(', ')}`);
+            this.log.info(`Supported ${plural(capabilities.length, 'capability')}: ${formatList(capabilities)}`);
         }).on('firmware', (firmware: string) => {
             this.log.info(`Firmware version ${firmware} installed`);
         }).on('battery', (battery?: Battery) => {
@@ -140,24 +140,24 @@ export class AEGRobotLog {
     // Log messages from the robot
     async logMessages(): Promise<void> {
         this.robot.on('message', (message: Message) => {
-            const age = `${formatDuration(Date.now() - message.timestamp * 1000)} ago`;
+            const age = `${formatMilliseconds(Date.now() - message.timestamp * MS)} ago`;
             const bits = [`type=${message.type}`];
             if (message.userErrorID)     bits.push(`user-error=${message.userErrorID}`);
             if (message.internalErrorID) bits.push(`internal-error=${message.internalErrorID}`);
             this.log.warn(`Message: ${message.text} (${age})`);
-            this.log.debug(`Message: ${bits.join(', ')}`);
+            this.log.debug(`Message: ${formatList(bits)}`);
         }).on('feed', (item: FeedItem) => {
-            const age = `${formatDuration(Date.now() - Date.parse(item.createdAtUTC))} ago`;
+            const age = `${formatMilliseconds(Date.now() - Date.parse(item.createdAtUTC))} ago`;
             switch (item.feedDataType) {
             case 'RVCLastWeekCleanedArea':
                 this.log.info(`Weekly insight (${age}):`);
-                this.log.info(`    Worked for ${formatDuration(item.data.cleaningDurationTicks * TICK_MS)}`);
+                this.log.info(`    Worked for ${formatMilliseconds(item.data.cleaningDurationTicks * TICK_MS)}`);
                 this.log.info(`    ${item.data.cleanedAreaSquareMeter} m² cleaned`);
                 this.log.info(`    Cleaned ${item.data.sessionCount} times`);
                 this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
                 break;
             case 'OsirisBusierWeekJobDone': {
-                const formatHours = (hours: number) => formatDuration(hours * 60 * 60 * 1000);
+                const formatHours = (hours: number) => formatSeconds(hours * 60 * 60);
                 this.log.info(`Worked more this week (${age}):`);
                 this.log.info(`    Worked ${formatHours(item.data.current)} this week`);
                 this.log.info(`    Worked ${formatHours(item.data.previous)} previous week`);
@@ -185,7 +185,7 @@ export class AEGRobotLog {
                 break;
             case 'ApplianceBirthday':
                 this.log.info(`Happy birthday! (${age})`);
-                this.log.info(`    Robot is ${item.data.age} year${item.data.age === 1 ? '' : 's'} old`);
+                this.log.info(`    Robot is ${plural(item.data.age, 'year')} old`);
                 this.log.info(`    First activated ${item.data.birthDay}`);
                 break;
             default:
@@ -205,10 +205,10 @@ export class AEGRobotLog {
             if (cleaningSession) {
                 const formatTime = (time: string) => new Date(time).toLocaleTimeString();
                 this.log.info(`    ${formatTime(cleaningSession.startTime)} - ${formatTime(cleaningSession.eventTime)}`);
-                this.log.info(`    Cleaned for ${formatDuration(cleaningSession.cleaningDuration * TICK_MS)}`);
+                this.log.info(`    Cleaned for ${formatMilliseconds(cleaningSession.cleaningDuration * TICK_MS)}`);
                 if (cleaningSession.pitstopCount) {
                     this.log.info(`    Recharged ${cleaningSession.pitstopCount} times while cleaning`);
-                    this.log.info(`    Charged for ${formatDuration(cleaningSession.pitstopDuration * TICK_MS)}`);
+                    this.log.info(`    Charged for ${formatMilliseconds(cleaningSession.pitstopDuration * TICK_MS)}`);
                 }
                 if (cleaningSession.completion) {
                     this.log.info(`    ${completionNames[cleaningSession.completion]}`);

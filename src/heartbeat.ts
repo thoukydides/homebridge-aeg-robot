@@ -2,11 +2,14 @@
 // Copyright © 2022-2023 Alexander Thoukydides
 
 import { Logger } from 'homebridge';
-import { logError, sleep } from './utils';
+
+import { setTimeout as setTimeoutP } from 'node:timers/promises';
+
+import { MS, logError, sleep } from './utils';
 
 // Multiple of interval to treat as a failure
 const TIMEOUT_MULTIPLE  = 3;
-const TIMEOUT_OFFSET    = 10 * 1000;
+const TIMEOUT_OFFSET    = 10 * MS;
 
 // Perform an action periodically with error reporting and timeout
 export class Heartbeat {
@@ -39,7 +42,7 @@ export class Heartbeat {
                 logError(this.log, this.name, err);
                 this.lastError = err;
             }
-            await sleep(this.interval);
+            await setTimeoutP(this.interval);
         }
     }
 

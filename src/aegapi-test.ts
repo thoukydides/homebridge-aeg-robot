@@ -7,7 +7,7 @@ import { AEGAPI } from './aegapi';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Appliance, Appliances, CleaningCommand, DomainAppliance, Domains,
          NewTask, PowerMode, SettableProperties, User } from './aegapi-types';
-import { logError } from './utils';
+import { logError, plural } from './utils';
 
 // A test failure
 interface Failure {
@@ -75,7 +75,7 @@ export class AEGAPITest {
         const user       = await test(this.api.getCurrentUser);
         const appliances = await test(this.api.getAppliances);
         const domains    = await test(this.api.getDomains);
-        const applianceIds = (appliances || []).map(a => a.applianceId);
+        const applianceIds = (appliances ?? []).map(a => a.applianceId);
         await test(this.api.getWebShopURLs, applianceIds);
 
         // Return results required for other tests
@@ -205,7 +205,7 @@ export class AEGAPITest {
     // Log a summary of the results
     summariseResults(): void {
         if (this.failures.length) {
-            this.log.error(`${this.failures.length} of ${this.tests} API tests failed`);
+            this.log.error(`${this.failures.length} of ${plural(this.tests, 'API test')} failed`);
             this.failures.forEach(failure => {
                 this.log.error(`${failure.logPrefix}: ${failure.testName}`);
                 this.log.error(`    ${failure.error}`);

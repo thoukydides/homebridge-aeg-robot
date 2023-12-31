@@ -2,14 +2,16 @@
 // Copyright © 2022-2023 Alexander Thoukydides
 
 import { Logger } from 'homebridge';
+
 import { getItem, setItem } from 'node-persist';
 import { CheckerT, createCheckers } from 'ts-interface-checker';
+import { setTimeout } from 'node:timers/promises';
 
 import { AuthToken, AuthUser, PostAuthTokenClient, PostAuthTokenExchange,
          PostAuthTokenRefresh, PostAuthTokenRevoke, PostAuthToken, PostAuthUser,
          AbsoluteAuthToken } from './aegapi-auth-types';
 import { AEGUserAgent, Headers, Method, Request, UAOptions } from './aegapi-ua';
-import { logError, sleep } from './utils';
+import { MS, logError, sleep } from './utils';
 import { AEG_CLIENT_ID, AEG_CLIENT_SECRET } from './settings';
 import { AEGAPIAuthorisationError, AEGAPIError,
          AEGAPIStatusCodeError } from './aegapi-error';
@@ -27,10 +29,10 @@ const checkers = createCheckers(aegapiTI) as {
 export class AEGAuthoriseUserAgent extends AEGUserAgent {
 
     // Time before token expiry to request a refresh
-    private readonly refreshWindow  = 60 * 60 * 1000; // (milliseconds)
+    private readonly refreshWindow  = 60 * 60 * MS;
 
     // Delay between retrying failed authorisation operations
-    private readonly authRetryDelay =      60 * 1000; // (milliseconds)
+    private readonly authRetryDelay =      60 * MS;
 
     // Promise that is resolved by successful (re)authorisation
     private authorised: Promise<void>;
@@ -121,7 +123,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
 
                 // Try to reauthorise after a short delay
                 this.token = undefined;
-                await sleep(this.authRetryDelay);
+                await setTimeout(this.authRetryDelay);
             }
         }
     }
@@ -208,7 +210,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         this.token = {
             authorizationHeader:    `${token.tokenType} ${token.accessToken}`,
             refreshToken:           token.refreshToken,
-            expiresAt:              Date.now() + token.expiresIn * 1000
+            expiresAt:              Date.now() + token.expiresIn * MS
         };
     }
 

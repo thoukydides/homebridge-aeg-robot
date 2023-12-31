@@ -6,7 +6,7 @@ import { Logger, LogLevel } from 'homebridge';
 import { AEGAPI } from './aegapi';
 import { AEGRobot } from './aeg-robot';
 import { HealthCheck } from './aegapi-types';
-import { columns } from './utils';
+import { columns, formatList, MS, plural } from './utils';
 import { Config } from './config-types';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Heartbeat } from './heartbeat';
@@ -63,8 +63,8 @@ export class AEGAccount {
             }
         });
         if (incompatible.length) {
-            this.log.info(`Ignoring ${incompatible.length} incompatible appliances: `
-                          + incompatible.join(', '));
+            this.log.info(`Ignoring ${plural(incompatible.length, 'incompatible appliance')}: `
+                          + formatList(incompatible));
         }
 
         // Update any robots with the domain details
@@ -82,7 +82,7 @@ export class AEGAccount {
             ['Feed',            intervals.feedSeconds,          this.pollFeed]
         ];
         this.heartbeats = poll.map(action =>
-            new Heartbeat(this.log, action[0], action[1] * 1000, action[2].bind(this),
+            new Heartbeat(this.log, action[0], action[1] * MS, action[2].bind(this),
                           (err) => this.heartbeat(err)));
     }
 
@@ -123,13 +123,13 @@ export class AEGAccount {
 
         // Summary status
         if (!failed) this.log.debug('All AEG API servers appear healthy:');
-        else this.log.error(`${failed} of ${servers.length} AEG API servers have problems:`);
+        else this.log.error(`${failed} of ${plural(servers.length, 'AEG API server')} have problems:`);
 
         // Detailed status
         const rows: string[][] = servers.map(server => ([
             server.app,
             server.release,
-            server.version || '',
+            server.version ?? '',
             server.environment,
             `${server.statusCode}`,
             server.message

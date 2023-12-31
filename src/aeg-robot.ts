@@ -11,7 +11,7 @@ import { Activity, Appliance, ApplianceNamePatch, Battery, Capability,
          DomainAppliance, Dustbin, FeedItem, InteractiveMap, InteractiveMapData,
          Message, PowerMode, Status } from './aegapi-types';
 import { PrefixLogger } from './logger';
-import { logError } from './utils';
+import { MS, formatList, logError } from './utils';
 import { AEGRobotLog } from './aeg-robot-log';
 import { AEGRobotCtrlActivity, AEGRobotCtrlName,
          AEGRobotCtrlPower } from './aeg-robot-ctrl';
@@ -138,7 +138,7 @@ export class AEGRobot extends EventEmitter {
         // Initialise static information that is already known
         this.applianceId    = appliance.applianceId;
         this.model          = appliance.applianceData.modelName;
-        this.hardware       = appliance.properties.reported.platform || '';
+        this.hardware       = appliance.properties.reported.platform ?? '';
 
         // Allow the robot to be controlled
         this.setName        = new AEGRobotCtrlName    (this).makeSetter();
@@ -181,7 +181,7 @@ export class AEGRobot extends EventEmitter {
             ['Cleaned areas',   intervals.cleanedAreasSeconds,  this.pollCleanedAreas]
         ];
         this.heartbeats = poll.map(action =>
-            new Heartbeat(this.log, action[0], action[1] * 1000, action[2].bind(this),
+            new Heartbeat(this.log, action[0], action[1] * MS, action[2].bind(this),
                           (err) => this.heartbeat(err)));
     }
 
@@ -208,7 +208,7 @@ export class AEGRobot extends EventEmitter {
 
             // Other details may be absent if the robot is not reachable
             capabilities:   Object.keys(reported.capabilities ?? {}),
-            firmware:       reported.firmwareVersion || '',
+            firmware:       reported.firmwareVersion ?? '',
             battery:        reported.batteryStatus,
             activity:       reported.robotStatus,
             dustbin:        reported.dustbinStatus,
@@ -340,7 +340,7 @@ export class AEGRobot extends EventEmitter {
         };
         const summary = changed.map(key =>
             `${key}: ${toText(this.emittedStatus[key])}->${toText(this.status[key])}`);
-        this.log.debug(summary.join(', '));
+        this.log.debug(formatList(summary));
 
         // Emit events for each change
         changed.forEach(key => this.emit(key, this.status[key], this.emittedStatus[key]));

@@ -1,26 +1,32 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
+import { Logger } from 'homebridge';
+
 import { IErrorDetail } from 'ts-interface-checker';
 import assert from 'assert';
 
-import { Logger } from 'homebridge';
 import { AEGAPIError } from './aegapi-error';
 
+// Milliseconds in a second
+export const MS = 1000;
+
 // Type assertions
+export function assertIsDefined<Type>(value: Type): asserts value is NonNullable<Type> {
+    assert.notStrictEqual(value, undefined);
+    assert.notStrictEqual(value, null);
+}
+export function assertIsUndefined(value: unknown): asserts value is undefined {
+    assert.strictEqual(value, undefined);
+}
 export function assertIsString(value: unknown): asserts value is string {
-    assert(typeof value === 'string');
+    assert.strictEqual(typeof value, 'string');
 }
 export function assertIsNumber(value: unknown): asserts value is number {
-    assert(typeof value === 'number');
+    assert.strictEqual(typeof value, 'number');
 }
 export function assertIsBoolean(value: unknown): asserts value is boolean {
-    assert(typeof value === 'boolean');
-}
-
-// Wait for the next iteration of the event loop
-export function immediate(): Promise<void> {
-    return new Promise(resolve => setImmediate(resolve));
+    assert.strictEqual(typeof value, 'boolean');
 }
 
 // Sleep for a specified period
@@ -51,17 +57,17 @@ export function logError(log: Logger, when: string, err: unknown): void {
     } catch { /*empty */ }
 }
 
-// Format a millisecond duration
-export function formatDuration(ms: number, maxParts = 2): string {
+// Format a milliseconds duration
+export function formatMilliseconds(ms: number, maxParts = 2): string {
     if (ms < 1) return 'n/a';
 
     // Split the duration into components
     const duration: Record<string, number> = {
-        day:            Math.floor(ms / (24 * 60 * 60 * 1000)),
-        hour:           Math.floor(ms /      (60 * 60 * 1000)) % 24,
-        minute:         Math.floor(ms /           (60 * 1000)) % 60,
-        second:         Math.floor(ms /                 1000 ) % 60,
-        millisecond:    Math.floor(ms                        ) % 1000
+        day:            Math.floor(ms / (24 * 60 * 60 * MS)),
+        hour:           Math.floor(ms /      (60 * 60 * MS)) % 24,
+        minute:         Math.floor(ms /           (60 * MS)) % 60,
+        second:         Math.floor(ms /                 MS ) % 60,
+        millisecond:    Math.floor(ms                      ) % MS
     };
 
     // Remove any leading zero components
@@ -71,8 +77,44 @@ export function formatDuration(ms: number, maxParts = 2): string {
     // Combine the required number of remaining components
     return keys.slice(0, maxParts)
         .filter(key => duration[key] !== 0)
-        .map(key => `${duration[key]} ${key}${duration[key] === 1 ? '' : 's'}`)
+        .map(key => plural(duration[key], key))
         .join(' ');
+}
+
+// Format a seconds duration
+export function formatSeconds(seconds: number, maxParts = 2): string {
+    return formatMilliseconds(seconds * 1000, maxParts);
+}
+
+// Format a list (with Oxford comma)
+export function formatList(items: string[]): string {
+    switch (items.length) {
+    case 0:     return 'n/a';
+    case 1:     return items[0];
+    case 2:     return `${items[0]} and ${items[1]}`;
+    default:    return [...items.slice(0, -1), `and ${items[items.length - 1]}`].join(', ');
+    }
+}
+
+// Format a counted noun (handling most regular cases automatically)
+export function plural(count: number, noun: string | [string, string], showCount: boolean = true): string {
+    const [singular, plural] = Array.isArray(noun) ? noun : [noun, ''];
+    noun = count === 1 ? singular : plural;
+    if (!noun) {
+        // Apply regular rules
+        const rules: [string, string, number][] = [
+            ['on$',                 'a',   2], // phenomenon/phenomena criterion/criteria
+            ['us$',                 'i',   1], //     cactus/cacti         focus/foci
+            ['[^aeiou]y$',          'ies', 1], //        cty/cites         puppy/puppies
+            ['(ch|is|o|s|sh|x|z)$', 'es',  0], //       iris/irises        truss/trusses
+            ['',                    's',   0]  //        cat/cats          house/houses
+        ];
+        const rule = rules.find(([ending]) => new RegExp(ending, 'i').test(singular));
+        assertIsDefined(rule);
+        const matchCase = (s: string) => singular === singular.toUpperCase() ? s.toUpperCase() : s;
+        noun = singular.substring(0, singular.length - rule[2]).concat(matchCase(rule[1]));
+    }
+    return showCount ? `${count} ${noun}` : noun;
 }
 
 // Format strings in columns
@@ -81,7 +123,7 @@ export function columns(rows: string[][], separator = '  '): string[] {
     const width: number[] = [];
     rows.forEach(row => {
         row.forEach((value, index) => {
-            width[index] = Math.max(width[index] || 0, value.length);
+            width[index] = Math.max(width[index] ?? 0, value.length);
         });
     });
     width.splice(-1, 1, 0);

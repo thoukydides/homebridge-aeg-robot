@@ -15,7 +15,7 @@ import { checkDependencyVersions } from './check-versions';
 import { AEGAccount } from './aeg-account';
 import { AEGRobot } from './aeg-robot';
 import { Config } from './config-types';
-import { deepMerge, getValidationTree, logError } from './utils';
+import { deepMerge, getValidationTree, logError, plural } from './utils';
 import { PrefixLogger } from './logger';
 import configTI from './ti/config-types-ti';
 
@@ -129,7 +129,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         // Add accessories for any robots associated with the AEG account
         const account = new AEGAccount(this.log, this.config);
         const robotPromises = await account.getRobots();
-        this.log.info(`Found ${robotPromises.length} robot vacuum(s)`);
+        this.log.info(`Found ${plural(robotPromises.length, 'robot vacuum')}`);
         await Promise.all(robotPromises.map(this.addRobotAccessory.bind(this)));
     }
 
@@ -165,7 +165,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         if (!rmAccessories.length) return;
 
         // Remove the identified accessories
-        this.log.warn(`Removing ${rmAccessories.length} cached accessories that are no longer required`);
+        this.log.warn(`Removing ${plural(rmAccessories.length, 'cached accessory')} that are no longer required`);
         this.hb.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, rmAccessories);
         rmAccessories.forEach(accessory => delete this.accessories[accessory.UUID]);
     }

@@ -3,17 +3,19 @@
 
 import { Logger } from 'homebridge';
 
+import { setTimeout } from 'node:timers/promises';
+
 import { AEGRobot, SimpleActivity } from './aeg-robot';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Activity, Appliance, CleaningCommand, PowerMode } from './aegapi-types';
-import { logError, sleep } from './utils';
+import { MS, logError } from './utils';
 import { Config } from './config-types';
 
 // Timezone to use when changing name if unable to determine
 const DEFAULT_TIMEZONE = 'London/Europe';
 
 // Timeout waiting for status to reflect a requested change
-const TIMEOUT_MIN_MS        = 20 * 1000;
+const TIMEOUT_MIN_MS        = 20 * MS;
 const TIMEOUT_POLL_MULTIPLE = 3;
 
 // An abstract AEG RX 9 / Electrolux Pure i9 robot controller
@@ -47,7 +49,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
         this.api = robot.api;
         this.timeout = Math.max(TIMEOUT_MIN_MS,
                                 this.config.pollIntervals.statusSeconds
-                                * 1000 * TIMEOUT_POLL_MULTIPLE);
+                                * MS * TIMEOUT_POLL_MULTIPLE);
         robot.on('preUpdate', () => {
             if (this.target !== undefined) this.overrideStatus(this.target);
         });
@@ -113,7 +115,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
         await this.setTarget(target);
 
         // Timeout waiting for status to reflect the requested change
-        const timeout = sleep(this.timeout);
+        const timeout = setTimeout(this.timeout);
 
         // Wait for status update, change of target state, or timeout
         let done: boolean | null, reason;
