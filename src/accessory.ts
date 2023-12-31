@@ -6,6 +6,8 @@ import { Characteristic, CharacteristicValue, HAPStatus, Logger, Nullable,
 
 import { AEGPlatform } from './platform';
 import { AEGAPIAuthorisationError } from './aegapi-error';
+import { assertIsString, logError } from './utils';
+import { getItem, setItem } from 'node-persist';
 
 // Characteristic used to indicate a long-term error state
 interface ErrorCharacteristic {
@@ -32,6 +34,10 @@ export class AEGAccessory {
     // The primary service
     private primaryService?: Service;
 
+    // Service names set via HomeKit
+    customNames: Record<string, string> = {};
+    persistPromise?: Promise<void>;
+
     // Characteristic used to indicate a long-term error state
     private errorCharacteristic?: ErrorCharacteristic;
 
@@ -46,10 +52,16 @@ export class AEGAccessory {
         this.HapStatusError   = platform.hb.hap.HapStatusError;
         this.log              = platform.log;
         this.obsoleteServices = [...this.accessory.services];
+
+        // Load any persistent data
+        this.persistPromise = this.loadPersist();
     }
 
     // Get or add a service
-    makeService(serviceConstructor: ServiceConstructor, displayName = '', subtype?: string): Service {
+    makeService(serviceConstructor: ServiceConstructor, suffix = '', subtype?: string): Service {
+        // Use the accessory name as a prefix for the service name
+        const displayName = `${this.accessory.displayName} ${suffix}`;
+
         // Check whether the service already exists
         let service = subtype
                       ? this.accessory.getServiceById(serviceConstructor, subtype)
@@ -72,20 +84,90 @@ export class AEGAccessory {
         }
 
         // Add a Configured Name characteristic if a custom name was supplied
-        if (displayName.length) this.addServiceName(service, displayName);
+        if (suffix.length) this.addServiceName(service, suffix, displayName);
 
         // Return the service
         return service;
     }
 
     // Add a read-only Configured Name characteristic
-    addServiceName(service: Service, displayName: string) {
+    addServiceName(service: Service, suffix: string, defaultName: string) {
+        // Add the configured name characteristic
         if (!service.testCharacteristic(this.Characteristic.ConfiguredName)) {
             service.addOptionalCharacteristic(this.Characteristic.ConfiguredName);
         }
-        service.getCharacteristic(this.Characteristic.ConfiguredName)
-            .updateValue(displayName)
-            .setProps({ perms: [Perms.NOTIFY, Perms.PAIRED_READ] });
+        const characteristic = service.getCharacteristic(this.Characteristic.ConfiguredName);
+        characteristic.setProps({ perms: [Perms.NOTIFY, Perms.PAIRED_READ, Perms.PAIRED_WRITE] });
+        let currentName = characteristic.value;
+        assertIsString(currentName);
+
+        // Set the initial value
+        this.withPersist('read-only', async () => {
+            if (currentName === this.customNames[suffix]) {
+                // Name was set via HomeKit, so preserve it
+                this.log.debug(`Preserving ${suffix} service name "${currentName}" set via HomeKit`);
+            } else {
+                // Probably not changed by the user via HomeKit, so set explicitly
+                if (currentName !== defaultName) {
+                    if (currentName === '') this.log.debug(`Naming ${suffix} service as "${defaultName}"`);
+                    else this.log.info(`Renaming ${suffix} service to "${defaultName}" (was "${currentName}")`);
+                }
+                characteristic.updateValue(defaultName);
+                currentName = defaultName;
+            }
+        });
+
+        // Monitor changes to the name
+        characteristic.onSet(async value => {
+            assertIsString(value);
+            this.withPersist('read-write', async () => {
+                if (value !== currentName) {
+                    currentName = value;
+                    this.log.debug(`${suffix} Configured Name => "${value}"`);
+                    if (value === defaultName) {
+                        this.log.info(`Removing HomeKit override on ${suffix} service name`);
+                        delete this.customNames[suffix];
+                    } else {
+                        if (this.customNames[suffix] === undefined)
+                            this.log.info(`HomeKit override on ${suffix} service name ("${value}")`);
+                        this.customNames[suffix] = value;
+                    }
+                }
+            });
+        });
+    }
+
+    // Perform an operation using persistent data
+    async withPersist(type: 'read-only' | 'read-write', operation: () => Promise<void>): Promise<void> {
+        while (this.persistPromise) await this.persistPromise;
+        await operation();
+        if (type === 'read-write') {
+            this.persistPromise = this.savePersist();
+            await this.persistPromise;
+        }
+    }
+
+    // Restore any persistent data
+    async loadPersist(): Promise<void> {
+        try {
+            const persist = await getItem(this.accessory.UUID);
+            if (persist) this.customNames = persist.customNames ?? {};
+        } catch (err) {
+            logError(this.log, 'Load persistent data', err);
+        } finally {
+            this.persistPromise = undefined;
+        }
+    }
+
+    // Save changes to the persistent data
+    async savePersist(): Promise<void> {
+        try {
+            await setItem(this.accessory.UUID, { customNames: this.customNames });
+        } catch (err) {
+            logError(this.log, 'Save persistent data', err);
+        } finally {
+            this.persistPromise = undefined;
+        }
     }
 
     // Check and tidy services after the accessory has been configured
@@ -123,8 +205,8 @@ export class AEGAccessory {
         // Select a service (preferably the primary) to report the error
         const services = accessory.services;
         const service = services.find(service => service.isPrimaryService)
-                     || services.find(service => service.UUID !== Service.AccessoryInformation.UUID)
-                     || services[0];
+                     ?? services.find(service => service.UUID !== Service.AccessoryInformation.UUID)
+                     ?? services[0];
         if (!service) return;
 
         // Pick a characteristic; ideally one with Perms.NOTIFY

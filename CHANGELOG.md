@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.4] - 2023-12-31
+### Changed
+* Made the `Configued Name` characteristics writable to allow the service to be renamed via HomeKit. Also added the accessory name as a prefix on the service names.
+### Fixed
+* Made `ZoneStatus` optional in cleaned area session maps returned by the API.
+
 ## [v0.4.3] - 2023-12-25
 ### Fixed
 * Accept an optional `IsValudUUID` field returned by the API in a cleaned area session map match.
@@ -89,7 +95,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2023 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.4...HEAD
+[v0.4.4]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.3...v0.4.4
 [v0.4.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.2...v0.4.3
 [v0.4.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.1...v0.4.2
 [v0.4.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.0...v0.4.1
