@@ -514,7 +514,7 @@ export interface CleanedAreaSessionMap {
     robotPoseReliable:          boolean;
     transforms:                 MapTransform[];
     mapMatch:                   CleanedAreaSessionMapMatch;
-    zoneStatus:                 CleanedAreaSessionZoneStatus[];
+    zoneStatus?:                CleanedAreaSessionZoneStatus[];
 }
 
 // GET /domain/api/v2/domains
