@@ -3,7 +3,7 @@
     "pluginType": "platform",
     "singular": true,
     "headerDisplay": "For help please refer to the [README](https://github.com/thoukydides/homebridge-aeg-robot/blob/master/README.md).",
-    "footerDisplay": "© 2022-2023 [Alexander Thoukydides](https://www.thouky.co.uk/)",
+    "footerDisplay": "© 2022-2024 [Alexander Thoukydides](https://www.thouky.co.uk/)",
     "schema": {
         "type": "object",
         "properties": {
