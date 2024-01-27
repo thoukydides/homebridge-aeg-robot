@@ -507,13 +507,13 @@ export interface CleanedAreaSessionMap {
     sessionId:                  number;     // e.g. 255
     timestamp:                  string;     // e.g. '2023-11-18T10:14:09'
     cleaningComplete:           number;     // e.g. 1
-    crumbs:                     MapPoint[];
+    crumbs?:                    MapPoint[];
     crumbCollectionDelta:       boolean;
     chargerPoses:               MapPointAngle[];
     robotPose:                  MapPointAngle;
     robotPoseReliable:          boolean;
     transforms:                 MapTransform[];
-    mapMatch:                   CleanedAreaSessionMapMatch;
+    mapMatch?:                  CleanedAreaSessionMapMatch;
     zoneStatus?:                CleanedAreaSessionZoneStatus[];
 }
 

@@ -4,19 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.6] - 2024-01-27
+### Changed
+* Updated dependencies to latest versions.
+### Fixed
+* Cope with maps that do not include any "crumbs".
+
 ## [v0.4.5] - 2024-01-13
 ### Changed
 * Updated dependencies to latest versions.
 
 ## [v0.4.4] - 2023-12-31
 ### Changed
-* Made the `Configued Name` characteristics writable to allow the service to be renamed via HomeKit. Also added the accessory name as a prefix on the service names.
+* Made the `Configured Name` characteristics writable to allow the service to be renamed via HomeKit. Also added the accessory name as a prefix on the service names.
 ### Fixed
 * Made `ZoneStatus` optional in cleaned area session maps returned by the API.
 
 ## [v0.4.3] - 2023-12-25
 ### Fixed
-* Accept an optional `IsValudUUID` field returned by the API in a cleaned area session map match.
+* Accept an optional `IsValidUUID` field returned by the API in a cleaned area session map match.
 
 ## [v0.4.2] - 2023-12-25
 ### Fixed
@@ -99,7 +105,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.5...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.6...HEAD
+[v0.4.6]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.5...v0.4.6
 [v0.4.5]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.4...v0.4.5
 [v0.4.4]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.3...v0.4.4
 [v0.4.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.2...v0.4.3

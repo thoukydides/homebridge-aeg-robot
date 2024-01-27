@@ -215,7 +215,7 @@ export class AEGRobotLog {
                 }
             }
             const {map, interactive, interactiveMap} = cleanedArea;
-            if (map) {
+            if (map?.crumbs) {
                 const mapText = new AEGRobotMap(map, interactive, interactiveMap).renderText();
                 mapText.forEach(line => this.log.info(`    ${line}`));
             }

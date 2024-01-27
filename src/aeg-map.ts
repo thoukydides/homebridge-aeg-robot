@@ -5,6 +5,7 @@ import { AnyMapCoordinate, MapCoordinate } from './aeg-map-coord';
 import { MapText } from './aeg-map-text';
 import { CleanedAreaSessionMap, InteractiveMap, InteractiveMapData, MapPoint,
          MapPointAngle, MapTransform } from './aegapi-types';
+import { assertIsDefined } from './utils';
 
 // Special point items
 type MapCrumb = 'interactive' | 'cleaned';
@@ -29,6 +30,7 @@ export class AEGRobotMap {
                 interactiveMap?: InteractiveMapData) {
         // Information from the cleaned area session
         this.storeTransforms(map.transforms);
+        assertIsDefined(map.crumbs);
         this.addCrumbs('cleaned', map.crumbs);
         map.chargerPoses.forEach(charger => this.addItem('charger', charger));
         this.addItem('robot', map.robotPose);
