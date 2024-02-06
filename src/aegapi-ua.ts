@@ -125,16 +125,17 @@ export class AEGUserAgent {
         // Retrieve the response as JSON text
         let text;
         const contentType = response.headers['content-type'];
-        if (typeof contentType === 'string'
-            && contentType.startsWith('application/json')) {
-            text = await response.body.text();
-        } else if (contentType === 'application/octet-stream') {
+        const contentEncoding = response.headers['content-encoding'];
+        if (contentType === 'application/octet-stream' || contentEncoding === 'gzip') {
             try {
                 const gzipped = await buffer(response.body);
                 text = gunzipSync(gzipped).toString();
             } catch (cause) {
                 throw new AEGAPIError(request, response, `Failed to gunzip binary response (${cause})`, { cause });
             }
+        } else if (typeof contentType === 'string'
+            && contentType.startsWith('application/json')) {
+            text = await response.body.text();
         } else {
             throw new AEGAPIError(request, response, `Unexpected response content-type (${contentType})`);
         }
