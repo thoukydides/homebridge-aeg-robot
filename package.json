@@ -57,23 +57,23 @@
         "node-persist": "^4.0.1",
         "semver": "^7.6.0",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^6.6.1"
+        "undici": "^6.7.0"
     },
     "devDependencies": {
         "@tsconfig/node18": "^18.2.2",
-        "@types/node": "^18.19.14",
+        "@types/node": "^18.19.22",
         "@types/node-persist": "^3.1.8",
-        "@types/semver": "^7.5.6",
-        "@typescript-eslint/eslint-plugin": "^6.21.0",
-        "@typescript-eslint/parser": "^6.21.0",
-        "eslint": "^8.56.0",
+        "@types/semver": "^7.5.8",
+        "@typescript-eslint/eslint-plugin": "^7.1.1",
+        "@typescript-eslint/parser": "^7.1.1",
+        "eslint": "^8.57.0",
         "homebridge": "^1.7.0",
         "homebridge-config-ui-x": "^4.55.1",
-        "nodemon": "^3.0.3",
+        "nodemon": "^3.1.0",
         "rimraf": "^5.0.5",
         "ts-interface-builder": "^0.3.3",
         "ts-node": "^10.9.2",
-        "typescript": "^5.3.3"
+        "typescript": "^5.4.2"
     },
     "scripts": {
         "lint": "npm run checkers && eslint src/**.ts --max-warnings=0",
