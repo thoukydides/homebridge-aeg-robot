@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.8] - 2024-03-07
+### Changed
+* Updated dependencies to latest versions.
+
 ## [v0.4.7] - 2024-02-06
 ### Changed
 * Updated dependencies to latest versions.
@@ -111,7 +115,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.7...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.8...HEAD
+[v0.4.8]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.7...v0.4.8
 [v0.4.7]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.6...v0.4.7
 [v0.4.6]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.5...v0.4.6
 [v0.4.5]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.4...v0.4.5
