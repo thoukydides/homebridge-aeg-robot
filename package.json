@@ -57,7 +57,7 @@
         "node-persist": "^4.0.1",
         "semver": "^7.6.0",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^6.7.0"
+        "undici": "^6.7.1"
     },
     "devDependencies": {
         "@tsconfig/node18": "^18.2.2",
