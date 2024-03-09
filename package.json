@@ -1,7 +1,7 @@
 {
     "name": "homebridge-aeg-robot",
     "displayName": "Homebridge AEG Robot Vacuum",
-    "version": "0.4.8",
+    "version": "0.4.9",
     "description": "AEG RX9 / Electrolux Pure i9 robot vacuum plugin for Homebridge",
     "license": "ISC",
     "keywords": [
