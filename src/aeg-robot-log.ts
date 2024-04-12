@@ -63,7 +63,7 @@ const completionNames: Record<Completion, string> = {
 };
 
 // Robot tick duration
-const TICK_MS = 10 * MS;
+const TICK_MS = 0.0001;
 
 // Logging of information about a robot
 export class AEGRobotLog {

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.4.10] - 2024-04-12
+### Changed
+* Changed units for interpreting cleaning/charging durations from 10 milliseconds to 100 picoseconds, matching an API change that occurred around 27th February 2024. (#36)
+
 ## [v0.4.10] - 2024-04-06
 ### Changed
 * Updated dependencies to latest versions.
@@ -123,7 +127,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.10...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.5.0...HEAD
+[v0.5.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.10...v0.5.0
 [v0.4.10]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.9...v0.4.10
 [v0.4.9]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.8...v0.4.9
 [v0.4.8]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.7...v0.4.8
