@@ -155,17 +155,17 @@ export interface MeasurementUnits {
     volumeMeasurementUnit?:     VolumeUnit;
 }
 export interface Address {
-    zipCode:                    string;     // e.g. 'SE1 8NW'
-    state:                      string;
-    city:                       string;     // e.g. 'London'
-    street:                     string;     // e.g. '240 Blackfriars Road'
-    apartmentNumber:            string;
-    contactCareOf:              string;
+    zipCode:                    string | null; // e.g. 'SE1 8NW'
+    state:                      string | null;
+    city:                       string | null; // e.g. 'London'
+    street:                     string | null; // e.g. '240 Blackfriars Road'
+    apartmentNumber:            string | null;
+    contactCareOf:              string | null;
 }
 export interface User {
     firstName:                  string;
     lastName:                   string;
-    phoneNumbers?:              PhoneNumber[];
+    phoneNumbers?:              PhoneNumber[] | null;
     address?:                   Address;
     countryCode:                string;     // e.g. 'GB'
     locale:                     string;     // e.g. 'en'

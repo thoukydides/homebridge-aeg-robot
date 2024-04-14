@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Changed
+* Accept accounts with `null` contact information.
 
 ## [v0.5.1] - 2024-04-12
 ### Changed
