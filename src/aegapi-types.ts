@@ -1,5 +1,5 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
-// Copyright © 2022-2023 Alexander Thoukydides
+// Copyright © 2022-2024 Alexander Thoukydides
 
 import { PutCommandZone } from './ti/aegapi-types-ti';
 
@@ -141,6 +141,17 @@ export enum VolumeUnit {
     CentiLiter                  = 'CentiLiter',
     FluidOunce                  = 'FluidOunce'
 }
+
+// GET /one-account-user/api/v1/identity-providers
+export interface IdentityProvider {
+    domain:                     string;
+    apiKey:                     string;
+    brand:                      string;
+    httpRegionalBaseUrl:        string;
+    webSocketRegionalBaseUrl:   string;
+    dataCenter:                 string;
+}
+export type IdentityProviders = IdentityProvider[];
 
 // GET /one-account-user/api/v1/users/current
 export interface PhoneNumber {

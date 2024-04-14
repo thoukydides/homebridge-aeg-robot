@@ -1,5 +1,5 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
-// Copyright © 2022-2023 Alexander Thoukydides
+// Copyright © 2022-2024 Alexander Thoukydides
 
 import { Logger, LogLevel } from 'homebridge';
 
@@ -60,7 +60,7 @@ export interface RequestResponse {
 // User agent for accessing the AEG RX 9 / Electrolux Pure i9 cloud API
 export class AEGUserAgent {
     // Cloud server API host
-    private readonly url = AEG_API_URL;
+    private url = AEG_API_URL;
 
     // Timeout applied to all requests
     private readonly timeout = 5000; // milliseconds
@@ -97,6 +97,13 @@ export class AEGUserAgent {
                 timeout:    this.timeout
             }
         });
+    }
+
+    // Set the API URL for future requests
+    setURL(url: string): void {
+        if (this.url === url) return;
+        this.log.info(`Switching API server from ${this.url} to ${url}`);
+        this.url = url;
     }
 
     // Requests that expect an empty response

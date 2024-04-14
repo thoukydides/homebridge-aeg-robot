@@ -1,5 +1,5 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
-// Copyright © 2022-2023 Alexander Thoukydides
+// Copyright © 2022-2024 Alexander Thoukydides
 
 import { Logger } from 'homebridge';
 import { createCheckers } from 'ts-interface-checker';
@@ -7,8 +7,8 @@ import { createCheckers } from 'ts-interface-checker';
 import { AEGAuthoriseUserAgent } from './aegapi-ua-auth';
 import { AEGApplianceAPI } from './aegapi-appliance';
 import { Appliances, Countries, Domains, FAQ, Feed, HealthChecks,
-         LegalDocuments, MeasurementUnits, PatchUser, PostWebShop,
-         PutChangePassword, User, WebShop } from './aegapi-types';
+         IdentityProviders, LegalDocuments, MeasurementUnits, PatchUser,
+         PostWebShop, PutChangePassword, User, WebShop } from './aegapi-types';
 import { AEG_APP } from './settings';
 import aegapiTI from './ti/aegapi-types-ti';
 import { Config } from './config-types';
@@ -64,6 +64,14 @@ export class AEGAPI {
 
     getFeed(): Promise<Feed> {
         return this.ua.getJSON(checkers.Feed, '/feed/api/v3.1/feeds', { query: this.language });
+    }
+
+    async getIdentityProviders(brand: string = 'AEG'): Promise<IdentityProviders> {
+        const query = { brand, countryCode: this.language.countryCode };
+        const provider = await this.ua.getJSON<IdentityProviders>(
+            checkers.IdentityProviders, '/one-account-user/api/v1/identity-providers', { query });
+        if (provider.length) this.ua.setURL(provider[0].httpRegionalBaseUrl);
+        return provider;
     }
 
     async getCurrentUser(): Promise<User> {
