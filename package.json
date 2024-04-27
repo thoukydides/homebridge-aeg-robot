@@ -50,7 +50,7 @@
         "url": "https://github.com/thoukydides/homebridge-aeg-robot/issues"
     },
     "engines": {
-        "node": ">=20.0.0 || ^18.18.0",
+        "node": ">=22.0.0 || ^20.12.2 || ^18.20.2",
         "homebridge": ">=1.7.0"
     },
     "dependencies": {
