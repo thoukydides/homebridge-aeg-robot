@@ -3,8 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [v0.6.0] - 2024-04-27
 ### Changed
 * Accept accounts with `null` contact information.
+* Updated dependencies to latest versions.
 
 ## [v0.5.1] - 2024-04-12
 ### Changed
@@ -133,7 +136,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.5.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.6.0...HEAD
+[v0.6.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.5.1...v0.6.0
 [v0.5.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.5.0...v0.5.1
 [v0.5.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.10...v0.5.0
 [v0.4.10]:          https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.4.9...v0.4.10
