@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.7.0] - 2024-08-31
+### Changed
+* Accept new fields in API responses.
+* Updated dependencies to latest versions.
+* Lots of internal changes for stricter eslint checking.
+
 ## [v0.6.1] - 2024-06-15
 ### Changed
 * Updated dependencies to latest versions.
@@ -140,7 +146,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.6.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.7.0...HEAD
+[v0.7.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.6.1...v0.7.0
 [v0.6.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.6.0...v0.6.1
 [v0.6.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.5.1...v0.6.0
 [v0.5.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.5.0...v0.5.1
