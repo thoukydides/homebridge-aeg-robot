@@ -47,5 +47,7 @@ export default tseslint.config(
                 ignoredNodes:           ['ConditionalExpression']
             }]
         }
+    }, {
+        ignores: [ '**/ti/' ]
     }
 );
