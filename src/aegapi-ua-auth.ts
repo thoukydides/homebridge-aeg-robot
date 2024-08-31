@@ -51,7 +51,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
     constructor(log: Logger, config: Config) {
         super(log, config);
         this.authorised = this.makeAuthPromise();
-        this.authoriseUserAgent();
+        void this.authoriseUserAgent();
     }
 
     // Construct a Promise indicating when (re)authorisation is complete

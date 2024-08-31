@@ -138,7 +138,7 @@ export class AEGRobotLog {
     }
 
     // Log messages from the robot
-    async logMessages(): Promise<void> {
+    logMessages(): void {
         this.robot.on('message', (message: Message) => {
             const age = `${formatMilliseconds(Date.now() - message.timestamp * MS)} ago`;
             const bits = [`type=${message.type}`];

@@ -102,7 +102,7 @@ export class AEGAccessory {
         assertIsString(currentName);
 
         // Set the initial value
-        this.withPersist('read-only', async () => {
+        void this.withPersist('read-only', async () => {
             if (currentName === this.customNames[suffix]) {
                 // Name was set via HomeKit, so preserve it
                 this.log.debug(`Preserving ${suffix} service name "${currentName}" set via HomeKit`);
@@ -120,7 +120,7 @@ export class AEGAccessory {
         // Monitor changes to the name
         characteristic.onSet(async value => {
             assertIsString(value);
-            this.withPersist('read-write', async () => {
+            void this.withPersist('read-write', async () => {
                 if (value !== currentName) {
                     currentName = value;
                     this.log.debug(`${suffix} Configured Name => "${value}"`);

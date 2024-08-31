@@ -94,9 +94,9 @@ export class AEGRobot extends EventEmitter {
     readonly api: AEGApplianceAPI;
 
     // Control the robot
-    readonly setName:       (name:      string)            => Promise<void>;
-    readonly setPower:      (power:     PowerMode)         => Promise<void>;
-    readonly setActivity:   (command:   CleaningCommand)   => Promise<void>;
+    readonly setName:       (name:      string)            => void;
+    readonly setPower:      (power:     PowerMode)         => void;
+    readonly setActivity:   (command:   CleaningCommand)   => void;
 
     // Static information about the robot (mostly initialised asynchronously)
     readonly applianceId:   string; // Product ID

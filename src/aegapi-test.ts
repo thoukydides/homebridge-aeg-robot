@@ -34,7 +34,7 @@ export class AEGAPITest {
         readonly api:    AEGAPI,
         readonly unsafe: boolean
     ) {
-        this.runAllTests();
+        void this.runAllTests();
     }
 
     // Run all enabled tests

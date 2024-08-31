@@ -28,8 +28,8 @@ export class Heartbeat {
         readonly action:     () => Promise<void>,
         readonly failure:   (err?: unknown) => void
     ) {
-        this.doAction();
-        this.resetWatchdog();
+        void this.doAction();
+        void this.resetWatchdog();
     }
 
     // Perform the action periodically indefinitely
@@ -37,7 +37,7 @@ export class Heartbeat {
         for (;;) {
             try {
                 await this.action();
-                this.resetWatchdog();
+                void this.resetWatchdog();
             } catch (err) {
                 logError(this.log, this.name, err);
                 this.lastError = err;

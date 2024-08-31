@@ -56,8 +56,8 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     }
 
     // Return a set method bound to this instance
-    makeSetter(): (target: Type) => Promise<void> {
-        return this.set.bind(this);
+    makeSetter(): (target: Type) => void {
+        return (target) => void (async () => await this.set(target))();
     }
 
     // Request a change to the robot

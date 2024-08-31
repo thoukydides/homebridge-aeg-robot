@@ -55,7 +55,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         this.log = new PrefixLogger(log);
 
         // Wait for Homebridge to restore cached accessories
-        this.hb.on('didFinishLaunching', () => this.finishedLaunching());
+        this.hb.on('didFinishLaunching', () => void this.finishedLaunching());
     }
 
     // Restore a cached accessory
