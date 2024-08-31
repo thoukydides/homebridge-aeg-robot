@@ -1,6 +1,8 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2024 Alexander Thoukydides
 
+/* eslint-disable @typescript-eslint/consistent-indexed-object-style */
+
 import { PutCommandZone } from './ti/aegapi-types-ti';
 
 // Task schedule

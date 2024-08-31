@@ -1,6 +1,8 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
+/* eslint-disable @typescript-eslint/consistent-indexed-object-style */
+
 // Error response formats returned by the AEG RX 9 / Electrolux Pure i9 cloud API
 export interface ErrorResponseMessageLC {
     message:            string;

@@ -73,10 +73,11 @@ interface DataEventType {
 }
 type DataEvent = keyof DataEventType;
 type VoidEvent = 'info' | 'appliance' | 'preUpdate';
+type DataEventListener  <Event extends DataEvent>   = (value: DataEventType[Event]) => void
+type StatusEventListener<Event extends StatusEvent> = (newValue: DynamicStatus[Event], oldValue: DynamicStatus[Event]) => void
 
 // A generic event listener, compatible with all prototypes
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Listener = (...args: any[]) => void;
+type Listener = (...args: unknown[]) => void;
 
 // Maximum number of historial cleaned areas to retrieve
 const MAX_CLEANED_AREAS = 5;
@@ -407,16 +408,16 @@ export class AEGRobot extends EventEmitter {
 
     // Install a handler for a robot status event
     on                           (event: VoidEvent, listener: () => void): this;
-    on<Event extends DataEvent>  (event: Event, listener: (value: DataEventType[Event]) => void): this;
-    on<Event extends StatusEvent>(event: Event, listener: (newValue: DynamicStatus[Event], oldValue: DynamicStatus[Event]) => void): this;
+    on<Event extends DataEvent>  (event: Event, dataListener: DataEventListener<Event>): this;
+    on<Event extends StatusEvent>(event: Event, statusListener: StatusEventListener<Event>): this;
     on(event: string, listener: Listener): this {
         return super.on(event, listener);
     }
 
     // Install a single-shot handler for a robot status event
     once                           (event: VoidEvent, listener: () => void): this;
-    once<Event extends DataEvent>  (event: Event, listener: (value: DataEventType[Event]) => void): this;
-    once<Event extends StatusEvent>(event: Event, listener: (newValue: DynamicStatus[Event], oldValue: DynamicStatus[Event]) => void): this;
+    once<Event extends DataEvent>  (event: Event, dataListener: DataEventListener<Event>): this;
+    once<Event extends StatusEvent>(event: Event, statusListener: StatusEventListener<Event>): this;
     once(event: string, listener: Listener): this {
         return super.once(event, listener);
     }

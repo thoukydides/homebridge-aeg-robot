@@ -57,7 +57,7 @@ export class Heartbeat {
             }
 
             // Start a new watchdog
-            const abort: Promise<never> = new Promise((_, reject) => {
+            const abort = new Promise<never>((_, reject) => {
                 this.killWatchdog = () => reject('kill');
             });
             await sleep(this.interval * TIMEOUT_MULTIPLE + TIMEOUT_OFFSET, abort);

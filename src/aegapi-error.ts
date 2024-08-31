@@ -10,7 +10,7 @@ import { Request, Response } from './aegapi-ua';
 import errorsTI from './ti/aegapi-error-types-ti';
 
 // Options that can be passed to an error constructor
-type Options = { cause?: unknown };
+interface Options { cause?: unknown }
 
 // Checkers for API error responses
 const checkers = createCheckers(errorsTI) as {

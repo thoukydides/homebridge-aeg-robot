@@ -86,7 +86,7 @@ export class MapText {
     }
 
     // Plot a filled circle
-    plotCircle(centre: MapCoordinate, diameter: number = 0, shade?: string): void {
+    plotCircle(centre: MapCoordinate, diameter = 0, shade?: string): void {
         // Ellipse characteristics in character coordinates
         const coord = this.transform(centre);
         const radiusX = diameter * this.scaleX / 2;
@@ -123,7 +123,7 @@ export class MapText {
     }
 
     // Get a string (usually single character) from the canvas
-    get(coord: MapCoordinate, length: number = 1): string {
+    get(coord: MapCoordinate, length = 1): string {
         return this.canvas[coord.y].substring(coord.x, coord.x + length);
     }
 

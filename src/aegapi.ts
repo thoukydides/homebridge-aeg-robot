@@ -66,7 +66,7 @@ export class AEGAPI {
         return this.ua.getJSON(checkers.Feed, '/feed/api/v3.1/feeds', { query: this.language });
     }
 
-    async getIdentityProviders(brand: string = 'AEG'): Promise<IdentityProviders> {
+    async getIdentityProviders(brand = 'AEG'): Promise<IdentityProviders> {
         const query = { brand, countryCode: this.language.countryCode };
         const provider = await this.ua.getJSON<IdentityProviders>(
             checkers.IdentityProviders, '/one-account-user/api/v1/identity-providers', { query });

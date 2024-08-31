@@ -41,7 +41,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
     config!: Config;
 
     // Mapping from UUID to accessories and their implementations
-    readonly accessories: Record<string, AccessoryLinkage> = {};
+    readonly accessories = new Map<string, AccessoryLinkage>();
 
     // Create a new AEG RX 9 / Electrolux Pure i9 platform
     constructor(
@@ -60,7 +60,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
 
     // Restore a cached accessory
     configureAccessory(accessory: PlatformAccessory): void {
-        this.accessories[accessory.UUID] = { accessory };
+        this.accessories.set(accessory.UUID, { accessory });
     }
 
     // Update list of robots after cache has been restored
@@ -139,7 +139,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         const uuid = this.makeUUID(robot.applianceId);
 
         // Check if an accessory was restored from the cache
-        const existingAccessory = this.accessories[uuid];
+        const existingAccessory = this.accessories.get(uuid);
         if (existingAccessory) {
             // Attach functionality to the existing accessory
             const { accessory } = existingAccessory;
@@ -151,7 +151,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
             this.log.info(`Creating new accessory "${robot.status.rawName}" for ${robot}`);
             const accessory = new this.hb.platformAccessory(robot.status.rawName, uuid);
             const implementation = new AEGRobotAccessory(this, accessory, robot);
-            this.accessories[uuid] = { accessory, implementation };
+            this.accessories.set(uuid, { accessory, implementation });
             this.hb.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         }
     }
@@ -167,7 +167,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         // Remove the identified accessories
         this.log.warn(`Removing ${plural(rmAccessories.length, 'cached accessory')} that are no longer required`);
         this.hb.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, rmAccessories);
-        rmAccessories.forEach(accessory => delete this.accessories[accessory.UUID]);
+        rmAccessories.forEach(accessory => this.accessories.delete(accessory.UUID));
     }
 
     // Place all accessories in an error state if initialisation failed

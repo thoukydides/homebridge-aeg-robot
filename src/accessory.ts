@@ -35,7 +35,7 @@ export class AEGAccessory {
     private primaryService?: Service;
 
     // Service names set via HomeKit
-    customNames: Record<string, string> = {};
+    customNames = new Map<string, string>();
     persistPromise?: Promise<void>;
 
     // Characteristic used to indicate a long-term error state
@@ -103,7 +103,7 @@ export class AEGAccessory {
 
         // Set the initial value
         void this.withPersist('read-only', async () => {
-            if (currentName === this.customNames[suffix]) {
+            if (currentName === this.customNames.get(suffix)) {
                 // Name was set via HomeKit, so preserve it
                 this.log.debug(`Preserving ${suffix} service name "${currentName}" set via HomeKit`);
             } else {
@@ -126,11 +126,11 @@ export class AEGAccessory {
                     this.log.debug(`${suffix} Configured Name => "${value}"`);
                     if (value === defaultName) {
                         this.log.info(`Removing HomeKit override on ${suffix} service name`);
-                        delete this.customNames[suffix];
+                        this.customNames.delete(suffix);
                     } else {
-                        if (this.customNames[suffix] === undefined)
+                        if (this.customNames.get(suffix) === undefined)
                             this.log.info(`HomeKit override on ${suffix} service name ("${value}")`);
-                        this.customNames[suffix] = value;
+                        this.customNames.set(suffix, value);
                     }
                 }
             });
