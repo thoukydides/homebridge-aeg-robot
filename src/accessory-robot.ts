@@ -39,7 +39,7 @@ export class AEGRobotAccessory extends AEGAccessory {
         if (support('Filter Maintenance'))  this.addFilterMaintenance();
 
         // Set or clear long term error state
-        this.onRobot('isError', (err?: unknown) => this.setError(err));
+        this.onRobot('isError', (err?: unknown) => { this.setError(err); });
 
         // Check and tidy services after the accessory has been configured
         this.cleanupServices();

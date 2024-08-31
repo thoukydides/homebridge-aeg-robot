@@ -68,6 +68,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
                 this.log.warn('Reauthorisation required...');
                 this.reauthorise = undefined;
                 this.authorised = this.makeAuthPromise();
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 reject(reason);
             };
         });
@@ -77,7 +78,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
     async authoriseUserAgent(): Promise<void> {
         // Retrieve any saved authorisation
         try {
-            const token = await getItem(this.persistKey);
+            const token: unknown = await getItem(this.persistKey);
             if (checkers.AbsoluteAuthToken.test(token)) {
                 this.token = token;
                 if (Date.now() + this.refreshWindow < this.token.expiresAt) {
@@ -95,7 +96,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         for (;;) {
             try {
                 // If there is no current token then (re)authorise
-                while (!this.token || !this.token.refreshToken) {
+                while (!this.token?.refreshToken) {
                     this.log.info('Starting new authorisation');
                     await this.performAuthorisation();
                 }

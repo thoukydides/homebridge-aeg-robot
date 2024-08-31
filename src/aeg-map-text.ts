@@ -45,7 +45,7 @@ export class MapText {
         this.rows = canvasSize.y + 1;
 
         // Create a blank canvas
-        this.canvas = new Array(this.rows).fill(' '.repeat(this.cols));
+        this.canvas = new Array<string>(this.rows).fill(' '.repeat(this.cols));
     }
 
     // Convert a coordinate to canvas coordinates

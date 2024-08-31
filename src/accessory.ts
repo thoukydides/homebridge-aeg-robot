@@ -21,6 +21,11 @@ type ServiceConstructor = typeof Service & {
     UUID: string;
 };
 
+// Format for the persistent data
+interface PersistData {
+    customNames: Record<string, string>;
+}
+
 // A Homebridge platform accessory handler
 export class AEGAccessory {
     readonly Service;
@@ -98,11 +103,11 @@ export class AEGAccessory {
         }
         const characteristic = service.getCharacteristic(this.Characteristic.ConfiguredName);
         characteristic.setProps({ perms: [Perms.NOTIFY, Perms.PAIRED_READ, Perms.PAIRED_WRITE] });
+        assertIsString(characteristic.value);
         let currentName = characteristic.value;
-        assertIsString(currentName);
 
         // Set the initial value
-        void this.withPersist('read-only', async () => {
+        void this.withPersist('read-only', () => {
             if (currentName === this.customNames.get(suffix)) {
                 // Name was set via HomeKit, so preserve it
                 this.log.debug(`Preserving ${suffix} service name "${currentName}" set via HomeKit`);
@@ -118,9 +123,9 @@ export class AEGAccessory {
         });
 
         // Monitor changes to the name
-        characteristic.onSet(async value => {
+        characteristic.onSet(value => {
             assertIsString(value);
-            void this.withPersist('read-write', async () => {
+            void this.withPersist('read-write', () => {
                 if (value !== currentName) {
                     currentName = value;
                     this.log.debug(`${suffix} Configured Name => "${value}"`);
@@ -138,7 +143,7 @@ export class AEGAccessory {
     }
 
     // Perform an operation using persistent data
-    async withPersist(type: 'read-only' | 'read-write', operation: () => Promise<void>): Promise<void> {
+    async withPersist(type: 'read-only' | 'read-write', operation: () => void | Promise<void>): Promise<void> {
         while (this.persistPromise) await this.persistPromise;
         await operation();
         if (type === 'read-write') {
@@ -150,8 +155,8 @@ export class AEGAccessory {
     // Restore any persistent data
     async loadPersist(): Promise<void> {
         try {
-            const persist = await getItem(this.accessory.UUID);
-            if (persist) this.customNames = persist.customNames ?? {};
+            const persist = await getItem(this.accessory.UUID) as PersistData | undefined;
+            if (persist) this.customNames = new Map(Object.entries(persist.customNames));
         } catch (err) {
             logError(this.log, 'Load persistent data', err);
         } finally {
@@ -162,7 +167,8 @@ export class AEGAccessory {
     // Save changes to the persistent data
     async savePersist(): Promise<void> {
         try {
-            await setItem(this.accessory.UUID, { customNames: this.customNames });
+            const persist: PersistData = { customNames: Object.fromEntries(this.customNames) };
+            await setItem(this.accessory.UUID, persist);
         } catch (err) {
             logError(this.log, 'Save persistent data', err);
         } finally {
@@ -204,10 +210,10 @@ export class AEGAccessory {
 
         // Select a service (preferably the primary) to report the error
         const services = accessory.services;
+        if (services.length === 0) return;
         const service = services.find(service => service.isPrimaryService)
                      ?? services.find(service => service.UUID !== Service.AccessoryInformation.UUID)
                      ?? services[0];
-        if (!service) return;
 
         // Pick a characteristic; ideally one with Perms.NOTIFY
         const characteristic = service.characteristics.find(characteristic =>

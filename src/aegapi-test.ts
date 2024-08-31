@@ -1,6 +1,8 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2024 Alexander Thoukydides
 
+/* eslint-disable @typescript-eslint/unbound-method */
+
 import { Logger } from 'homebridge';
 
 import { AEGAPI } from './aegapi';
@@ -209,7 +211,7 @@ export class AEGAPITest {
             this.log.error(`${this.failures.length} of ${plural(this.tests, 'API test')} failed`);
             this.failures.forEach(failure => {
                 this.log.error(`${failure.logPrefix}: ${failure.testName}`);
-                this.log.error(`    ${failure.error}`);
+                this.log.error(`    ${String(failure.error)}`);
             });
         } else {
             this.log.info(`All ${this.tests} API tests passed`);

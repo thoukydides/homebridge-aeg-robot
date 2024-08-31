@@ -5,7 +5,7 @@ import { Logger, LogLevel } from 'homebridge';
 
 import { AEGRobot, CleanedAreaWithMap } from './aeg-robot';
 import { Activity, Battery, Capability, Completion, Dustbin,
-         FeedItem, Message, PowerMode } from './aegapi-types';
+         FeedItem, FeedItemBase, Message, PowerMode } from './aegapi-types';
 import { columns, formatList, formatMilliseconds, formatSeconds, MS, plural } from './utils';
 import { AEGRobotMap } from './aeg-map';
 
@@ -120,13 +120,13 @@ export class AEGRobotLog {
         }).on('connected', (connected: boolean) => {
             this.log.log(connected ? LogLevel.INFO : LogLevel.WARN,
                          `Robot ${connected ? 'is' : 'is NOT'} connected to the cloud servers`);
-        }).on('isError', (err?: unknown) => this.logHealth(err));
+        }).on('isError', (err?: unknown) => { this.logHealth(err); });
     }
 
     // Log changes to cloud server health
     logHealth(err?: unknown): void {
         if (err) {
-            const message = `${err}`;
+            const message = String(err);
             if (!this.loggedHealthErrors.has(message)) {
                 this.loggedHealthErrors.add(message);
                 this.log.error(`Lost connection to cloud servers: ${message}`);
@@ -171,7 +171,7 @@ export class AEGRobotLog {
                     [item.data.minCountry.country, `${item.data.minCountry.sessionCount} sessions`],
                     [item.data.maxCountry.country, `${item.data.maxCountry.sessionCount} sessions`]
                 ]);
-                rows.forEach(row => this.log.info(`    ${row}`));
+                rows.forEach(row => { this.log.info(`    ${row}`); });
                 break;
             }
             case 'RVCSurfaceFilterMaintenance':
@@ -189,7 +189,7 @@ export class AEGRobotLog {
                 this.log.info(`    First activated ${item.data.birthDay}`);
                 break;
             default:
-                this.log.warn(`Unrecognised feed item type "${item['feedDataType']}" (${age})`);
+                this.log.warn(`Unrecognised feed item type "${(item as FeedItemBase).feedDataType}" (${age})`);
                 this.log.warn(JSON.stringify(item, null, 4));
             }
         });
@@ -217,7 +217,7 @@ export class AEGRobotLog {
             const {map, interactive, interactiveMap} = cleanedArea;
             if (map?.crumbs) {
                 const mapText = new AEGRobotMap(map, interactive, interactiveMap).renderText();
-                mapText.forEach(line => this.log.info(`    ${line}`));
+                mapText.forEach(line => { this.log.info(`    ${line}`); });
             }
         });
     }

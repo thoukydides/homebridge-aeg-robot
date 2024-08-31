@@ -18,7 +18,7 @@ export class AEGAccount {
     readonly api: AEGAPI;
 
     // AEG RX 9 / Electrolux Pure i9 robot managers
-    readonly robots: Record<string, AEGRobot> = {};
+    readonly robots = new Map<string, AEGRobot>();
 
     // Periodic polling tasks
     private heartbeats: Heartbeat[] = [];
@@ -41,7 +41,7 @@ export class AEGAccount {
     // Return a list of robots in the account
     async getRobots(): Promise<Promise<AEGRobot>[]> {
         await this.readyPromise;
-        return Object.values(this.robots).map(robot => robot.waitUntilReady());
+        return [...this.robots.values()].map(robot => robot.waitUntilReady());
     }
 
     // One-off asynchronous initialisation
@@ -56,7 +56,7 @@ export class AEGAccount {
         appliances.forEach(appliance => {
             if (AEGApplianceAPI.isRobot(appliance)) {
                 const robot = new AEGRobot(this.log, this, appliance);
-                this.robots[appliance.applianceId] = robot;
+                this.robots.set(appliance.applianceId, robot);
             } else {
                 const data = appliance.applianceData;
                 incompatible.push(`${data.applianceName} (${data.modelName})`);
@@ -70,20 +70,20 @@ export class AEGAccount {
         // Update any robots with the domain details
         const domains = await this.api.getDomains();
         domains.appliances.forEach(appliance => {
-            const robot = this.robots[appliance.pncId];
+            const robot = this.robots.get(appliance.pncId);
             robot?.updateFromDomains(appliance);
         });
 
         // Start polling for interesting changes
         const intervals = this.config.pollIntervals;
         const poll: [string, number, () => Promise<void>][] = [
-            ['Appliances',      intervals.statusSeconds,        this.pollAppliances],
-            ['Server health',   intervals.serverHealthSeconds,  this.pollServerHealth],
-            ['Feed',            intervals.feedSeconds,          this.pollFeed]
+            ['Appliances',      intervals.statusSeconds,        () => this.pollAppliances()],
+            ['Server health',   intervals.serverHealthSeconds,  () => this.pollServerHealth()],
+            ['Feed',            intervals.feedSeconds,          () => this.pollFeed()]
         ];
         this.heartbeats = poll.map(action =>
-            new Heartbeat(this.log, action[0], action[1] * MS, action[2].bind(this),
-                          (err) => this.heartbeat(err)));
+            new Heartbeat(this.log, action[0], action[1] * MS, action[2],
+                          (err) => { this.heartbeat(err); }));
     }
 
     // Attempt to read the user's name
@@ -102,15 +102,15 @@ export class AEGAccount {
         }
 
         // Inform the robots
-        Object.values(this.robots).forEach(robot => robot.updateServerHealth(err));
+        this.robots.forEach(robot => { robot.updateServerHealth(err); });
     }
 
     // Periodically read values that might change
     async pollAppliances(): Promise<void> {
         const appliances = await this.api.getAppliances();
         appliances.forEach(appliance => {
-            const robot = this.robots[appliance.applianceId];
-            if (robot) robot.updateFromAppliances(appliance);
+            const robot = this.robots.get(appliance.applianceId);
+            robot?.updateFromAppliances(appliance);
         });
     }
 
@@ -146,7 +146,7 @@ export class AEGAccount {
     // Poll for new feed items
     async pollFeed(): Promise<void> {
         const feed = (await this.api.getFeed()).feedItemResponseDetailDTOs;
-        Object.entries(this.robots).forEach(([applianceId, robot]) => {
+        this.robots.forEach((robot, applianceId) => {
             const items = feed.filter(item => item.data.pncId === applianceId);
             robot.updateFromFeed(items);
         });

@@ -129,7 +129,7 @@ export class AEGRobot extends EventEmitter {
         appliance:          Appliance
     ) {
         super({ captureRejections: true });
-        super.on('error', err => logError(this.log, 'Event', err));
+        super.on('error', err => { logError(this.log, 'Event', err); });
 
         // Construct a Logger and API for this robot
         this.config = account.config;
@@ -179,11 +179,11 @@ export class AEGRobot extends EventEmitter {
         // Start polling for interesting changes
         const intervals = this.config.pollIntervals;
         const poll: [string, number, () => Promise<void>][] = [
-            ['Cleaned areas',   intervals.cleanedAreasSeconds,  this.pollCleanedAreas]
+            ['Cleaned areas',   intervals.cleanedAreasSeconds,  () => this.pollCleanedAreas()]
         ];
         this.heartbeats = poll.map(action =>
-            new Heartbeat(this.log, action[0], action[1] * MS, action[2].bind(this),
-                          (err) => this.heartbeat(err)));
+            new Heartbeat(this.log, action[0], action[1] * MS, action[2],
+                          (err) => { this.heartbeat(err); }));
     }
 
     // Describe this robot
@@ -194,7 +194,7 @@ export class AEGRobot extends EventEmitter {
             this.status.rawName && `"${this.status.rawName}"`,
             `(Product ID ${this.applianceId})`
         ];
-        return bits.filter(bit => bit?.length).join(' ');
+        return bits.filter(bit => bit.length).join(' ');
     }
 
     // Update dynamic robot state
@@ -337,7 +337,7 @@ export class AEGRobot extends EventEmitter {
         const toText = (value: unknown) => {
             if (value === undefined) return '?';
             if (typeof(value) === 'string' && /[- <>:,]/.test(value)) return `"${value}"`;
-            return `${value}`;
+            return String(value);
         };
         const summary = changed.map(key =>
             `${key}: ${toText(this.emittedStatus[key])}->${toText(this.status[key])}`);
@@ -353,7 +353,7 @@ export class AEGRobot extends EventEmitter {
     // Emit events for any new messages
     emitMessages(messages: Message[] = []) {
         // If there are no current messages then just flush the cache
-        if (!messages.length) return this.emittedMessages.clear();
+        if (!messages.length) { this.emittedMessages.clear(); return; }
 
         // Emit events for any new messages
         messages.forEach(message => {
@@ -368,7 +368,7 @@ export class AEGRobot extends EventEmitter {
     // Update feed items
     updateFromFeed(feed: FeedItem[]) {
         // If there are no current feed items then just flush the cache
-        if (!feed.length) return this.emittedFeed.clear();
+        if (!feed.length) { this.emittedFeed.clear(); return; }
 
         // Emit events for any new feed items
         feed.forEach(item => {

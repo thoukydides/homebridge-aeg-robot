@@ -30,7 +30,7 @@ export class PrefixLogger {
 
         // Log each line of the message
         const prefix = this.prefix?.length ? `[${this.prefix}] ` : '';
-        message.split('\n').forEach(line => this.logger.log(level, prefix + line));
+        message.split('\n').forEach(line => { this.logger.log(level, prefix + line); });
     }
 
     // Log all DEBUG messages as INFO to avoid being dropped by Homebridge

@@ -138,22 +138,21 @@ export class AEGUserAgent {
                 const gzipped = await buffer(response.body);
                 text = gunzipSync(gzipped).toString();
             } catch (cause) {
-                throw new AEGAPIError(request, response, `Failed to gunzip binary response (${cause})`, { cause });
+                throw new AEGAPIError(request, response, `Failed to gunzip binary response (${String(cause)})`, { cause });
             }
-        } else if (typeof contentType === 'string'
-            && contentType.startsWith('application/json')) {
+        } else if (typeof contentType === 'string' && contentType.startsWith('application/json')) {
             text = await response.body.text();
         } else {
-            throw new AEGAPIError(request, response, `Unexpected response content-type (${contentType})`);
+            throw new AEGAPIError(request, response, `Unexpected response content-type (${JSON.stringify(contentType)})`);
         }
 
         // Parse the response as JSON
-        let json;
+        let json: unknown;
         try {
             this.logBody('Response', text);
             json = JSON.parse(text);
         } catch (cause) {
-            throw new AEGAPIError(request, response, `Failed to parse JSON response (${cause})`, { cause });
+            throw new AEGAPIError(request, response, `Failed to parse JSON response (${String(cause)})`, { cause });
         }
 
         // Check that the response has the expected fields
@@ -171,14 +170,14 @@ export class AEGUserAgent {
         }
 
         // Return the result
-        return json;
+        return json as Type;
     }
 
     // Construct and issue a request, retrying if appropriate
     async request(method: Method, path: string, options?: UAOptions,
                   body?: object, headers?: Headers): Promise<RequestResponse> {
         // Request counters
-        let requestCount: number;
+        let requestCount: number | undefined;
         let retryCount = 0;
         let retryDelay = this.retryDelay.min;
 
@@ -203,8 +202,8 @@ export class AEGUserAgent {
     }
 
     // Construct a Request
-    async prepareRequest(method: Method, path: string, options?: UAOptions,
-                         body?: object, headers?: Headers): Promise<Request> {
+    prepareRequest(method: Method, path: string, options?: UAOptions,
+                   body?: object, headers?: Headers): Request | Promise<Request> {
         const request: Request = {
             method,
             path,
@@ -255,7 +254,7 @@ export class AEGUserAgent {
                 response = await this.client.request(request);
                 this.logHeaders(`${logPrefix} Response`, response.headers);
             } catch (cause) {
-                status = `ERROR: ${cause}`;
+                status = `ERROR: ${String(cause)}`;
                 throw new AEGAPIError(request, undefined, status, { cause });
             }
 
@@ -266,7 +265,7 @@ export class AEGUserAgent {
                 const text = await response.body.text();
                 this.logBody(`${logPrefix} Response`, text);
                 const err = new AEGAPIStatusCodeError(request, response, text);
-                status += ` ${err}`;
+                status += ` ${String(err)}`;
                 throw err;
             }
 
@@ -289,20 +288,20 @@ export class AEGUserAgent {
             const values = headers[key];
             if (typeof values === 'string') rows.push([`${key}:`, values]);
             else if (Array.isArray(values)) {
-                values?.forEach(value => rows.push([`${key}:`, value]));
+                values.forEach(value => rows.push([`${key}:`, value]));
             }
         });
         this.log.debug(`${name} headers:`);
-        columns(rows).forEach(line => this.log.debug(`    ${line}`));
+        columns(rows).forEach(line => { this.log.debug(`    ${line}`); });
     }
 
     // Log request or response body
     logBody(name: string, body: unknown): void {
         if (!this.config.debug.includes('Log API Bodies')) return;
         if (typeof body !== 'string') return;
-        if (body?.length) {
+        if (body.length) {
             this.log.debug(`${name} body:`);
-            body.split('\n').forEach(line => this.log.debug(`    ${line}`));
+            body.split('\n').forEach(line => { this.log.debug(`    ${line}`); });
         } else {
             this.log.debug(`${name} body: EMPTY`);
         }
@@ -310,13 +309,13 @@ export class AEGUserAgent {
 
     // Log checker validation errors
     logCheckerValidation(level: LogLevel, message: string, request: Request,
-                         errors: IErrorDetail[], json: object): void {
+                         errors: IErrorDetail[], json: unknown): void {
         this.log.log(level, `${message}:`);
         this.log.log(level, `${request.method} ${request.path}`);
         const validationLines = getValidationTree(errors);
-        validationLines.forEach(line => this.log.log(level, line));
+        validationLines.forEach(line => { this.log.log(level, line); });
         this.log.debug('Received response (reformatted):');
         const jsonLines = JSON.stringify(json, null, 4).split('\n');
-        jsonLines.forEach(line => this.log.debug(`    ${line}`));
+        jsonLines.forEach(line => { this.log.debug(`    ${line}`); });
     }
 }

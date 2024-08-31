@@ -80,9 +80,10 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
 
     // Attempt to extract a useful description from the response body
     static getBodyDescription(text: string): string | null {
-        let message = text.length ? text : null;
+        if (text === '') return null;
+        let message = text;
         try {
-            const json = JSON.parse(text);
+            const json = JSON.parse(text) as unknown;
             if (checkers.ErrorResponseMessageLC.test(json) && json.message) {
                 message = json.message;
                 if (json.error) message += ` (${json.error})`;

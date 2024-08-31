@@ -33,7 +33,8 @@ export function assertIsBoolean(value: unknown): asserts value is boolean {
 export function sleep(ms: number, abort?: Promise<never>): Promise<void> {
     return new Promise((resolve, reject) => {
         setTimeout(resolve, Math.max(ms, 0));
-        if (abort) abort.catch(reason => reject(reason));
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        if (abort) abort.catch((reason: unknown) => { reject(reason); });
     });
 }
 
@@ -41,14 +42,14 @@ export function sleep(ms: number, abort?: Promise<never>): Promise<void> {
 export function logError(log: Logger, when: string, err: unknown): void {
     try {
         // Log the error message itself
-        log.error(`[${when}] ${err}`);
+        log.error(`[${when}] ${String(err)}`);
 
         // Log any history of causes for the error
         let cause = err;
         let prefix = ' '.repeat(when.length + 3);
         while ((cause instanceof AEGAPIError) && cause.errCause) {
             cause = cause.errCause;
-            log.error(`${prefix}└─ ${cause}`);
+            log.error(`${prefix}└─ ${String(cause)}`);
             prefix += '   ';
         }
 

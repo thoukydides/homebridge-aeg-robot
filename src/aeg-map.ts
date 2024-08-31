@@ -32,12 +32,12 @@ export class AEGRobotMap {
         this.storeTransforms(map.transforms);
         assertIsDefined(map.crumbs);
         this.addCrumbs('cleaned', map.crumbs);
-        map.chargerPoses.forEach(charger => this.addItem('charger', charger));
+        map.chargerPoses.forEach(charger => { this.addItem('charger', charger); });
         this.addItem('robot', map.robotPose);
 
         // Extra details if an interactive map has also been provided
         if (interactive?.zones?.length) {
-            interactive.zones.forEach(zone => this.addZone(zone.name, zone.vertices));
+            interactive.zones.forEach(zone => { this.addZone(zone.name, zone.vertices); });
         }
         if (interactiveMap) {
             this.storeTransforms(interactiveMap.transforms);
@@ -84,13 +84,13 @@ export class AEGRobotMap {
         const canvas = new MapText(srcMin.sub(margin), srcMax.add(margin));
 
         // Plot the interactive map breadcrumbs
-        this.crumbs['interactive'].forEach(crumb => canvas.plotCircle(crumb, ROBOT_DIAMETER, '▒'));
+        this.crumbs.interactive.forEach(crumb => { canvas.plotCircle(crumb, ROBOT_DIAMETER, '▒'); });
 
         // Plot the zones
-        Object.values(this.zones).forEach(coords => canvas.plotRectangle(coords));
+        Object.values(this.zones).forEach(coords => { canvas.plotRectangle(coords); });
 
         // Plot the cleaned area breadcrumbs
-        this.crumbs['cleaned'].forEach(crumb => canvas.plotCircle(crumb, ROBOT_DIAMETER));
+        this.crumbs.cleaned.forEach(crumb => { canvas.plotCircle(crumb, ROBOT_DIAMETER); });
 
         // Label the zones
         Object.keys(this.zones).forEach(name => {
@@ -99,8 +99,8 @@ export class AEGRobotMap {
         });
 
         // Plot other items
-        this.items['charger'].forEach(coord => canvas.plotLabel(coord, '[C]'));
-        this.items['robot']  .forEach(coord => canvas.plotLabel(coord, '[R]'));
+        this.items.charger.forEach(coord => { canvas.plotLabel(coord, '[C]'); });
+        this.items.robot  .forEach(coord => { canvas.plotLabel(coord, '[R]'); });
 
         // Convert the canvas to row strings
         return canvas.canvas;

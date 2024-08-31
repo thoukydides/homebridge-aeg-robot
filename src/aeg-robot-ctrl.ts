@@ -57,20 +57,18 @@ abstract class AEGRobotCtrl<Type extends number | string> {
 
     // Return a set method bound to this instance
     makeSetter(): (target: Type) => void {
-        return (target) => void (async () => await this.set(target))();
+        return (target) => void (async () => { await this.set(target); })();
     }
 
     // Request a change to the robot
     async set(target: Type): Promise<void> {
         // No new action required if already setting the requested state
         const description = this.description(target);
-        if (target === this.target)
-            return this.log.debug(`Ignoring duplicate request to ${description}`);
+        if (target === this.target) { this.log.debug(`Ignoring duplicate request to ${description}`); return; }
 
         // No action required if already in the required state
         let done = this.isTargetSet(target);
-        if (done === true)
-            return this.log.debug(`Ignoring unnecessary request to ${description}`);
+        if (done === true) { this.log.debug(`Ignoring unnecessary request to ${description}`); return; }
 
         // Temporarily override the reported status
         this.target = target;
@@ -79,7 +77,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
         // Replace any previous unfinished request
         if (this.abort) {
             this.abort();
-            return this.log.debug(`Changing pending request to ${description}`);
+            this.log.debug(`Changing pending request to ${description}`); return;
         }
 
         // Start a new request
@@ -88,7 +86,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
             do {
                 // Create mechanism to abort waiting for a status update
                 const abort = new Promise<'abort'>(resolve =>
-                    this.abort = () => resolve('abort'));
+                    this.abort = () => { resolve('abort'); });
 
                 // Attempt to apply the requested change
                 target = this.target;
@@ -121,7 +119,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
         let done: boolean | null, reason;
         do {
             const status = new Promise(resolve =>
-                this.robot.once('appliance', () => resolve('status')));
+                this.robot.once('appliance', () => { resolve('status'); }));
             reason = await Promise.race([status, timeout, abort]) ?? 'timeout';
             done = this.isTargetSet(target);
         } while (!done && reason === 'status');
@@ -135,7 +133,6 @@ abstract class AEGRobotCtrl<Type extends number | string> {
 
     // Describe setting the target value
     description(target: Type): string {
-        if (target === undefined) return `leave ${this.name} unchanged`;
         const value = this.toText ? this.toText[target] : `"${target}"`;
         return `set ${this.name} to ${value}`;
     }

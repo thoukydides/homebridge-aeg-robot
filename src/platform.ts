@@ -66,14 +66,12 @@ export class AEGPlatform implements DynamicPlatformPlugin {
     // Update list of robots after cache has been restored
     async finishedLaunching(): Promise<void> {
         try {
-            if (this.platformConfig) {
-                // Check that the dependencies and configuration
-                checkDependencyVersions(this);
-                this.checkConfig();
+            // Check that the dependencies and configuration
+            checkDependencyVersions(this);
+            this.checkConfig();
 
-                // Initialise the platform accessories
-                await this.addConfiguredAccessories();
-            }
+            // Initialise the platform accessories
+            await this.addConfiguredAccessories();
             this.removeUnconfiguredAccessories();
         } catch (err) {
             logError(this.log, 'Plugin initialisation', err);
@@ -114,10 +112,10 @@ export class AEGPlatform implements DynamicPlatformPlugin {
     // Log configuration checker validation errors
     logCheckerValidation(level: LogLevel, errors: IErrorDetail[] | null): void {
         const errorLines = errors ? getValidationTree(errors) : [];
-        errorLines.forEach(line => this.log.log(level, line));
+        errorLines.forEach(line => { this.log.log(level, line); });
         this.log.info(`${this.hb.user.configPath()}:`);
         const configLines = JSON.stringify(this.platformConfig, null, 4).split('\n');
-        configLines.forEach(line => this.log.info(`    ${line}`));
+        configLines.forEach(line => { this.log.info(`    ${line}`); });
     }
 
     // Add any accessories that have been configured
@@ -143,12 +141,12 @@ export class AEGPlatform implements DynamicPlatformPlugin {
         if (existingAccessory) {
             // Attach functionality to the existing accessory
             const { accessory } = existingAccessory;
-            this.log.info(`Restoring accessory "${accessory.displayName}" from cache for ${robot}`);
+            this.log.info(`Restoring accessory "${accessory.displayName}" from cache for ${robot.toString()}`);
             const implementation = new AEGRobotAccessory(this, accessory, robot);
             existingAccessory.implementation = implementation;
         } else {
             // Create a new accessory for this robot
-            this.log.info(`Creating new accessory "${robot.status.rawName}" for ${robot}`);
+            this.log.info(`Creating new accessory "${robot.status.rawName}" for ${robot.toString()}`);
             const accessory = new this.hb.platformAccessory(robot.status.rawName, uuid);
             const implementation = new AEGRobotAccessory(this, accessory, robot);
             this.accessories.set(uuid, { accessory, implementation });
@@ -160,7 +158,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
     removeUnconfiguredAccessories(): void {
         // Identify accessories that do not have an implementation
         const isObsolete = (linkage: AccessoryLinkage) => !linkage.implementation;
-        const rmAccessories = Object.values(this.accessories)
+        const rmAccessories = [...this.accessories.values()]
             .filter(isObsolete).map(linkage => linkage.accessory);
         if (!rmAccessories.length) return;
 
@@ -172,7 +170,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
 
     // Place all accessories in an error state if initialisation failed
     setAccessoryErrors(cause: unknown): void {
-        const accessories = Object.values(this.accessories).map(linkage => linkage.accessory);
+        const accessories = [...this.accessories.values()].map(linkage => linkage.accessory);
         if (!accessories.length) return;
 
         // Set the error state

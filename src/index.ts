@@ -7,4 +7,4 @@ import { PLATFORM_NAME } from './settings';
 import { AEGPlatform } from './platform';
 
 // Register the platform with Homebridge
-export default (api: API) => api.registerPlatform(PLATFORM_NAME, AEGPlatform);
+export default (api: API) => { api.registerPlatform(PLATFORM_NAME, AEGPlatform); };

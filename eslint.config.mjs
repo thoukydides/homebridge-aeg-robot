@@ -8,9 +8,10 @@ export default tseslint.config(
     // ESLint recommended rules
     eslint.configs.recommended,
     // typescript-eslint strict and stylistic rules
-    ...tseslint.configs.strict,
-    ...tseslint.configs.stylistic,
+    ...tseslint.configs.strictTypeChecked,
+    ...tseslint.configs.stylisticTypeChecked,
     {
+        files: ['**/*.ts'],
         languageOptions: {
             globals:        globals.node,
             ecmaVersion:    'latest',
@@ -21,23 +22,16 @@ export default tseslint.config(
             }
         },
         rules: {
-            quotes:                                     ['warn', 'single', { avoidEscape: true }],
-            semi:                                       ['warn'],
-            'comma-dangle':                             ['warn', 'never'],
-            'dot-notation':                             ['off'],
-            eqeqeq:                                     ['warn'],
-            curly:                                      ['off'],
-            'brace-style':                              ['warn', '1tbs', { allowSingleLine: true }],
-            'prefer-arrow-callback':                    ['warn'],
-            'max-len':                                  ['warn', 140],
-            'comma-spacing':                            ['error'],
-            'no-trailing-spaces':                       ['warn'],
-            'lines-between-class-members':              ['warn', 'always', { exceptAfterSingleLine:  true }],
-            '@typescript-eslint/no-unused-vars':        ['error', { args: 'all', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
-            '@typescript-eslint/no-floating-promises':  ['error', {}],
-            '@typescript-eslint/no-misused-promises':   ['error', {}],
-            '@typescript-eslint/unified-signatures':    ['error', { ignoreDifferentlyNamedParameters: true }],
-            indent:                                     ['warn', 4, {
+            '@typescript-eslint/no-floating-promises':          ['error', {}],
+            '@typescript-eslint/no-misused-promises':           ['error', {}],
+            '@typescript-eslint/no-unused-vars':                ['error', { args: 'all', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
+            '@typescript-eslint/restrict-template-expressions': ['error', { allowBoolean: true, allowNullish: true, allowNumber: true}],
+            'brace-style':                                      ['warn', '1tbs', { allowSingleLine: true }],
+            'comma-dangle':                                     ['warn', 'never'],
+            'comma-spacing':                                    ['error'],
+            'curly':                                            ['off'],
+            'eqeqeq':                                           ['warn'],
+            'indent':                                           ['warn', 4, {
                 SwitchCase:             0,
                 FunctionDeclaration:    { parameters:   'first' },
                 FunctionExpression:     { parameters:   'first' },
@@ -45,7 +39,20 @@ export default tseslint.config(
                 ImportDeclaration:      'first',
                 ArrayExpression:        'first',
                 ignoredNodes:           ['ConditionalExpression']
-            }]
+            }],
+            'lines-between-class-members':                      ['warn', 'always', { exceptAfterSingleLine:  true }],
+            'max-len':                                          ['warn', 140],
+            'no-trailing-spaces':                               ['warn'],
+            'prefer-arrow-callback':                            ['warn'],
+            'quotes':                                           ['warn', 'single', { avoidEscape: true }],
+            'semi':                                             ['warn'],
+
+            '@typescript-eslint/unified-signatures':    ['error', { ignoreDifferentlyNamedParameters: true }]
+        }
+    }, {
+        files: ['**/*-types.ts'],
+        rules: {
+            '@typescript-eslint/consistent-indexed-object-style':   'off'
         }
     }, {
         ignores: [ '**/ti/' ]
