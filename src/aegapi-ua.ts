@@ -131,9 +131,10 @@ export class AEGUserAgent {
 
         // Retrieve the response as JSON text
         let text;
-        const contentType = response.headers['content-type'];
-        const contentEncoding = response.headers['content-encoding'];
-        if (contentType === 'application/octet-stream' || contentEncoding === 'gzip') {
+        const contentType       = response.headers['content-type'];
+        const contentEncoding   = response.headers['content-encoding'];
+        const acceptRanges      = response.headers['accept-ranges'];
+        if (contentType === 'application/octet-stream' || contentEncoding === 'gzip' || acceptRanges === 'bytes') {
             try {
                 const gzipped = await buffer(response.body);
                 text = gunzipSync(gzipped).toString();
