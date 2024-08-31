@@ -305,6 +305,9 @@ export interface ApplianceInfo {
     model:                      string;     // e.g. 'rx92'
     variant:                    string;     // e.g. 'M2'
     colour:                     string;     // e.g. 'SHALEGREY'
+    status?:                    string | null;
+    elc?:                       string;     // e.g. '00'
+    configurationName?:         string | null;
 }
 
 // GET /appliance/api/v2/appliances/${applianceId}/tasks
@@ -412,6 +415,9 @@ export interface InteractiveMap {
     freeze:                     boolean;
     name?:                      string;     // e.g. 'Map 1'
     interactiveMapMessageUuid?: string;     // e.g. '2bc4f03b-8e59-4ca1-9e79-827a53eea200'
+    interactiveTimeStamp?:      null;
+    interactiveId?:             null;
+    interactiveAuthor?:         null;
     zones?:                     MapZone[];
 }
 export type InteractiveMaps = InteractiveMap[];
@@ -536,6 +542,7 @@ export interface DomainAppliance extends ApplianceDataWithPNC {
     id:                         number;     // e.g. 1308100
     domainId:                   number;     // e.g. 815573
     timeZoneStandardName:       string | null; // e.g. 'Europe/London'
+    casDomainId?:               number | null;
 }
 export interface DomainUser {
     email:                      string;     // e.g. 'rx@gmail.com'
@@ -587,6 +594,7 @@ export interface LegalDocuments {
 }
 
 // GET /feed/api/v3.1/feeds?countryCode=${countryCode}&languageCode=${locale}
+export type FeedItemPayload = object;
 export interface FeedItemBase {
     id:                         string;     // e.g. '815573-900277479937001234567890-RVCSurfaceFilterMaintenance'
     createdAtUTC:               string;     // e.g. '2022-12-24T15:57:24.8144471Z'
@@ -600,6 +608,7 @@ export interface FeedItemLastWeekCleanedArea extends FeedItemBase {
         cleanedAreaSquareMeter: number;     // e.g. 40 (m^2)
         sessionCount:           number;     // e.g. 5 (cleanings)
         cleaningDurationTicks:  number;     // e.g. 99920000000 (0.1µs ticks?)
+        payload?:               FeedItemPayload;
     };
 }
 export interface FeedItemBusierWeekJobDone extends FeedItemBase {
@@ -609,6 +618,7 @@ export interface FeedItemBusierWeekJobDone extends FeedItemBase {
         relativeDifference:     number;     // e.g. 2.4116516 (current/previous-1)
         previous:               number;     // e.g. 0.4338888888888889 (hours)
         current:                number;     // e.g. 1.4802777777777778 (hours)
+        payload?:               FeedItemPayload;
     };
 }
 export interface FeedItemMonthlyJobDoneGlobalComparison extends FeedItemBase {
@@ -626,6 +636,7 @@ export interface FeedItemMonthlyJobDoneGlobalComparison extends FeedItemBase {
             country:            string;     // e.g. SG
             sessionCount:       number;     // e.g. 19.711956
         };
+        payload?:               FeedItemPayload;
     };
 }
 export interface FeedItemMaintenance extends FeedItemBase {
@@ -640,6 +651,7 @@ export interface FeedItemMaintenance extends FeedItemBase {
         extendedViewDescription: string;    // e.g. '{{BULLET:1}}Open the lid and remove ...'
         hasWebShop:             boolean;
         webShopDescription:     string;     // e.g. 'Confirm new password'
+        payload?:               FeedItemPayload;
     };
 }
 export interface FeedItemSurvey extends FeedItemBase {
@@ -654,6 +666,7 @@ export interface FeedItemBirthday extends FeedItemBase {
         pncId:                  string;     // e.g. '900277479937001234567890'
         birthDay:               string;     // e.g. '2022-12-22'
         age:                    number;     // e.g. 1
+        payload?:               FeedItemPayload;
     };
 }
 export type FeedItem = FeedItemLastWeekCleanedArea | FeedItemBusierWeekJobDone
