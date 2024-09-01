@@ -3,13 +3,13 @@
 
 import { Logger, LogLevel } from 'homebridge';
 
-import { AEGAPI } from './aegapi';
-import { AEGRobot } from './aeg-robot';
-import { HealthCheck } from './aegapi-types';
-import { columns, formatList, MS, plural } from './utils';
-import { Config } from './config-types';
-import { AEGApplianceAPI } from './aegapi-appliance';
-import { Heartbeat } from './heartbeat';
+import { AEGAPI } from './aegapi.js';
+import { AEGApplianceAPI } from './aegapi-appliance.js';
+import { AEGRobot } from './aeg-robot.js';
+import { columns, formatList, MS, plural } from './utils.js';
+import { Config } from './config-types.js';
+import { HealthCheck } from './aegapi-types.js';
+import { Heartbeat } from './heartbeat.js';
 
 // An AEG user account manager
 export class AEGAccount {

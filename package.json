@@ -45,6 +45,7 @@
         "type": "git",
         "url": "https://github.com/thoukydides/homebridge-aeg-robot.git"
     },
+    "type": "module",
     "main": "dist/index.js",
     "bugs": {
         "url": "https://github.com/thoukydides/homebridge-aeg-robot/issues"

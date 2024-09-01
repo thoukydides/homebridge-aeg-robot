@@ -1,7 +1,7 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
-import { MapPoint, MapPointAngle, MapTransform, Vertex } from './aegapi-types';
+import { MapPoint, MapPointAngle, MapTransform, Vertex } from './aegapi-types.js';
 
 // Any type that can represent a coordinate
 export type AnyMapCoordinate = Vertex | MapPoint | MapPointAngle;

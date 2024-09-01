@@ -1,7 +1,7 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
-import { MapCoordinate } from './aeg-map-coord';
+import { MapCoordinate } from './aeg-map-coord.js';
 
 // Block and box drawing characters
 const QUADRANT_CHARS    = ' ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█';

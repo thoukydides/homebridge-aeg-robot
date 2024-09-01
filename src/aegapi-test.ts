@@ -5,11 +5,11 @@
 
 import { Logger } from 'homebridge';
 
-import { AEGAPI } from './aegapi';
-import { AEGApplianceAPI } from './aegapi-appliance';
+import { AEGAPI } from './aegapi.js';
+import { AEGApplianceAPI } from './aegapi-appliance.js';
 import { Appliance, Appliances, CleaningCommand, DomainAppliance, Domains,
-         NewTask, PowerMode, SettableProperties, User } from './aegapi-types';
-import { logError, plural } from './utils';
+         NewTask, PowerMode, SettableProperties, User } from './aegapi-types.js';
+import { logError, plural } from './utils.js';
 
 // A test failure
 interface Failure {

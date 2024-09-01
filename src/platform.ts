@@ -8,16 +8,16 @@ import NodePersist from 'node-persist';
 import Path from 'path';
 import { CheckerT, createCheckers, IErrorDetail } from 'ts-interface-checker';
 
-import { DEFAULT_CONFIG, PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { AEGAccessory } from './accessory';
-import { AEGRobotAccessory } from './accessory-robot';
-import { checkDependencyVersions } from './check-versions';
-import { AEGAccount } from './aeg-account';
-import { AEGRobot } from './aeg-robot';
-import { Config } from './config-types';
-import { deepMerge, getValidationTree, logError, plural } from './utils';
-import { PrefixLogger } from './logger';
-import configTI from './ti/config-types-ti';
+import { DEFAULT_CONFIG, PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
+import { AEGAccessory } from './accessory.js';
+import { AEGRobotAccessory } from './accessory-robot.js';
+import { checkDependencyVersions } from './check-versions.js';
+import { AEGAccount } from './aeg-account.js';
+import { AEGRobot } from './aeg-robot.js';
+import { Config } from './config-types.js';
+import { deepMerge, getValidationTree, logError, plural } from './utils.js';
+import { PrefixLogger } from './logger.js';
+import configTI from './ti/config-types-ti.js';
 
 // Checkers for API responses
 const checkers = createCheckers(configTI) as {

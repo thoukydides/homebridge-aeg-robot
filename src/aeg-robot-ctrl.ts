@@ -5,11 +5,11 @@ import { Logger } from 'homebridge';
 
 import { setTimeout } from 'node:timers/promises';
 
-import { AEGRobot, SimpleActivity } from './aeg-robot';
-import { AEGApplianceAPI } from './aegapi-appliance';
-import { Activity, Appliance, CleaningCommand, PowerMode } from './aegapi-types';
-import { MS, logError } from './utils';
-import { Config } from './config-types';
+import { Activity, Appliance, CleaningCommand, PowerMode } from './aegapi-types.js';
+import { AEGApplianceAPI } from './aegapi-appliance.js';
+import { AEGRobot, SimpleActivity } from './aeg-robot.js';
+import { Config } from './config-types.js';
+import { MS, logError } from './utils.js';
 
 // Timezone to use when changing name if unable to determine
 const DEFAULT_TIMEZONE = 'London/Europe';

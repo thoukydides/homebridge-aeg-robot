@@ -5,7 +5,7 @@ import { Logger } from 'homebridge';
 
 import { setTimeout as setTimeoutP } from 'node:timers/promises';
 
-import { MS, logError, sleep } from './utils';
+import { MS, logError, sleep } from './utils.js';
 
 // Multiple of interval to treat as a failure
 const TIMEOUT_MULTIPLE  = 3;

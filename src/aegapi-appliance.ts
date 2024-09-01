@@ -3,13 +3,13 @@
 
 import { createCheckers } from 'ts-interface-checker';
 
-import { AEGAuthoriseUserAgent } from './aegapi-ua-auth';
+import { AEGAuthoriseUserAgent } from './aegapi-ua-auth.js';
 import { Appliance, ApplianceInfo, ApplianceNamePatch, AppliancePut,
          Capabilities, CleanedAreas, CleanedAreaSessionMap, CleaningCommand,
          DeleteTask, InteractiveMaps, InteractiveMapData, Lifetime,
          PowerMode, PutCommand, PutCommandZone, PutTask, PostNewTask, NewTask,
-         Task, Tasks, PatchApplianceName, PutAppliance, InteractiveMap } from './aegapi-types';
-import aegapiTI from './ti/aegapi-types-ti';
+         Task, Tasks, PatchApplianceName, PutAppliance, InteractiveMap } from './aegapi-types.js';
+import aegapiTI from './ti/aegapi-types-ti.js';
 
 // Checkers for API responses
 const checkers = createCheckers(aegapiTI);

@@ -3,11 +3,11 @@
 
 import { Logger, LogLevel } from 'homebridge';
 
-import { AEGRobot, CleanedAreaWithMap } from './aeg-robot';
-import { Activity, Battery, Capability, Completion, Dustbin,
-         FeedItem, FeedItemBase, Message, PowerMode } from './aegapi-types';
-import { columns, formatList, formatMilliseconds, formatSeconds, MS, plural } from './utils';
-import { AEGRobotMap } from './aeg-map';
+import { Activity, Battery, Capability, Completion, Dustbin, FeedItem,
+         FeedItemBase, Message, PowerMode } from './aegapi-types.js';
+import { AEGRobot, CleanedAreaWithMap } from './aeg-robot.js';
+import { AEGRobotMap } from './aeg-map.js';
+import { columns, formatList, formatMilliseconds, formatSeconds, MS, plural } from './utils.js';
 
 // Descriptions of the robot activity
 const activityNames: Record<Activity, string | null> = {

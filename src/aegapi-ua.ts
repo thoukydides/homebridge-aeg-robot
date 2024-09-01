@@ -11,12 +11,12 @@ import { Checker, IErrorDetail } from 'ts-interface-checker';
 import { setTimeout } from 'node:timers/promises';
 
 import { AEG_API_KEY, AEG_API_URL,
-         PLUGIN_NAME, PLUGIN_VERSION } from './settings';
+         PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
 import { AEGAPIError, AEGAPIStatusCodeError,
-         AEGAPIValidationError } from './aegapi-error';
-import { columns, getValidationTree, MS } from './utils';
-import { Config } from './config-types';
-import { IncomingHttpHeaders } from 'undici/types/header';
+         AEGAPIValidationError } from './aegapi-error.js';
+import { columns, getValidationTree, MS } from './utils.js';
+import { Config } from './config-types.js';
+import { IncomingHttpHeaders } from 'undici/types/header.js';
 
 export type Binary     = Dispatcher.ResponseData['body'];
 export type Response   = Dispatcher.ResponseData;

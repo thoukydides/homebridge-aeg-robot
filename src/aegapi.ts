@@ -4,15 +4,15 @@
 import { Logger } from 'homebridge';
 import { createCheckers } from 'ts-interface-checker';
 
-import { AEGAuthoriseUserAgent } from './aegapi-ua-auth';
-import { AEGApplianceAPI } from './aegapi-appliance';
+import { AEGAuthoriseUserAgent } from './aegapi-ua-auth.js';
+import { AEGApplianceAPI } from './aegapi-appliance.js';
 import { Appliances, Countries, Domains, FAQ, Feed, HealthChecks,
          IdentityProviders, LegalDocuments, MeasurementUnits, PatchUser,
-         PostWebShop, PutChangePassword, User, WebShop } from './aegapi-types';
-import { AEG_APP } from './settings';
-import aegapiTI from './ti/aegapi-types-ti';
-import { Config } from './config-types';
-import { AEGAPITest } from './aegapi-test';
+         PostWebShop, PutChangePassword, User, WebShop } from './aegapi-types.js';
+import { AEG_APP } from './settings.js';
+import { Config } from './config-types.js';
+import { AEGAPITest } from './aegapi-test.js';
+import aegapiTI from './ti/aegapi-types-ti.js';
 
 // Checkers for API responses
 const checkers = createCheckers(aegapiTI);

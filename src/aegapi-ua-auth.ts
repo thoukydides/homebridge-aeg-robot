@@ -3,20 +3,20 @@
 
 import { Logger } from 'homebridge';
 
-import { getItem, setItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import { CheckerT, createCheckers } from 'ts-interface-checker';
 import { setTimeout } from 'node:timers/promises';
 
 import { AuthToken, AuthUser, PostAuthTokenClient, PostAuthTokenExchange,
          PostAuthTokenRefresh, PostAuthTokenRevoke, PostAuthToken, PostAuthUser,
-         AbsoluteAuthToken } from './aegapi-auth-types';
-import { AEGUserAgent, Headers, Method, Request, UAOptions } from './aegapi-ua';
-import { MS, logError, sleep } from './utils';
-import { AEG_CLIENT_ID, AEG_CLIENT_SECRET } from './settings';
+         AbsoluteAuthToken } from './aegapi-auth-types.js';
+import { AEGUserAgent, Headers, Method, Request, UAOptions } from './aegapi-ua.js';
+import { MS, logError, sleep } from './utils.js';
+import { AEG_CLIENT_ID, AEG_CLIENT_SECRET } from './settings.js';
 import { AEGAPIAuthorisationError, AEGAPIError,
-         AEGAPIStatusCodeError } from './aegapi-error';
-import { Config } from './config-types';
-import aegapiTI from './ti/aegapi-auth-types-ti';
+         AEGAPIStatusCodeError } from './aegapi-error.js';
+import { Config } from './config-types.js';
+import aegapiTI from './ti/aegapi-auth-types-ti.js';
 
 // Checkers for API responses
 const checkers = createCheckers(aegapiTI) as {
@@ -78,7 +78,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
     async authoriseUserAgent(): Promise<void> {
         // Retrieve any saved authorisation
         try {
-            const token: unknown = await getItem(this.persistKey);
+            const token: unknown = await nodePersist.getItem(this.persistKey);
             if (checkers.AbsoluteAuthToken.test(token)) {
                 this.token = token;
                 if (Date.now() + this.refreshWindow < this.token.expiresAt) {
@@ -111,7 +111,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
 
                 // Save the updated token
                 this.log.info('Successfully refreshed access token');
-                await setItem(this.persistKey, this.token);
+                await nodePersist.setItem(this.persistKey, this.token);
                 this.authorisedFn.resolve();
 
             } catch (cause) {
@@ -148,7 +148,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
 
             // Save the new token
             this.log.info('Successfully obtained access token');
-            await setItem(this.persistKey, this.token);
+            await nodePersist.setItem(this.persistKey, this.token);
             this.authorisedFn.resolve();
 
         } catch (cause) {

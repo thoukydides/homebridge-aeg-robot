@@ -4,19 +4,18 @@
 import { Logger } from 'homebridge';
 import { EventEmitter } from 'events';
 
-import { AEGAccount } from './aeg-account';
-import { AEGApplianceAPI } from './aegapi-appliance';
 import { Activity, Appliance, ApplianceNamePatch, Battery, Capability,
          CleanedArea, CleanedAreaSessionMap, CleaningCommand, Connection,
          DomainAppliance, Dustbin, FeedItem, InteractiveMap, InteractiveMapData,
-         Message, PowerMode, Status } from './aegapi-types';
-import { PrefixLogger } from './logger';
-import { MS, formatList, logError } from './utils';
-import { AEGRobotLog } from './aeg-robot-log';
-import { AEGRobotCtrlActivity, AEGRobotCtrlName,
-         AEGRobotCtrlPower } from './aeg-robot-ctrl';
-import { Heartbeat } from './heartbeat';
-import { Config } from './config-types';
+         Message, PowerMode, Status } from './aegapi-types.js';
+import { AEGAccount } from './aeg-account.js';
+import { AEGApplianceAPI } from './aegapi-appliance.js';
+import { AEGRobotCtrlActivity, AEGRobotCtrlName, AEGRobotCtrlPower } from './aeg-robot-ctrl.js';
+import { AEGRobotLog } from './aeg-robot-log.js';
+import { Config } from './config-types.js';
+import { Heartbeat } from './heartbeat.js';
+import { MS, formatList, logError } from './utils.js';
+import { PrefixLogger } from './logger.js';
 
 // Simplified robot activities
 export enum SimpleActivity {

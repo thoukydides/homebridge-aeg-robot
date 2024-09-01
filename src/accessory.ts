@@ -4,10 +4,11 @@
 import { Characteristic, CharacteristicValue, HAPStatus, Logger, Nullable,
          Perms, PlatformAccessory, Service } from 'homebridge';
 
-import { AEGPlatform } from './platform';
-import { AEGAPIAuthorisationError } from './aegapi-error';
-import { assertIsString, logError } from './utils';
-import { getItem, setItem } from 'node-persist';
+import nodePersist from 'node-persist';
+
+import { AEGAPIAuthorisationError } from './aegapi-error.js';
+import { AEGPlatform } from './platform.js';
+import { assertIsString, logError } from './utils.js';
 
 // Characteristic used to indicate a long-term error state
 interface ErrorCharacteristic {
@@ -155,7 +156,7 @@ export class AEGAccessory {
     // Restore any persistent data
     async loadPersist(): Promise<void> {
         try {
-            const persist = await getItem(this.accessory.UUID) as PersistData | undefined;
+            const persist = await nodePersist.getItem(this.accessory.UUID) as PersistData | undefined;
             if (persist) this.customNames = new Map(Object.entries(persist.customNames));
         } catch (err) {
             logError(this.log, 'Load persistent data', err);
@@ -168,7 +169,7 @@ export class AEGAccessory {
     async savePersist(): Promise<void> {
         try {
             const persist: PersistData = { customNames: Object.fromEntries(this.customNames) };
-            await setItem(this.accessory.UUID, persist);
+            await nodePersist.setItem(this.accessory.UUID, persist);
         } catch (err) {
             logError(this.log, 'Save persistent data', err);
         } finally {

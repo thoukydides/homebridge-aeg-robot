@@ -3,8 +3,8 @@
 
 import { API } from 'homebridge';
 
-import { PLATFORM_NAME } from './settings';
-import { AEGPlatform } from './platform';
+import { PLATFORM_NAME } from './settings.js';
+import { AEGPlatform } from './platform.js';
 
 // Register the platform with Homebridge
 export default (api: API) => { api.registerPlatform(PLATFORM_NAME, AEGPlatform); };

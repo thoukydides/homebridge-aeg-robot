@@ -1,10 +1,11 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
-import { ENGINES, PLUGIN_NAME, PLUGIN_VERSION,
-         REQUIRED_HOMEBRIDGE_API } from './settings';
-import { AEGPlatform } from './platform';
 import semver from 'semver';
+
+import { ENGINES, PLUGIN_NAME, PLUGIN_VERSION,
+         REQUIRED_HOMEBRIDGE_API } from './settings.js';
+import { AEGPlatform } from './platform.js';
 
 // Log critical package and API versions
 export function checkDependencyVersions(platform: AEGPlatform): void {

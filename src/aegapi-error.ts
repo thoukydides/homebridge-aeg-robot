@@ -5,9 +5,9 @@ import { STATUS_CODES } from 'http';
 import { createCheckers, CheckerT, IErrorDetail } from 'ts-interface-checker';
 
 import { ErrorResponseCode, ErrorResponseMessageLC,
-         ErrorResponseMessageUC } from './aegapi-error-types';
-import { Request, Response } from './aegapi-ua';
-import errorsTI from './ti/aegapi-error-types-ti';
+         ErrorResponseMessageUC } from './aegapi-error-types.js';
+import { Request, Response } from './aegapi-ua.js';
+import errorsTI from './ti/aegapi-error-types-ti.js';
 
 // Options that can be passed to an error constructor
 interface Options { cause?: unknown }

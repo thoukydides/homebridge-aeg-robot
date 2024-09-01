@@ -3,14 +3,13 @@
 
 import { PlatformAccessory, Service } from 'homebridge';
 
-import { AEGAccessory } from './accessory';
-import { AEGPlatform } from './platform';
-import { AEGRobot, DynamicStatus, StatusEvent,
-         SimpleActivity } from './aeg-robot';
-import { Battery, PowerMode, CleaningCommand } from './aegapi-types';
-import { HideService } from './config-types';
-import { assertIsBoolean, assertIsNumber, assertIsString, gcd } from './utils';
-import { PLUGIN_VERSION } from './settings';
+import { AEGAccessory } from './accessory.js';
+import { AEGPlatform } from './platform.js';
+import { AEGRobot, DynamicStatus, StatusEvent, SimpleActivity } from './aeg-robot.js';
+import { assertIsBoolean, assertIsNumber, assertIsString, gcd } from './utils.js';
+import { Battery, PowerMode, CleaningCommand } from './aegapi-types.js';
+import { HideService } from './config-types.js';
+import { PLUGIN_VERSION } from './settings.js';
 
 // A Homebridge AEG RX 9 / Electrolux Pure i9 accessory handler
 export class AEGRobotAccessory extends AEGAccessory {

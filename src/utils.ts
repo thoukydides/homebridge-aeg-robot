@@ -6,7 +6,7 @@ import { Logger } from 'homebridge';
 import { IErrorDetail } from 'ts-interface-checker';
 import assert from 'assert';
 
-import { AEGAPIError } from './aegapi-error';
+import { AEGAPIError } from './aegapi-error.js';
 
 // Milliseconds in a second
 export const MS = 1000;
