@@ -64,7 +64,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
     // Construct a Promise used to abort token refreshing
     makeAbortRefreshPromise(reason: unknown): Promise<never> {
         return new Promise((_, reject) => {
-            this.reauthorise = () => {
+            this.reauthorise = (): void => {
                 this.log.warn('Reauthorisation required...');
                 this.reauthorise = undefined;
                 this.authorised = this.makeAuthPromise();

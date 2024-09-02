@@ -77,9 +77,9 @@ export class AEGAccount {
         // Start polling for interesting changes
         const intervals = this.config.pollIntervals;
         const poll: [string, number, () => Promise<void>][] = [
-            ['Appliances',      intervals.statusSeconds,        () => this.pollAppliances()],
-            ['Server health',   intervals.serverHealthSeconds,  () => this.pollServerHealth()],
-            ['Feed',            intervals.feedSeconds,          () => this.pollFeed()]
+            ['Appliances',      intervals.statusSeconds,        this.pollAppliances.bind(this)],
+            ['Server health',   intervals.serverHealthSeconds,  this.pollServerHealth.bind(this)],
+            ['Feed',            intervals.feedSeconds,          this.pollFeed.bind(this)]
         ];
         this.heartbeats = poll.map(action =>
             new Heartbeat(this.log, action[0], action[1] * MS, action[2],
@@ -117,7 +117,7 @@ export class AEGAccount {
     // Check the server health
     async pollServerHealth(): Promise<void> {
         // Check the server health
-        const isHealthy = (server: HealthCheck) => server.statusCode === 200 && server.message === 'I am alive!';
+        const isHealthy = (server: HealthCheck): boolean => server.statusCode === 200 && server.message === 'I am alive!';
         const servers = await this.api.getHealthChecks();
         const failed = servers.filter(server => !isHealthy(server)).length;
 

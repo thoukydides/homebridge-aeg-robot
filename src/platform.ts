@@ -157,7 +157,7 @@ export class AEGPlatform implements DynamicPlatformPlugin {
     // Remove any accessories that are no longer required
     removeUnconfiguredAccessories(): void {
         // Identify accessories that do not have an implementation
-        const isObsolete = (linkage: AccessoryLinkage) => !linkage.implementation;
+        const isObsolete = (linkage: AccessoryLinkage): boolean => !linkage.implementation;
         const rmAccessories = [...this.accessories.values()]
             .filter(isObsolete).map(linkage => linkage.accessory);
         if (!rmAccessories.length) return;

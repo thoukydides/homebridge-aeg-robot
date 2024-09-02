@@ -59,7 +59,7 @@ export class Heartbeat {
             // Start a new watchdog
             const abort = new Promise<never>((_, reject) => {
                 // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                this.killWatchdog = () => { reject('kill'); };
+                this.killWatchdog = (): void => { reject('kill'); };
             });
             await sleep(this.interval * TIMEOUT_MULTIPLE + TIMEOUT_OFFSET, abort);
 

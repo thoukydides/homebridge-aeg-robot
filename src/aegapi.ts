@@ -117,7 +117,7 @@ export class AEGAPI {
         return this.ua.postJSON(checkers.WebShop, path, body);
     }
 
-    applianceAPI(applianceId: string) {
+    applianceAPI(applianceId: string): AEGApplianceAPI {
         return new AEGApplianceAPI(this.ua, applianceId);
     }
 }

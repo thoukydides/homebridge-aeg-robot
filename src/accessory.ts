@@ -97,7 +97,7 @@ export class AEGAccessory {
     }
 
     // Add a read-only Configured Name characteristic
-    addServiceName(service: Service, suffix: string, defaultName: string) {
+    addServiceName(service: Service, suffix: string, defaultName: string): void {
         // Add the configured name characteristic
         if (!service.testCharacteristic(this.Characteristic.ConfiguredName)) {
             service.addOptionalCharacteristic(this.Characteristic.ConfiguredName);

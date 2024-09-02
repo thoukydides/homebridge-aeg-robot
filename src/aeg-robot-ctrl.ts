@@ -57,7 +57,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
 
     // Return a set method bound to this instance
     makeSetter(): (target: Type) => void {
-        return (target) => void (async () => { await this.set(target); })();
+        return (target) => void (async (): Promise<void> => { await this.set(target); })();
     }
 
     // Request a change to the robot
@@ -86,7 +86,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
             do {
                 // Create mechanism to abort waiting for a status update
                 const abort = new Promise<'abort'>(resolve =>
-                    this.abort = () => { resolve('abort'); });
+                    this.abort = (): void => { resolve('abort'); });
 
                 // Attempt to apply the requested change
                 target = this.target;

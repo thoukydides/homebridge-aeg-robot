@@ -157,7 +157,7 @@ export class AEGRobotLog {
                 this.log.info(`    Recharged ${item.data.pitstopCount} times while cleaning`);
                 break;
             case 'OsirisBusierWeekJobDone': {
-                const formatHours = (hours: number) => formatSeconds(hours * 60 * 60);
+                const formatHours = (hours: number): string => formatSeconds(hours * 60 * 60);
                 this.log.info(`Worked more this week (${age}):`);
                 this.log.info(`    Worked ${formatHours(item.data.current)} this week`);
                 this.log.info(`    Worked ${formatHours(item.data.previous)} previous week`);
@@ -203,7 +203,7 @@ export class AEGRobotLog {
             this.log.info(`Cleaned area ${date.toLocaleDateString()}:`);
             this.log.info(`    Cleaned ${cleanedArea.cleanedArea} m²`);
             if (cleaningSession) {
-                const formatTime = (time: string) => new Date(time).toLocaleTimeString();
+                const formatTime = (time: string): string => new Date(time).toLocaleTimeString();
                 this.log.info(`    ${formatTime(cleaningSession.startTime)} - ${formatTime(cleaningSession.eventTime)}`);
                 this.log.info(`    Cleaned for ${formatMilliseconds(cleaningSession.cleaningDuration * TICK_MS)}`);
                 if (cleaningSession.pitstopCount) {

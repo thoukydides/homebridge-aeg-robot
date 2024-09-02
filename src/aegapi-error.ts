@@ -69,7 +69,7 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
     }
 
     // Construct an error message from a response
-    static getMessage(response: Response, text: string) {
+    static getMessage(response: Response, text: string): string {
         const statusCode = response.statusCode;
         const statusCodeName = STATUS_CODES[statusCode];
         const description = AEGAPIStatusCodeError.getBodyDescription(text)
@@ -126,7 +126,7 @@ export class AEGAPIValidationError extends AEGAPIError {
     }
 
     // Construct an error message from a checker validation error
-    static getMessage(errors: IErrorDetail[]) {
+    static getMessage(errors: IErrorDetail[]): string {
         const description = `${errors[0].path} ${errors[0].message}`;
         return `Structure validation failed (${description})`;
     }

@@ -39,8 +39,8 @@ export class PrefixLogger {
     }
 
     // Attempt to filter sensitive data within the log message
-    static filterSensitive(message: string) {
-        const replaceJWT = (match: string) => isJWT(match) ? '<JSON_WEB_TOKEN>' : match;
+    static filterSensitive(message: string): string {
+        const replaceJWT = (match: string): string => isJWT(match) ? '<JSON_WEB_TOKEN>' : match;
         return message
             // User ID and access tokens
             .replace(/\b[\w-]+\.[\w-]+\.[\w-]+\b/g,             replaceJWT)

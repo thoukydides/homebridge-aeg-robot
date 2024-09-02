@@ -178,7 +178,7 @@ export class AEGRobot extends EventEmitter {
         // Start polling for interesting changes
         const intervals = this.config.pollIntervals;
         const poll: [string, number, () => Promise<void>][] = [
-            ['Cleaned areas',   intervals.cleanedAreasSeconds,  () => this.pollCleanedAreas()]
+            ['Cleaned areas',   intervals.cleanedAreasSeconds,  this.pollCleanedAreas.bind(this)]
         ];
         this.heartbeats = poll.map(action =>
             new Heartbeat(this.log, action[0], action[1] * MS, action[2],
@@ -224,7 +224,7 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Update the name and timezone
-    updateFromDomains(appliance: DomainAppliance | ApplianceNamePatch) {
+    updateFromDomains(appliance: DomainAppliance | ApplianceNamePatch): void {
         this.updateStatus({
             rawName:    appliance.applianceName,
             timezone:   appliance.timeZoneStandardName
@@ -333,7 +333,7 @@ export class AEGRobot extends EventEmitter {
         if (!changed.length) return;
 
         // Log a summary of the changes
-        const toText = (value: unknown) => {
+        const toText = (value: unknown): string => {
             if (value === undefined) return '?';
             if (typeof(value) === 'string' && /[- <>:,]/.test(value)) return `"${value}"`;
             return String(value);
@@ -350,7 +350,7 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Emit events for any new messages
-    emitMessages(messages: Message[] = []) {
+    emitMessages(messages: Message[] = []): void {
         // If there are no current messages then just flush the cache
         if (!messages.length) { this.emittedMessages.clear(); return; }
 
@@ -365,7 +365,7 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Update feed items
-    updateFromFeed(feed: FeedItem[]) {
+    updateFromFeed(feed: FeedItem[]): void {
         // If there are no current feed items then just flush the cache
         if (!feed.length) { this.emittedFeed.clear(); return; }
 
