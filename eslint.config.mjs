@@ -22,6 +22,7 @@ export default tseslint.config(
             }
         },
         rules: {
+            '@typescript-eslint/explicit-function-return-type': ['error'],
             '@typescript-eslint/no-unused-vars':                ['error', { args: 'all', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
             '@typescript-eslint/restrict-template-expressions': ['error', { allowBoolean: true, allowNullish: true, allowNumber: true}],
             'brace-style':                                      ['warn', '1tbs', { allowSingleLine: true }],
@@ -45,8 +46,7 @@ export default tseslint.config(
             'quotes':                                           ['warn', 'single', { avoidEscape: true }],
             'semi':                                             ['warn'],
             // Special rules for this project
-            '@typescript-eslint/unified-signatures':            ['error', { ignoreDifferentlyNamedParameters: true }],
-            '@typescript-eslint/explicit-function-return-type': ['error']
+            '@typescript-eslint/unified-signatures':            ['error', { ignoreDifferentlyNamedParameters: true }]
         }
     }, {
         files: ['**/*-types.ts'],
