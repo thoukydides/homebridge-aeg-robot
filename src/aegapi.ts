@@ -2,7 +2,6 @@
 // Copyright © 2022-2024 Alexander Thoukydides
 
 import { Logger } from 'homebridge';
-import { createCheckers } from 'ts-interface-checker';
 
 import { AEGAuthoriseUserAgent } from './aegapi-ua-auth.js';
 import { AEGApplianceAPI } from './aegapi-appliance.js';
@@ -12,10 +11,7 @@ import { Appliances, Countries, Domains, FAQ, Feed, HealthChecks,
 import { AEG_APP } from './settings.js';
 import { Config } from './config-types.js';
 import { AEGAPITest } from './aegapi-test.js';
-import aegapiTI from './ti/aegapi-types-ti.js';
-
-// Checkers for API responses
-const checkers = createCheckers(aegapiTI);
+import { checkers } from './ti/aegapi-types.js';
 
 // Access to the AEG RX 9 / Electrolux Pure i9 cloud API
 export class AEGAPI {
@@ -70,7 +66,7 @@ export class AEGAPI {
         const query = { brand, countryCode: this.language.countryCode };
         const provider = await this.ua.getJSON<IdentityProviders>(
             checkers.IdentityProviders, '/one-account-user/api/v1/identity-providers', { query });
-        if (provider.length) this.ua.setURL(provider[0].httpRegionalBaseUrl);
+        if (provider[0] !== undefined) this.ua.setURL(provider[0].httpRegionalBaseUrl);
         return provider;
     }
 

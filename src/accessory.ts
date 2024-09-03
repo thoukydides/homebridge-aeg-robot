@@ -211,7 +211,7 @@ export class AEGAccessory {
 
         // Select a service (preferably the primary) to report the error
         const services = accessory.services;
-        if (services.length === 0) return;
+        if (services[0] === undefined) return;
         const service = services.find(service => service.isPrimaryService)
                      ?? services.find(service => service.UUID !== Service.AccessoryInformation.UUID)
                      ?? services[0];

@@ -9,7 +9,7 @@ import { Activity, Appliance, CleaningCommand, PowerMode } from './aegapi-types.
 import { AEGApplianceAPI } from './aegapi-appliance.js';
 import { AEGRobot, SimpleActivity } from './aeg-robot.js';
 import { Config } from './config-types.js';
-import { MS, logError } from './utils.js';
+import { MS, assertIsNotUndefined, logError } from './utils.js';
 
 // Timezone to use when changing name if unable to determine
 const DEFAULT_TIMEZONE = 'London/Europe';
@@ -248,6 +248,7 @@ export class AEGRobotCtrlActivity extends AEGRobotCtrl<CleaningCommand> {
             && this.robot.status.isDocked !== undefined) {
             isSet = this.robot.status.isDocked;
         }
+        assertIsNotUndefined(isSet);
         return isSet;
     }
 

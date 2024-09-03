@@ -245,7 +245,7 @@ export interface ApplianceTask {
 export interface ApplianceTasks {
     [index: string]:            ApplianceTask;
 }
-interface CapabilitySupported {
+export interface CapabilitySupported {
     [index: string]:            never;
 }
 export interface Capabilities {

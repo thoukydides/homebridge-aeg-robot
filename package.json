@@ -75,14 +75,14 @@
         "nodemon": "^3.1.4",
         "rimraf": "^6.0.1",
         "ts-interface-builder": "^0.3.3",
-        "ts-node": "^10.9.2",
+        "tsx": "^4.19.0",
         "typescript": "^5.5.4",
         "typescript-eslint": "^8.3.0"
     },
     "scripts": {
         "lint": "npm run checkers && eslint 'src/**.ts' --max-warnings=0",
         "watch": "npm run build && nodemon",
-        "checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts",
+        "checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts && tsx bin/ts-interface-post.ts ./src/ti",
         "build": "rimraf ./dist && npm run checkers && tsc",
         "postversion": "git push && git push --tags",
         "prepublishOnly": "npm run lint && npm run build"

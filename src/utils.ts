@@ -16,6 +16,9 @@ export function assertIsDefined<Type>(value: Type): asserts value is NonNullable
     assert.notStrictEqual(value, undefined);
     assert.notStrictEqual(value, null);
 }
+export function assertIsNotUndefined<Type>(value: Type): asserts value is Exclude<Type, undefined> {
+    assert.notStrictEqual(value, undefined);
+}
 export function assertIsUndefined(value: unknown): asserts value is undefined {
     assert.strictEqual(value, undefined);
 }
@@ -63,22 +66,21 @@ export function formatMilliseconds(ms: number, maxParts = 2): string {
     if (ms < 1) return 'n/a';
 
     // Split the duration into components
-    const duration: Record<string, number> = {
-        day:            Math.floor(ms / (24 * 60 * 60 * MS)),
-        hour:           Math.floor(ms /      (60 * 60 * MS)) % 24,
-        minute:         Math.floor(ms /           (60 * MS)) % 60,
-        second:         Math.floor(ms /                 MS ) % 60,
-        millisecond:    Math.floor(ms                      ) % MS
-    };
+    const duration: [string, number][] = [
+        ['day',         Math.floor(ms / (24 * 60 * 60 * MS))     ],
+        ['hour',        Math.floor(ms /      (60 * 60 * MS)) % 24],
+        ['minute',      Math.floor(ms /           (60 * MS)) % 60],
+        ['second',      Math.floor(ms /                 MS ) % 60],
+        ['millisecond', Math.floor(ms                      ) % MS]
+    ];
 
     // Remove any leading zero components
-    const keys = Object.keys(duration);
-    while (keys.length && duration[keys[0]] === 0) keys.shift();
+    while (duration[0]?.[1] === 0) duration.shift();
 
     // Combine the required number of remaining components
-    return keys.slice(0, maxParts)
-        .filter(key => duration[key] !== 0)
-        .map(key => plural(duration[key], key))
+    return duration.slice(0, maxParts)
+        .filter(([_key, value]) => value !== 0)
+        .map(([key, value]) => plural(value, key))
         .join(' ');
 }
 
@@ -91,7 +93,7 @@ export function formatSeconds(seconds: number, maxParts = 2): string {
 export function formatList(items: string[]): string {
     switch (items.length) {
     case 0:     return 'n/a';
-    case 1:     return items[0];
+    case 1:     return items[0] ?? '';
     case 2:     return `${items[0]} and ${items[1]}`;
     default:    return [...items.slice(0, -1), `and ${items[items.length - 1]}`].join(', ');
     }
@@ -130,7 +132,7 @@ export function columns(rows: string[][], separator = '  '): string[] {
     width.splice(-1, 1, 0);
 
     // Format the rows
-    return rows.map(row => row.map((value, index) => value.padEnd(width[index])).join(separator));
+    return rows.map(row => row.map((value, index) => value.padEnd(width[index] ?? 0)).join(separator));
 }
 
 // Recursive object assignment, skipping undefined values
@@ -164,9 +166,11 @@ export function getValidationTree(errors: IErrorDetail[]): string[] {
 
 // Greatest common divisor using the Euclidean algorithm
 export function gcd(...values: number[]): number {
-    assert(0 < values.length);
-    if (values.length === 1) return values[0];
-    const [a, b] = values.splice(0, 2);
-    if (!values.length) return b === 0 ? a : gcd(b, a % b);
+    const a = values.shift();
+    assertIsDefined(a);
+    if (values.length === 0) return a;
+    const b = values.shift();
+    assertIsDefined(b);
+    if (values.length === 0) return b === 0 ? a : gcd(b, a % b);
     else return gcd(gcd(a, b), ...values);
 }

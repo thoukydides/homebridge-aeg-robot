@@ -2,10 +2,14 @@
 // Copyright © 2022-2023 Alexander Thoukydides
 
 import { MapCoordinate } from './aeg-map-coord.js';
+import { assertIsDefined } from './utils.js';
 
 // Block and box drawing characters
-const QUADRANT_CHARS    = ' ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█';
-const BOX_CHARS         = { single: '╭╮╰╯─│', double: '╔╗╚╝═║' };
+const QUADRANT_CHARS = ' ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█';
+const BOX_CHARS = {
+    single: ['╭', '╮', '╰', '╯', '─', '│'],
+    double: ['╔', '╗', '╚', '╝', '═', '║']
+} as const;
 
 // Character aspect ratio (width / height)
 const ASPECT_RATIO = 0.7;
@@ -118,13 +122,16 @@ export class MapText {
 
         // Set the required quadrant
         const quad = (frac.x < 0 ? 0 : 1) + (frac.y < 0 ? 0 : 2);
-        //console.log({coord, int, frac, quad});
-        this.set(int, QUADRANT_CHARS[quadBits | (1 << quad)]);
+        const quadChar = QUADRANT_CHARS[quadBits | (1 << quad)];
+        assertIsDefined(quadChar);
+        this.set(int, quadChar);
     }
 
     // Get a string (usually single character) from the canvas
     get(coord: MapCoordinate, length = 1): string {
-        return this.canvas[coord.y].substring(coord.x, coord.x + length);
+        const row = this.canvas[coord.y];
+        assertIsDefined(row);
+        return row.substring(coord.x, coord.x + length);
     }
 
     // Set a string (usually single character) in the canvas
@@ -140,7 +147,9 @@ export class MapText {
         if (this.cols < x + value.length) x = this.cols - value.length;
 
         // Update the canvas
-        this.canvas[coord.y] = this.canvas[coord.y].substring(0, x) + value
-                             + this.canvas[coord.y].substring(x + value.length);
+        const row = this.canvas[coord.y];
+        assertIsDefined(row);
+        this.canvas[coord.y] = row.substring(0, x) + value
+                             + row.substring(x + value.length);
     }
 }

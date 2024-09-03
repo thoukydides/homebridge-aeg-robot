@@ -54,7 +54,9 @@ export class AEGRobotMap {
     applyTransform(orig: AnyMapCoordinate): MapCoordinate {
         let coord = new MapCoordinate(orig);
         if ('t' in orig && orig.t !== undefined) {
-            coord = coord.transform(this.transforms[orig.t]);
+            const transform = this.transforms[orig.t];
+            assertIsDefined(transform);
+            coord = coord.transform(transform);
         }
         return coord.rotate(-Math.PI / 2);
     }
@@ -93,8 +95,8 @@ export class AEGRobotMap {
         this.crumbs.cleaned.forEach(crumb => { canvas.plotCircle(crumb, ROBOT_DIAMETER); });
 
         // Label the zones
-        Object.keys(this.zones).forEach(name => {
-            const coord = MapCoordinate.mean(MapCoordinate.boundingBox(this.zones[name]));
+        Object.entries(this.zones).forEach(([name, zone]) => {
+            const coord = MapCoordinate.mean(MapCoordinate.boundingBox(zone));
             canvas.plotLabel(coord, name);
         });
 

@@ -6,7 +6,7 @@ import { Logger, LogLevel } from 'homebridge';
 import { AEGAPI } from './aegapi.js';
 import { AEGApplianceAPI } from './aegapi-appliance.js';
 import { AEGRobot } from './aeg-robot.js';
-import { columns, formatList, MS, plural } from './utils.js';
+import { assertIsDefined, columns, formatList, MS, plural } from './utils.js';
 import { Config } from './config-types.js';
 import { HealthCheck } from './aegapi-types.js';
 import { Heartbeat } from './heartbeat.js';
@@ -135,7 +135,9 @@ export class AEGAccount {
             server.message
         ]));
         columns(rows).forEach((line, index) => {
-            const level = isHealthy(servers[index]) ? LogLevel.DEBUG : LogLevel.ERROR;
+            const server = servers[index];
+            assertIsDefined(server);
+            const level = isHealthy(server) ? LogLevel.DEBUG : LogLevel.ERROR;
             this.log.log(level, line);
         });
 

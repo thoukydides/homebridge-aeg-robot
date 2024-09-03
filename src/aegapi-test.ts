@@ -1,8 +1,6 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2024 Alexander Thoukydides
 
-/* eslint-disable @typescript-eslint/unbound-method */
-
 import { Logger } from 'homebridge';
 
 import { AEGAPI } from './aegapi.js';
@@ -18,10 +16,17 @@ interface Failure {
     error:      unknown;
 }
 
-// A tester for a single API method
-type Tester = <Args extends unknown[], Returns>
-              (method: (...args: [...Args]) => Promise<Returns>, ...args: [...Args])
-              => Promise<Returns | undefined>;
+// Testable methods on an API class
+type TestableMethod = (...args: never[]) => unknown;
+type TestableMethodNames<API> = keyof {
+    [K in keyof API as API[K] extends TestableMethod ? K : never]: unknown
+};
+
+// A tester for an API class
+type Tester<API> = <Method extends TestableMethodNames<API>>(
+    method: Method,
+    ...args: Parameters<Extract<API[Method], TestableMethod>>
+) => Promise<ReturnType<Extract<API[Method], TestableMethod>> | undefined>;
 
 // Tests of the AEG RX 9 / Electrolux Pure i9 cloud API
 export class AEGAPITest {
@@ -37,6 +42,7 @@ export class AEGAPITest {
         readonly unsafe: boolean
     ) {
         void this.runAllTests();
+        this.runAllTests.bind(this);
     }
 
     // Run all enabled tests
@@ -69,17 +75,18 @@ export class AEGAPITest {
         const test = this.makeTester(this.api);
 
         // Run the tests
-        await test(this.api.getCountries);
-        await test(this.api.getFAQ);
-        await test(this.api.getLegalDocuments);
-        await test(this.api.getHealthChecks);
-        await test(this.api.getFeed);
-        await test(this.api.getIdentityProviders);
-        const user       = await test(this.api.getCurrentUser);
-        const appliances = await test(this.api.getAppliances);
-        const domains    = await test(this.api.getDomains);
+        await test('getCountries');
+        // [403 Forbidden] '<...>' not a valid key=value pair (missing equal-sign) in Authorization header: 'Bearer <...>'.
+        //await test('getFAQ');
+        await test('getLegalDocuments');
+        await test('getHealthChecks');
+        await test('getFeed');
+        await test('getIdentityProviders');
+        const user       = await test('getCurrentUser');
+        const appliances = await test('getAppliances');
+        const domains    = await test('getDomains');
         const applianceIds = (appliances ?? []).map(a => a.applianceId);
-        await test(this.api.getWebShopURLs, applianceIds);
+        await test('getWebShopURLs', applianceIds);
 
         // Return results required for other tests
         return { appliances, domains, user };
@@ -90,10 +97,10 @@ export class AEGAPITest {
         const test = this.makeTester(this.api);
 
         // Run the tests
-        await test(this.api.setUserName, user.firstName, user.lastName);
-        await test(this.api.setCountry, user.countryCode);
+        await test('setUserName', user.firstName, user.lastName);
+        await test('setCountry', user.countryCode);
         if (user.measurementUnits !== null) {
-            await test(this.api.setMeasurementUnits, user.measurementUnits);
+            await test('setMeasurementUnits', user.measurementUnits);
         } else {
             this.log.warn('No measurement units found for API test');
         }
@@ -105,26 +112,26 @@ export class AEGAPITest {
         const test = this.makeTester(applianceAPI);
 
         // Run most of the tests
-        await test(applianceAPI.getApplianceInfo);
-        await test(applianceAPI.getApplianceTasks);
-        const interactiveMaps = await test(applianceAPI.getApplianceInteractiveMaps);
-        await test(applianceAPI.getApplianceLifetime);
-        const cleanedAreas = await test(applianceAPI.getApplianceCleanedAreas);
-        await test(applianceAPI.getApplianceHistory);
+        await test('getApplianceInfo');
+        await test('getApplianceTasks');
+        const interactiveMaps = await test('getApplianceInteractiveMaps');
+        await test('getApplianceLifetime');
+        const cleanedAreas = await test('getApplianceCleanedAreas');
+        await test('getApplianceHistory');
         // [404 Not Found] Failed to retrieve capabilities from delta (capability_0004)
-        //await test(applianceAPI.getApplianceCapabilities);
+        //await test('getApplianceCapabilities');
 
         // Run the map retrieval tests
-        if (cleanedAreas?.length) {
+        if (cleanedAreas?.[0] !== undefined) {
             const { sessionId } = cleanedAreas[0];
-            await test(applianceAPI.getApplianceSessionMap, sessionId);
+            await test('getApplianceSessionMap', sessionId);
         } else {
             this.log.warn('No cleaned area session found for API test');
         }
-        if (interactiveMaps?.length) {
+        if (interactiveMaps?.[0] !== undefined) {
             const { id, sequenceNumber } = interactiveMaps[0];
-            await test(applianceAPI.getApplianceInteractiveMap, id);
-            await test(applianceAPI.getApplianceInteractiveMapData, id, sequenceNumber);
+            await test('getApplianceInteractiveMap', id);
+            await test('getApplianceInteractiveMapData', id, sequenceNumber);
         } else {
             this.log.warn('No interactive map found for API test');
         }
@@ -146,11 +153,11 @@ export class AEGAPITest {
         const timeZoneStandardName = domainAppliance.timeZoneStandardName ?? 'Europe/London';
 
         // Run most of the tests
-        await test(applianceAPI.setPowerMode, powerMode);
-        await test(applianceAPI.setApplianceName, applianceName, timeZoneStandardName);
-        await test(applianceAPI.setMute, mute);
-        await test(applianceAPI.setLanguage, language);
-        await test(applianceAPI.cleaningCommand, cleaningCommand);
+        await test('setPowerMode', powerMode);
+        await test('setApplianceName', applianceName, timeZoneStandardName);
+        await test('setMute', mute);
+        await test('setLanguage', language);
+        await test('cleaningCommand', cleaningCommand);
 
         // Run the task creation/modification/deletion tests
         const newTask: NewTask = {
@@ -166,10 +173,10 @@ export class AEGAPITest {
                 }
             }
         };
-        const createdTask = await test(applianceAPI.createApplianceTask, newTask);
+        const createdTask = await test('createApplianceTask', newTask);
         if (createdTask) {
-            await test(applianceAPI.replaceApplianceTask, createdTask);
-            await test(applianceAPI.deleteApplianceTask, createdTask.id);
+            await test('replaceApplianceTask', createdTask);
+            await test('deleteApplianceTask', createdTask.id);
         }
     }
 
@@ -181,22 +188,27 @@ export class AEGAPITest {
     }
 
     // Bind a tester to a specific API
-    makeTester(api: object): Tester {
+    makeTester<API>(api: API): Tester<API> {
         return (...args) => this.test(api, ...args);
     }
 
     // Test a single API method
-    async test<Args extends unknown[], Returns>
-    (api: object, method: (...args: [...Args]) => Promise<Returns>, ...args: [...Args]): Promise<Returns | undefined> {
+    async test<API, Method extends TestableMethodNames<API>>(
+        api: API,
+        method: Method,
+        ...args: Parameters<Extract<API[Method], TestableMethod>>
+    ): Promise<ReturnType<Extract<API[Method], TestableMethod>> | undefined> {
         // Log the test being performed
         const logPrefix = `API test #${++this.tests}`;
         const argsName = args.map(arg => JSON.stringify(arg));
-        const testName = `${method.name}(${argsName.join(', ')})`;
+        const testName = `${String(method)}(${argsName.join(', ')})`;
         this.log.debug(`${logPrefix}: ${testName}`);
 
         // Run the test and record any error thrown
         try {
-            return await method.apply(api, args);
+            const fn = api[method] as Extract<API[Method], TestableMethod>;
+            const result = await fn.apply(api, args);
+            return result as ReturnType<Extract<API[Method], TestableMethod>>;
         } catch (err) {
             this.failures.push({ logPrefix, testName, error: err });
             this.log.error(`[${logPrefix}] ${testName}`);

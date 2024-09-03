@@ -2,6 +2,7 @@
 // Copyright © 2022-2023 Alexander Thoukydides
 
 import { Logger, LogLevel } from 'homebridge';
+import { assertIsDefined } from './utils.js';
 
 // A logger with filtering and support for an additional prefix
 export class PrefixLogger {
@@ -57,6 +58,8 @@ function isJWT(jwt: string): boolean {
         const encodedParts = jwt.split('.');
         if (encodedParts.length !== 3) return false;
         const parts = encodedParts.map(part => decodeBase64URL(part));
+        assertIsDefined(parts[0]);
+        assertIsDefined(parts[1]);
         JSON.parse(parts[0]);
         JSON.parse(parts[1]);
         return true;

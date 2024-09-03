@@ -384,8 +384,8 @@ export class AEGRobot extends EventEmitter {
         const cleanedAreas: CleanedAreaWithMap[] = await this.api.getApplianceCleanedAreas(MAX_CLEANED_AREAS);
 
         // Retrieve any maps associated with the first (most recent) session
-        if (cleanedAreas.length) {
-            const recent = cleanedAreas[0];
+        const recent = cleanedAreas[0];
+        if (recent !== undefined) {
             const { sessionId } = recent;
             recent.map = await this.api.getApplianceSessionMap(sessionId);
             if (recent.cleaningSession?.persistentMapId !== undefined) {

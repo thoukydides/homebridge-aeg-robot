@@ -167,9 +167,10 @@ export class AEGRobotAccessory extends AEGAccessory {
             [PowerMode.Power]: 100
         };
         const percentToPower = (percent: number): PowerMode => {
-            const powers = [PowerMode.Quiet, PowerMode.Smart, PowerMode.Power];
-            const diffs = powers.map(power => Math.abs(powerPercent[power] - percent));
-            return powers[diffs.indexOf(Math.min(...diffs))];
+            return Object.entries(powerPercent).reduce(([prevKey, prevValue], [key, value]) => {
+                return (Math.abs(value - percent) < Math.abs(prevValue - percent)
+                       ? [key, value] : [prevKey, prevValue]);
+            })[1];
         };
 
         // Restrict the supported Rotation Speed values

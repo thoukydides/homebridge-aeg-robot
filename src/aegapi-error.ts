@@ -8,6 +8,7 @@ import { ErrorResponseCode, ErrorResponseMessageLC,
          ErrorResponseMessageUC } from './aegapi-error-types.js';
 import { Request, Response } from './aegapi-ua.js';
 import errorsTI from './ti/aegapi-error-types-ti.js';
+import { assertIsDefined } from './utils.js';
 
 // Options that can be passed to an error constructor
 interface Options { cause?: unknown }
@@ -127,6 +128,7 @@ export class AEGAPIValidationError extends AEGAPIError {
 
     // Construct an error message from a checker validation error
     static getMessage(errors: IErrorDetail[]): string {
+        assertIsDefined(errors[0]);
         const description = `${errors[0].path} ${errors[0].message}`;
         return `Structure validation failed (${description})`;
     }

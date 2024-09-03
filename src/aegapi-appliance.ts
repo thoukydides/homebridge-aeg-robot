@@ -1,18 +1,16 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2023 Alexander Thoukydides
 
-import { createCheckers } from 'ts-interface-checker';
-
 import { AEGAuthoriseUserAgent } from './aegapi-ua-auth.js';
 import { Appliance, ApplianceInfo, ApplianceNamePatch, AppliancePut,
          Capabilities, CleanedAreas, CleanedAreaSessionMap, CleaningCommand,
          DeleteTask, InteractiveMaps, InteractiveMapData, Lifetime,
          PowerMode, PutCommand, PutCommandZone, PutTask, PostNewTask, NewTask,
          Task, Tasks, PatchApplianceName, PutAppliance, InteractiveMap } from './aegapi-types.js';
-import aegapiTI from './ti/aegapi-types-ti.js';
+import { checkers } from './ti/aegapi-types.js';
 
 // Checkers for API responses
-const checkers = createCheckers(aegapiTI);
+//const checkers = createCheckers(aegapiTI);
 
 // Access to the AEG RX 9 / Electrolux Pure i9 cloud API
 export class AEGApplianceAPI {
