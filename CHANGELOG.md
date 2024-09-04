@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.0.1] - 2024-09-04
+### Changed
+* Updated dependencies to latest versions.
+* Lots of internal changes for stricter eslint checking.
+
 ## [v1.0.0] - 2024-09-01
 ### Changed
 * Changed to ESM project to support Homebridge 2.0.
@@ -150,7 +155,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.1...HEAD
+[v1.0.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.0...v1.0.1
 [v1.0.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.7.0...v1.0.0
 [v0.7.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.6.1...v0.7.0
 [v0.6.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.6.0...v0.6.1
