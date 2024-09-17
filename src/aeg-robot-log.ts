@@ -59,7 +59,8 @@ const completionNames: Record<Completion, string> = {
     cleaningFinishedSuccessfulInCharger:    'Successfully cleaned and returned to charger',
     cleaningFinishedSuccessfulInStartPose:  'Successfully cleaned and returned to starting location',
     endedNotFindingCharger:                 'Failed to return home to charger',
-    error:                                  'Error'
+    error:                                  'Error',
+    robotPowerDown:                         'Powered down'
 };
 
 // Robot tick duration

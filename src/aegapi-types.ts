@@ -62,7 +62,8 @@ export type Completion = 'abortedByUser'
                        | 'cleaningFinishedSuccessfulInCharger'
                        | 'cleaningFinishedSuccessfulInStartPose'
                        | 'endedNotFindingCharger'
-                       | 'error';
+                       | 'error'
+                       | 'robotPowerDown';
 
 // Zone status
 export type ZoneStatusStatus = 'finished' | 'terminated' | 'aborted';
