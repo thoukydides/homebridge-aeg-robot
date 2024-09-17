@@ -8,7 +8,6 @@ jobs:
 
     strategy:
       matrix:
-        # the Node.js versions to build on
         node-version: [18.x, 20.x, 22.x]
         homebridge-version: ['^1.8.0', '^2.0.0-beta.0']
 
@@ -29,5 +28,5 @@ jobs:
       - name: Build the project
         run: npm run build
 
-      - name: Tune the tests
+      - name: Run the tests
         run: npm run test
