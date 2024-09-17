@@ -25,6 +25,9 @@ jobs:
       - name: Use homebridge ${{ matrix.homebridge-version }}
         run: npm install homebridge@${{ matrix.homebridge-version }}
 
+      - name: Copy homebridge configuration
+        run: cp -R ./.devcontainer/.homebridge ~/
+
       - name: Build the project
         run: npm run build
 
