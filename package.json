@@ -85,7 +85,8 @@
         "checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts && tsx bin/ts-interface-post.ts ./src/ti",
         "build": "rimraf ./dist && npm run checkers && tsc",
         "postversion": "git push && git push --tags",
-        "prepublishOnly": "npm run lint && npm run build"
+        "prepublishOnly": "npm run lint && npm run build",
+        "test": "tsx bin/test-startup.ts"
     },
     "optionalDependencies": {
         "fsevents": "^2.3.3"
