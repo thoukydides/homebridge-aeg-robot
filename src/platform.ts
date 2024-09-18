@@ -1,12 +1,12 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
-// Copyright © 2022-2023 Alexander Thoukydides
+// Copyright © 2022-2024 Alexander Thoukydides
 
 import { API, DynamicPlatformPlugin, Logger, LogLevel, PlatformAccessory,
          PlatformConfig } from 'homebridge';
 
 import NodePersist from 'node-persist';
 import Path from 'path';
-import { CheckerT, createCheckers, IErrorDetail } from 'ts-interface-checker';
+import { IErrorDetail } from 'ts-interface-checker';
 
 import { DEFAULT_CONFIG, PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { AEGAccessory } from './accessory.js';
@@ -17,12 +17,7 @@ import { AEGRobot } from './aeg-robot.js';
 import { Config } from './config-types.js';
 import { deepMerge, getValidationTree, logError, plural } from './utils.js';
 import { PrefixLogger } from './logger.js';
-import configTI from './ti/config-types-ti.js';
-
-// Checkers for API responses
-const checkers = createCheckers(configTI) as {
-    Config: CheckerT<Config>;
-};
+import { checkers } from './ti/config-types.js';
 
 // Accessory information
 interface AccessoryLinkage {
@@ -146,8 +141,8 @@ export class AEGPlatform implements DynamicPlatformPlugin {
             existingAccessory.implementation = implementation;
         } else {
             // Create a new accessory for this robot
-            this.log.info(`Creating new accessory "${robot.status.rawName}" for ${robot.toString()}`);
-            const accessory = new this.hb.platformAccessory(robot.status.rawName, uuid);
+            this.log.info(`Creating new accessory "${robot.status.name}" for ${robot.toString()}`);
+            const accessory = new this.hb.platformAccessory(robot.status.name, uuid);
             const implementation = new AEGRobotAccessory(this, accessory, robot);
             this.accessories.set(uuid, { accessory, implementation });
             this.hb.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

@@ -34,5 +34,4 @@ jobs:
       - name: Run the tests
         run: npm run test
         env:
-          AEG_USERNAME: ${{ secrets.AEG_USERNAME }}
-          AEG_PASSWORD: ${{ secrets.AEG_PASSWORD }}
+          AEG_API_KEY: ${{ secrets.AEG_API_KEY }}

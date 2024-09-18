@@ -4,23 +4,15 @@
 import { Logger } from 'homebridge';
 
 import { AEGAuthoriseUserAgent } from './aegapi-ua-auth.js';
-import { AEGApplianceAPI } from './aegapi-appliance.js';
-import { Appliances, Countries, Domains, FAQ, Feed, HealthChecks,
-         IdentityProviders, LegalDocuments, MeasurementUnits, PatchUser,
-         PostWebShop, PutChangePassword, User, WebShop } from './aegapi-types.js';
-import { AEG_APP } from './settings.js';
+import { ApplianceId, ApplianceInfo, Appliances, ApplianceState,
+         Command } from './aegapi-types.js';
 import { Config } from './config-types.js';
 import { AEGAPITest } from './aegapi-test.js';
+import { AEGAPIRX92 } from './aegapi-rx92.js';
 import { checkers } from './ti/aegapi-types.js';
 
-// Access to the AEG RX 9 / Electrolux Pure i9 cloud API
+// Access to the Electrolux Group API
 export class AEGAPI {
-
-    // Language settings for some API methods (set by getCurrentUser())
-    language = {
-        countryCode:  'GB',
-        languageCode: 'en'
-    };
 
     // User agent used for all requests
     readonly ua: AEGAuthoriseUserAgent;
@@ -39,81 +31,28 @@ export class AEGAPI {
         }
     }
 
-    // Global API methods
-
-    getCountries(): Promise<Countries> {
-        return this.ua.getJSON(checkers.Countries, '/country/api/v1/countries');
+    // Get user appliances
+    async getAppliances(): Promise<Appliances> {
+        return this.ua.getJSON(checkers.Appliances, '/api/v1/appliances');
     }
 
-    getFAQ(app = AEG_APP): Promise<FAQ> {
-        return this.ua.getJSON(checkers.FAQ, `/faq/api/v2/faqs/${app}/`, { query: this.language });
+    // Get appliance info
+    async getApplianceInfo(applianceId: ApplianceId): Promise<ApplianceInfo> {
+        return this.ua.getJSON(checkers.ApplianceInfo, `/api/v1/appliances/${applianceId}/info`);
     }
 
-    getLegalDocuments(): Promise<LegalDocuments> {
-        const path = `/legaldocument/api/v1/legaldocuments/${this.language.countryCode}/${this.language.languageCode}/`;
-        return this.ua.getJSON(checkers.LegalDocuments, path);
+    // Get appliance state
+    async getApplianceState(applianceId: ApplianceId): Promise<ApplianceState> {
+        return this.ua.getJSON(checkers.ApplianceState, `/api/v1/appliances/${applianceId}/state`);
     }
 
-    getHealthChecks(): Promise<HealthChecks> {
-        return this.ua.getJSON(checkers.HealthChecks, '/health-check/api/v1/health-checks');
+    // Send command to appliance
+    async sendCommand(applianceId: ApplianceId, command: Command): Promise<void> {
+        await this.ua.put(`/api/v1/appliances/${applianceId}/command`, command);
     }
 
-    getFeed(): Promise<Feed> {
-        return this.ua.getJSON(checkers.Feed, '/feed/api/v3.1/feeds', { query: this.language });
-    }
-
-    async getIdentityProviders(brand = 'AEG'): Promise<IdentityProviders> {
-        const query = { brand, countryCode: this.language.countryCode };
-        const provider = await this.ua.getJSON<IdentityProviders>(
-            checkers.IdentityProviders, '/one-account-user/api/v1/identity-providers', { query });
-        if (provider[0] !== undefined) this.ua.setURL(provider[0].httpRegionalBaseUrl);
-        return provider;
-    }
-
-    async getCurrentUser(): Promise<User> {
-        const user = await this.ua.getJSON<User>(checkers.User, '/one-account-user/api/v1/users/current');
-        this.language = { countryCode: user.countryCode, languageCode: user.locale };
-        return user;
-    }
-
-    setUserName(firstName: string, lastName = ''): Promise<User> {
-        const patchBody: PatchUser = { firstName, lastName };
-        return this.ua.patchJSON(checkers.User, '/one-account-user/api/v1/users/current', patchBody);
-    }
-
-    setCountry(countryCode: string): Promise<User> {
-        const patchBody: PatchUser = { countryCode };
-        return this.ua.patchJSON(checkers.User, '/one-account-user/api/v1/users/current', patchBody);
-    }
-
-    setMeasurementUnits(measurementUnits: MeasurementUnits): Promise<User> {
-        const patchBody: PatchUser = { measurementUnits };
-        return this.ua.patchJSON(checkers.User, '/one-account-user/api/v1/users/current', patchBody);
-    }
-
-    changePassword(password: string, newPassword: string): Promise<void> {
-        const putBody: PutChangePassword = { password, newPassword };
-        return this.ua.put('/one-account-user/api/v1/users/current/change-password', putBody);
-    }
-
-    getAppliances(): Promise<Appliances> {
-        return this.ua.getJSON(checkers.Appliances, '/appliance/api/v2/appliances');
-    }
-
-    getDomains(): Promise<Domains> {
-        return this.ua.getJSON(checkers.Domains, '/domain/api/v2/domains');
-    }
-
-    // API functions for specific appliance(s)
-
-    getWebShopURLs(applianceIds: string[]): Promise<WebShop> {
-        const path = `/webshop/api/v2.1/webshop-urls/${this.language.countryCode}`;
-        const devices = applianceIds.map(applianceId => ({ applianceId }));
-        const body: PostWebShop = { WebShopDeviceQueryDTOs: devices };
-        return this.ua.postJSON(checkers.WebShop, path, body);
-    }
-
-    applianceAPI(applianceId: string): AEGApplianceAPI {
-        return new AEGApplianceAPI(this.ua, applianceId);
+    // Create an API for an AEG RX9.2 robot vacuum cleaner
+    rx92API(applianceId: ApplianceId): AEGAPIRX92 {
+        return new AEGAPIRX92(this.ua, applianceId);
     }
 }

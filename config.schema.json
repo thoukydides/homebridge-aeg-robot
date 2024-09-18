@@ -7,12 +7,15 @@
     "schema": {
         "type": "object",
         "properties": {
-            "username": {
+            "apiKey": {
                 "type": "string",
-                "required": true,
-                "format": "email"
+                "required": true
             },
-            "password": {
+            "accessToken": {
+                "type": "string",
+                "required": true
+            },
+            "refreshToken": {
                 "type": "string",
                 "required": true
             },
@@ -21,21 +24,9 @@
                 "properties": {
                     "statusSeconds": {
                         "type": "integer",
-                        "placeholder": 5,
-                        "minimum": 1,
+                        "placeholder": 20,
+                        "minimum": 20,
                         "maximum": 600
-                    },
-                    "serverHealthSeconds": {
-                        "type": "integer",
-                        "placeholder": 60,
-                        "minimum": 60,
-                        "maximum": 3600
-                    },
-                    "feedSeconds": {
-                        "type": "integer",
-                        "placeholder": 300,
-                        "minimum": 60,
-                        "maximum": 3600
                     }
                 }
             },
@@ -73,16 +64,23 @@
     },
     "form": [{
         "type": "fieldset",
-        "title": "AEG / Electrolux Account",
+        "title": "Electrolux Group API Credentials",
         "expandable": false,
         "items": [{
-            "key": "username",
-            "title": "Username (email address)",
-            "placeholder": "e.g. rx@gmail.com"
+            "type": "help",
+            "helpvalue": "<div class='help-block'>Create an API Key and Authorization tokens via the <a href='https://developer.electrolux.one/dashboard'>Electrolux Group Developer Portal Dashboard</a>.</div>"
         },{
-            "key": "password",
-            "title": "Password",
-            "placeholder": "e.g. Passw0rd!"
+            "key": "apiKey",
+            "title": "API Key",
+            "placeholder": "API Key"
+        },{
+            "key": "accessToken",
+            "title": "Authorization Access Token",
+            "placeholder": "Access Token"
+        },{
+            "key": "refreshToken",
+            "title": "Authorization Refresh Token",
+            "placeholder": "Refresh Token"
         }]
     },{
         "type": "fieldset",
@@ -103,15 +101,8 @@
             "key": "pollIntervals.statusSeconds",
             "title": "Interval between polling for appliance status updates",
             "type": "number",
-            "minimum": 1,
+            "minimum": 20,
             "maximum": 600,
-            "fieldAddonRight": "&nbsp;seconds"
-        },{
-            "key": "pollIntervals.serverHealthSeconds",
-            "title": "Interval between API server health checks",
-            "type": "number",
-            "minimum": 60,
-            "maximum": 3600,
             "fieldAddonRight": "&nbsp;seconds"
         }]
     },{

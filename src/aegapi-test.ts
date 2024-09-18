@@ -4,10 +4,9 @@
 import { Logger } from 'homebridge';
 
 import { AEGAPI } from './aegapi.js';
-import { AEGApplianceAPI } from './aegapi-appliance.js';
-import { Appliance, Appliances, CleaningCommand, DomainAppliance, Domains,
-         NewTask, PowerMode, SettableProperties, User } from './aegapi-types.js';
+import { ApplianceId, Appliances } from './aegapi-types.js';
 import { logError, plural } from './utils.js';
+import { AEGAPIRX92 } from './aegapi-rx92.js';
 
 // A test failure
 interface Failure {
@@ -28,7 +27,7 @@ type Tester<API> = <Method extends TestableMethodNames<API>>(
     ...args: Parameters<Extract<API[Method], TestableMethod>>
 ) => Promise<ReturnType<Extract<API[Method], TestableMethod>> | undefined>;
 
-// Tests of the AEG RX 9 / Electrolux Pure i9 cloud API
+// Tests of the Electrolux Group API
 export class AEGAPITest {
 
     // Number of tests run and errors generated
@@ -42,25 +41,21 @@ export class AEGAPITest {
         readonly unsafe: boolean
     ) {
         void this.runAllTests();
-        this.runAllTests.bind(this);
     }
 
     // Run all enabled tests
     async runAllTests(): Promise<void> {
         try {
-            // Global tests
-            const { appliances, domains, user } = await this.runSafeGlobalTests();
-            if (this.unsafe && user) {
-                await this.runUnsafeGlobalTests(user);
-            }
+            // Generic tests
+            const appliances = await this.runSafeGenericTests();
 
-            // Appliance tests
-            const { appliance, domainAppliance } = this.selectRobot(appliances, domains);
-            if (appliance && domainAppliance) {
-                await this.runSafeApplianceTests(appliance);
-                if (this.unsafe) await this.runUnsafeApplianceTests(appliance, domainAppliance);
+            // AEG RX9.2 robot vacuum cleaner tests
+            const applianceId = this.selectRX92(appliances);
+            if (applianceId !== undefined) {
+                await this.runSafeRX92Tests(applianceId);
+                if (this.unsafe) await this.runUnsafeRX92Tests(applianceId);
             } else {
-                this.log.warn('No robot appliance found for API test');
+                this.log.warn('No AEG RX9.2 robot vacuum cleaner found for API test');
             }
 
             // Log a summary of the results
@@ -70,121 +65,43 @@ export class AEGAPITest {
         }
     }
 
-    // Run safe global tests
-    async runSafeGlobalTests(): Promise<{ appliances?: Appliances; domains?: Domains; user?: User }> {
+    // Run safe generic tests
+    async runSafeGenericTests(): Promise<Appliances | undefined> {
         const test = this.makeTester(this.api);
 
         // Run the tests
-        await test('getCountries');
-        // [403 Forbidden] '<...>' not a valid key=value pair (missing equal-sign) in Authorization header: 'Bearer <...>'.
-        //await test('getFAQ');
-        await test('getLegalDocuments');
-        await test('getHealthChecks');
-        await test('getFeed');
-        await test('getIdentityProviders');
-        const user       = await test('getCurrentUser');
         const appliances = await test('getAppliances');
-        const domains    = await test('getDomains');
-        const applianceIds = (appliances ?? []).map(a => a.applianceId);
-        await test('getWebShopURLs', applianceIds);
 
         // Return results required for other tests
-        return { appliances, domains, user };
+        return appliances;
     }
 
-    // Run unsafe global tests
-    async runUnsafeGlobalTests(user: User): Promise<void> {
+    // Run safe AEG RX9.2 robot vacuum cleaner  tests
+    async runSafeRX92Tests(applianceId: ApplianceId): Promise<void> {
         const test = this.makeTester(this.api);
+        const rx92test = this.makeTester(this.api.rx92API(applianceId));
+
+        // Run most of the tests
+        await test('getApplianceInfo', applianceId);
+        await rx92test('getApplianceInfo');
+        await test('getApplianceState', applianceId);
+        await rx92test('getApplianceState');
+    }
+
+    // Run unsafe AEG RX9.2 robot vacuum cleaner tests
+    async runUnsafeRX92Tests(applianceId: ApplianceId): Promise<void> {
+        const test = this.makeTester(this.api);
+        const rx92test = this.makeTester(this.api.rx92API(applianceId));
 
         // Run the tests
-        await test('setUserName', user.firstName, user.lastName);
-        await test('setCountry', user.countryCode);
-        if (user.measurementUnits !== null) {
-            await test('setMeasurementUnits', user.measurementUnits);
-        } else {
-            this.log.warn('No measurement units found for API test');
-        }
+        await test('sendCommand', applianceId, { CleaningCommand: 'home' });
+        await rx92test('sendCleaningCommand', 'home');
     }
 
-    // Run safe appliance tests
-    async runSafeApplianceTests(appliance: Appliance): Promise<void> {
-        const applianceAPI = this.api.applianceAPI(appliance.applianceId);
-        const test = this.makeTester(applianceAPI);
-
-        // Run most of the tests
-        await test('getApplianceInfo');
-        await test('getApplianceTasks');
-        const interactiveMaps = await test('getApplianceInteractiveMaps');
-        await test('getApplianceLifetime');
-        const cleanedAreas = await test('getApplianceCleanedAreas');
-        await test('getApplianceHistory');
-        // [404 Not Found] Failed to retrieve capabilities from delta (capability_0004)
-        //await test('getApplianceCapabilities');
-
-        // Run the map retrieval tests
-        if (cleanedAreas?.[0] !== undefined) {
-            const { sessionId } = cleanedAreas[0];
-            await test('getApplianceSessionMap', sessionId);
-        } else {
-            this.log.warn('No cleaned area session found for API test');
-        }
-        if (interactiveMaps?.[0] !== undefined) {
-            const { id, sequenceNumber } = interactiveMaps[0];
-            await test('getApplianceInteractiveMap', id);
-            await test('getApplianceInteractiveMapData', id, sequenceNumber);
-        } else {
-            this.log.warn('No interactive map found for API test');
-        }
-    }
-
-    // Run unsafe appliance tests
-    async runUnsafeApplianceTests(appliance: Appliance, domainAppliance: DomainAppliance): Promise<void> {
-        const applianceAPI = this.api.applianceAPI(appliance.applianceId);
-        const test = this.makeTester(applianceAPI);
-
-        // Attempt to select parameters that won't actually change anything
-        const property = <Key extends keyof SettableProperties>(key: Key): SettableProperties[Key] =>
-            appliance.properties.reported[key] ?? appliance.properties.desired[key];
-        const { applianceName } = appliance.applianceData;
-        const powerMode = property('powerMode') ?? PowerMode.Power;
-        const mute      = property('mute')      ?? false;
-        const language  = property('language')  ?? 'eng';
-        const cleaningCommand = CleaningCommand.Home;
-        const timeZoneStandardName = domainAppliance.timeZoneStandardName ?? 'Europe/London';
-
-        // Run most of the tests
-        await test('setPowerMode', powerMode);
-        await test('setApplianceName', applianceName, timeZoneStandardName);
-        await test('setMute', mute);
-        await test('setLanguage', language);
-        await test('cleaningCommand', cleaningCommand);
-
-        // Run the task creation/modification/deletion tests
-        const newTask: NewTask = {
-            name:   'API Test',
-            enabled:    false,
-            start: {
-                weekDays:   ['Monday'],
-                time:       '12:00:00',
-                properties: {
-                    Zones:  [{
-                        PowerMode:  PowerMode.Power
-                    }]
-                }
-            }
-        };
-        const createdTask = await test('createApplianceTask', newTask);
-        if (createdTask) {
-            await test('replaceApplianceTask', createdTask);
-            await test('deleteApplianceTask', createdTask.id);
-        }
-    }
-
-    // Select a single robot appliance to run tests against
-    selectRobot(appliances?: Appliances, domains?: Domains): { appliance?: Appliance; domainAppliance?: DomainAppliance } {
-        const appliance = appliances?.find(appliance => AEGApplianceAPI.isRobot(appliance));
-        const domainAppliance = domains?.appliances.find(domain => domain.pncId === appliance?.applianceId);
-        return { appliance, domainAppliance };
+    // Select a single AEG RX9.2 robot vacuum cleaner to run tests against
+    selectRX92(appliances?: Appliances): ApplianceId | undefined {
+        const appliance = appliances?.find(appliance => AEGAPIRX92.isRX92(appliance));
+        return appliance?.applianceId;
     }
 
     // Bind a tester to a specific API

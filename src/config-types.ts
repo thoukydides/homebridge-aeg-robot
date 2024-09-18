@@ -1,12 +1,9 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
-// Copyright © 2022-2023 Alexander Thoukydides
+// Copyright © 2022-2024 Alexander Thoukydides
 
 // Interval between polling for status changes
 export interface PollIntervals {
     statusSeconds:          number;
-    serverHealthSeconds:    number;
-    feedSeconds:            number;
-    cleanedAreasSeconds:    number;
 }
 
 // Services that can be hidden
@@ -24,8 +21,9 @@ export interface Config {
     // Fields required by Homebridge
     platform:               string;
     // Fields used by this plugin
-    username:               string;
-    password:               string;
+    apiKey:                 string;
+    accessToken:            string;
+    refreshToken:           string;
     pollIntervals:          PollIntervals;
     hideServices:           HideService[];
     debug:                  DebugFeatures[];

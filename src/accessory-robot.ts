@@ -6,10 +6,10 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AEGAccessory } from './accessory.js';
 import { AEGPlatform } from './platform.js';
 import { AEGRobot, DynamicStatus, StatusEvent, SimpleActivity } from './aeg-robot.js';
-import { assertIsBoolean, assertIsNumber, assertIsString, gcd } from './utils.js';
-import { Battery, PowerMode, CleaningCommand } from './aegapi-types.js';
+import { assertIsBoolean, assertIsNumber, gcd } from './utils.js';
 import { HideService } from './config-types.js';
 import { PLUGIN_VERSION } from './settings.js';
+import { RX92BatteryStatus, RX92CleaningCommand, RX92PowerMode } from './aegapi-rx92-types.js';
 
 // A Homebridge AEG RX 9 / Electrolux Pure i9 accessory handler
 export class AEGRobotAccessory extends AEGAccessory {
@@ -51,24 +51,19 @@ export class AEGRobotAccessory extends AEGAccessory {
             .updateCharacteristic(this.Characteristic.Manufacturer,        this.robot.brand)
             .updateCharacteristic(this.Characteristic.Model,               this.robot.model)
             .updateCharacteristic(this.Characteristic.SerialNumber,        this.robot.sn)
-            .updateCharacteristic(this.Characteristic.FirmwareRevision,    PLUGIN_VERSION)
-            .updateCharacteristic(this.Characteristic.HardwareRevision,    this.robot.hardware);
+            .updateCharacteristic(this.Characteristic.FirmwareRevision,    PLUGIN_VERSION);
 
         // Update other characteristics when there is an update
-        this.onRobot('firmware', (firmware: string) => {
+        this.onRobot('hardware', (hardware: string) => {
+            this.log.debug(`Hardware Revision <= ${hardware}`);
+            service.updateCharacteristic(this.Characteristic.HardwareRevision, hardware);
+        }).onRobot('firmware', (firmware: string) => {
             this.log.debug(`Software Revision <= ${firmware}`);
             service.updateCharacteristic(this.Characteristic.SoftwareRevision, firmware);
         }).onRobot('name', (name: string) => {
             this.log.debug(`Name <= "${name}"`);
             service.updateCharacteristic(this.Characteristic.Name, name);
             service.updateCharacteristic(this.Characteristic.ConfiguredName, name);
-        });
-
-        // Rename the robot
-        service.getCharacteristic(this.Characteristic.ConfiguredName).onSet((value) => {
-            assertIsString(value);
-            this.log.debug(`Configured Name => "${value}"`);
-            this.robot.setName(value);
         });
     }
 
@@ -77,9 +72,9 @@ export class AEGRobotAccessory extends AEGAccessory {
         const service = this.makeService(this.Service.Battery);
 
         // Update characteristics when there is an update
-        this.onRobot('battery', (battery?: Battery) => {
-            const percent = Math.round(100 * ((battery ?? Battery.Dead) - Battery.Dead)
-                                       / (Battery.FullyCharged - Battery.Dead));
+        this.onRobot('battery', (battery?: RX92BatteryStatus) => {
+            const percent = Math.round(100 * ((battery ?? RX92BatteryStatus.Dead) - RX92BatteryStatus.Dead)
+                                       / (RX92BatteryStatus.FullyCharged - RX92BatteryStatus.Dead));
             this.log.debug(`Battery Level <= ${percent}%`);
             service.updateCharacteristic(this.Characteristic.BatteryLevel, percent);
         }).onRobot('isBatteryLow', (isBatteryLow?: boolean) => {
@@ -161,16 +156,10 @@ export class AEGRobotAccessory extends AEGAccessory {
         const service = this.makeService(this.Service.Fanv2, 'Power Mode');
 
         // Mapping from power mode to fan rotation speed
-        const powerPercent: Record<PowerMode, number> = {
-            [PowerMode.Quiet]:  25,
-            [PowerMode.Smart]:  50,
-            [PowerMode.Power]: 100
-        };
-        const percentToPower = (percent: number): PowerMode => {
-            return Object.entries(powerPercent).reduce(([prevKey, prevValue], [key, value]) => {
-                return (Math.abs(value - percent) < Math.abs(prevValue - percent)
-                       ? [key, value] : [prevKey, prevValue]);
-            })[1];
+        const powerPercent: Record<RX92PowerMode, number> = {
+            [RX92PowerMode.Quiet]:  25,
+            [RX92PowerMode.Smart]:  50,
+            [RX92PowerMode.Power]: 100
         };
 
         // Restrict the supported Rotation Speed values
@@ -195,7 +184,7 @@ export class AEGRobotAccessory extends AEGAccessory {
             this.log.debug(`Current Fan State <= ${state}`);
             service.updateCharacteristic(this.Characteristic.CurrentFanState,
                                          this.Characteristic.CurrentFanState[state]);
-        }).onRobot('power', (power?: PowerMode) => {
+        }).onRobot('power', (power?: RX92PowerMode) => {
             const percent = power === undefined ? 0 : powerPercent[power];
             this.log.debug(`Rotation Speed <= ${percent}%`);
             service.updateCharacteristic(this.Characteristic.RotationSpeed, percent);
@@ -204,9 +193,9 @@ export class AEGRobotAccessory extends AEGAccessory {
         // Start or pause/resume cleaning
         service.getCharacteristic(this.Characteristic.Active).onSet((value) => {
             assertIsNumber(value);
-            const command = value === this.Characteristic.Active.ACTIVE ? 'Play' : 'Pause';
+            const command: RX92CleaningCommand = value === this.Characteristic.Active.ACTIVE ? 'play' : 'pause';
             this.log.debug(`Active => ${value} => ${command}`);
-            this.robot.setActivity(CleaningCommand[command]);
+            this.robot.setActivity(command);
         });
 
         // Change cleaning power mode
@@ -214,12 +203,10 @@ export class AEGRobotAccessory extends AEGAccessory {
             assertIsNumber(value);
             if (value === 0) {
                 this.log.debug(`Rotation Speed => ${value} => Pause`);
-                this.robot.setActivity(CleaningCommand.Pause);
+                this.robot.setActivity('pause');
             } else {
-                const power = percentToPower(value);
-                this.log.debug(`Rotation Speed => ${value} => Clean ${power}`);
-                this.robot.setPower(power);
-                this.robot.setActivity(CleaningCommand.Play);
+                this.log.debug(`Rotation Speed => ${value} => Clean`);
+                this.robot.setActivity('play');
             }
         });
     }
@@ -238,9 +225,9 @@ export class AEGRobotAccessory extends AEGAccessory {
         // Start or pause/resume cleaning
         service.getCharacteristic(this.Characteristic.On).onSet((value) => {
             assertIsBoolean(value);
-            const command = value ? 'Play' : 'Pause';
+            const command: RX92CleaningCommand = value ? 'play' : 'pause';
             this.log.debug(`On (Clean) => ${value} => ${command}`);
-            this.robot.setActivity(CleaningCommand[command]);
+            this.robot.setActivity(command);
         });
     }
 
@@ -258,9 +245,9 @@ export class AEGRobotAccessory extends AEGAccessory {
         // Return to the charging dock or pause returning
         service.getCharacteristic(this.Characteristic.On).onSet((value) => {
             assertIsBoolean(value);
-            const command = value ? 'Home' : 'Pause';
+            const command: RX92CleaningCommand = value ? 'home' : 'pause';
             this.log.debug(`On (Home) => ${value} => ${command}`);
-            this.robot.setActivity(CleaningCommand[command]);
+            this.robot.setActivity(command);
         });
     }
 

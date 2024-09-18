@@ -4,18 +4,18 @@
 import { Logger } from 'homebridge';
 import { EventEmitter } from 'events';
 
-import { Activity, Appliance, ApplianceNamePatch, Battery, Capability,
-         CleanedArea, CleanedAreaSessionMap, CleaningCommand, Connection,
-         DomainAppliance, Dustbin, FeedItem, InteractiveMap, InteractiveMapData,
-         Message, PowerMode, Status } from './aegapi-types.js';
 import { AEGAccount } from './aeg-account.js';
-import { AEGApplianceAPI } from './aegapi-appliance.js';
-import { AEGRobotCtrlActivity, AEGRobotCtrlName, AEGRobotCtrlPower } from './aeg-robot-ctrl.js';
+import { AEGRobotCtrlActivity } from './aeg-robot-ctrl.js';
 import { AEGRobotLog } from './aeg-robot-log.js';
 import { Config } from './config-types.js';
 import { Heartbeat } from './heartbeat.js';
-import { MS, formatList, logError } from './utils.js';
+import { formatList, logError, MS } from './utils.js';
 import { PrefixLogger } from './logger.js';
+import { RX92ApplianceInfo, RX92ApplianceState, RX92BatteryStatus,
+         RX92Capabilities, RX92CleaningCommand, RX92Dustbin, RX92Message,
+         RX92PowerMode, RX92RobotStatus } from './aegapi-rx92-types.js';
+import { AEGAPIRX92 } from './aegapi-rx92.js';
+import { Appliance } from './aegapi-types.js';
 
 // Simplified robot activities
 export enum SimpleActivity {
@@ -28,15 +28,15 @@ export enum SimpleActivity {
 
 // Dynamic information about a robot
 export interface DynamicStatus {
-    // Raw values provided by the AEG API
-    rawName:            string;
+    // Raw values provided by the Electrolux Group API
+    name:               string;
+    hardware:           string;
     firmware:           string;
-    timezone?:          string | null;
-    capabilities:       Capability[];
-    battery?:           Battery;
-    activity?:          Activity;
-    dustbin?:           Dustbin;
-    rawPower?:          PowerMode;
+    capabilities:       RX92Capabilities[];
+    battery?:           RX92BatteryStatus;
+    activity?:          RX92RobotStatus;
+    dustbin?:           RX92Dustbin;
+    rawPower?:          RX92PowerMode;
     enabled:            boolean;
     connected:          boolean;
     // API errors
@@ -52,23 +52,13 @@ export interface DynamicStatus {
     isBusy?:            boolean;
     isFault?:           boolean;
     isError?:           unknown;
-    name:               string;
-    power?:             PowerMode;
+    power?:             RX92PowerMode;
 }
 export type StatusEvent = keyof DynamicStatus;
 
-// Optional map data to accompany cleaned area information
-export interface CleanedAreaWithMap extends CleanedArea {
-    map?:               CleanedAreaSessionMap;
-    interactive?:       InteractiveMap;
-    interactiveMap?:    InteractiveMapData;
-}
-
 // Other event types
 interface DataEventType {
-    message:        Message;
-    feed:           FeedItem;
-    cleanedArea:    CleanedAreaWithMap;
+    message:        RX92Message;
 }
 type DataEvent = keyof DataEventType;
 type VoidEvent = 'info' | 'appliance' | 'preUpdate';
@@ -77,9 +67,6 @@ type StatusEventListener<Event extends StatusEvent> = (newValue: DynamicStatus[E
 
 // A generic event listener, compatible with all prototypes
 type Listener = (...args: unknown[]) => void;
-
-// Maximum number of historial cleaned areas to retrieve
-const MAX_CLEANED_AREAS = 5;
 
 // An AEG RX 9 / Electrolux Pure i9 robot manager
 export class AEGRobot extends EventEmitter {
@@ -90,30 +77,33 @@ export class AEGRobot extends EventEmitter {
     // A custom logger
     readonly log: Logger;
 
-    // AEG appliance API
-    readonly api: AEGApplianceAPI;
+    // Electrolux Group API for an AEG RX9.2 robot vacuum cleaner
+    readonly api: AEGAPIRX92;
 
     // Control the robot
-    readonly setName:       (name:      string)            => void;
-    readonly setPower:      (power:     PowerMode)         => void;
-    readonly setActivity:   (command:   CleaningCommand)   => void;
+    readonly setActivity:   (command:   RX92CleaningCommand)    => void;
 
     // Static information about the robot (mostly initialised asynchronously)
     readonly applianceId:   string; // Product ID
-    readonly hardware:      string; // Hardware version
     pnc         = '';               // Product Number Code
     sn          = '';               // Serial Number
     brand       = '';
     model       = '';
 
     // Dynamic information about the robot
-    readonly status: DynamicStatus = { rawName: '', firmware: '', capabilities: [], enabled: false, connected: false, name: '' };
+    readonly status: DynamicStatus = {
+        name:           '',
+        hardware:       '',
+        firmware:       '',
+        capabilities:   [],
+        enabled:        false,
+        connected:      false
+    };
+
     private emittedStatus: Partial<DynamicStatus> = {};
 
     // Messages about the robot
     private readonly emittedMessages    = new Set<number>();
-    private readonly emittedFeed        = new Set<string>();
-    private readonly emittedCleanedArea = new Set<string>();
 
     // Periodic polling tasks
     private heartbeats: Heartbeat[] = [];
@@ -132,24 +122,18 @@ export class AEGRobot extends EventEmitter {
 
         // Construct a Logger and API for this robot
         this.config = account.config;
-        this.log = new PrefixLogger(log, appliance.applianceData.applianceName);
-        this.api = account.api.applianceAPI(appliance.applianceId);
+        this.log = new PrefixLogger(log, appliance.applianceName);
+        this.api = account.api.rx92API(appliance.applianceId);
 
         // Initialise static information that is already known
         this.applianceId    = appliance.applianceId;
-        this.model          = appliance.applianceData.modelName;
-        this.hardware       = appliance.properties.reported.platform ?? '';
+        this.model          = appliance.applianceType;
 
         // Allow the robot to be controlled
-        this.setName        = new AEGRobotCtrlName    (this).makeSetter();
-        this.setPower       = new AEGRobotCtrlPower   (this).makeSetter();
         this.setActivity    = new AEGRobotCtrlActivity(this).makeSetter();
 
         // Start logging information about this robot
         new AEGRobotLog(this);
-
-        // Initialise dynamic information
-        this.updateFromAppliances(appliance);
 
         // Start asynchronous initialisation
         this.readyPromise = this.init();
@@ -166,23 +150,22 @@ export class AEGRobot extends EventEmitter {
         try {
             // Read the full appliance details
             const info = await this.api.getApplianceInfo();
-            this.pnc    = info.pnc;
-            this.sn     = info.serialNumber;
-            this.brand  = info.brand;
-            this.model += ` (${info.model})`;
-            this.emit('info');
+            this.updateFromApplianceInfo(info);
+            const pollState = async (): Promise<void> => {
+                const state = await this.api.getApplianceState();
+                this.updateFromApplianceState(state);
+            };
+            await pollState();
+
+            // Start polling the appliance state periodically
+            this.heartbeats = [
+                new Heartbeat(this.log, 'Appliance state',
+                              this.config.pollIntervals.statusSeconds * MS,
+                              pollState, (err) => { this.heartbeat(err); })
+            ];
         } catch (err) {
             logError(this.log, 'Appliance info', err);
         }
-
-        // Start polling for interesting changes
-        const intervals = this.config.pollIntervals;
-        const poll: [string, number, () => Promise<void>][] = [
-            ['Cleaned areas',   intervals.cleanedAreasSeconds,  this.pollCleanedAreas.bind(this)]
-        ];
-        this.heartbeats = poll.map(action =>
-            new Heartbeat(this.log, action[0], action[1] * MS, action[2],
-                          (err) => { this.heartbeat(err); }));
     }
 
     // Describe this robot
@@ -190,25 +173,33 @@ export class AEGRobot extends EventEmitter {
         const bits = [
             this.brand,
             this.model,
-            this.status.rawName && `"${this.status.rawName}"`,
+            this.status.name && `"${this.status.name}"`,
             `(Product ID ${this.applianceId})`
         ];
         return bits.filter(bit => bit.length).join(' ');
     }
 
-    // Update dynamic robot state
-    updateFromAppliances(appliance: Appliance): void {
-        // Extract the relevant information
-        const { reported } = appliance.properties;
-        this.updateStatus({
-            // Status that is always provided
-            rawName:        appliance.applianceData.applianceName,
-            enabled:        appliance.status === Status.Enabled,
-            connected:      appliance.connectionState === Connection.Connected,
+    // Set static robot state
+    updateFromApplianceInfo(info: RX92ApplianceInfo): void {
+        const { serialNumber, pnc, brand, model } = info.applianceInfo;
+        this.pnc    = pnc;
+        this.sn     = serialNumber;
+        this.brand  = brand;
+        this.model += ` (${model})`;
+        this.emit('info');
+    }
 
-            // Other details may be absent if the robot is not reachable
-            capabilities:   Object.keys(reported.capabilities ?? {}),
-            firmware:       reported.firmwareVersion ?? '',
+    // Update dynamic robot state
+    updateFromApplianceState(state: RX92ApplianceState): void {
+        // Extract the relevant information
+        const { reported } = state.properties;
+        this.updateStatus({
+            name:           reported.applianceName,
+            enabled:        state.status === 'enabled',
+            connected:      state.connectionState === 'Connected',
+            capabilities:   Object.keys(reported.capabilities) as RX92Capabilities[],
+            hardware:       reported.platform,
+            firmware:       reported.firmwareVersion,
             battery:        reported.batteryStatus,
             activity:       reported.robotStatus,
             dustbin:        reported.dustbinStatus,
@@ -216,20 +207,17 @@ export class AEGRobot extends EventEmitter {
         });
 
         // Extract any new messages
-        this.emitMessages(reported.messageList?.messages);
+        this.emitMessages(reported.messageList.messages);
 
         // Generate derived state
         this.updateDerivedAndEmit();
         this.emit('appliance');
     }
 
-    // Update the name and timezone
-    updateFromDomains(appliance: DomainAppliance | ApplianceNamePatch): void {
-        this.updateStatus({
-            rawName:    appliance.applianceName,
-            timezone:   appliance.timeZoneStandardName
-        });
-        this.updateDerivedAndEmit();
+    // Periodically poll the appliance state
+    async pollApplianceState(): Promise<void> {
+        const state = await this.api.getApplianceState();
+        this.updateFromApplianceState(state);
     }
 
     // Handle a status update for a periodic action
@@ -244,12 +232,6 @@ export class AEGRobot extends EventEmitter {
         this.updateDerivedAndEmit();
     }
 
-    // Update server health
-    updateServerHealth(err?: unknown): void {
-        this.status.isServerError = err;
-        this.updateDerivedAndEmit();
-    }
-
     // Update robot status that is derived from other information sources
     updateDerivedAndEmit(): void {
         this.updateDerived();
@@ -261,22 +243,22 @@ export class AEGRobot extends EventEmitter {
     updateDerived(): void {
         // Mapping of robot activities
         type ActivityMap =                      [SimpleActivity,       boolean | null, boolean,    boolean];
-        const activityMap: Record<Activity, ActivityMap> = {
-            //                                   Activity                   Docked     Charging    Active
-            [Activity.Cleaning]:                [SimpleActivity.Clean,      false,     false,      true],
-            [Activity.PausedCleaning]:          [SimpleActivity.Pause,      false,     false,      false],
-            [Activity.SpotCleaning]:            [SimpleActivity.Clean,      false,     false,      true],
-            [Activity.PausedSpotCleaning]:      [SimpleActivity.Pause,      false,     false,      false],
-            [Activity.Return]:                  [SimpleActivity.Return,     false,     false,      true],
-            [Activity.PausedReturn]:            [SimpleActivity.Pause,      false,     false,      false],
-            [Activity.ReturnForPitstop]:        [SimpleActivity.Pitstop,    false,     false,      true],
-            [Activity.PausedReturnForPitstop]:  [SimpleActivity.Pause,      false,     false,      false],
-            [Activity.Charging]:                [SimpleActivity.Other,      true,      true,       true],
-            [Activity.Sleeping]:                [SimpleActivity.Other,      null,      false,      true],
-            [Activity.Error]:                   [SimpleActivity.Other,      null,      false,      false],
-            [Activity.Pitstop]:                 [SimpleActivity.Pitstop,    true,      true,       true],
-            [Activity.ManualSteering]:          [SimpleActivity.Other,      false,     false,      false],
-            [Activity.FirmwareUpgrade]:         [SimpleActivity.Other,      null,      false,      false]
+        const activityMap: Record<RX92RobotStatus, ActivityMap> = {
+            //                                          Activity                   Docked     Charging    Active
+            [RX92RobotStatus.Cleaning]:                [SimpleActivity.Clean,      false,     false,      true],
+            [RX92RobotStatus.PausedCleaning]:          [SimpleActivity.Pause,      false,     false,      false],
+            [RX92RobotStatus.SpotCleaning]:            [SimpleActivity.Clean,      false,     false,      true],
+            [RX92RobotStatus.PausedSpotCleaning]:      [SimpleActivity.Pause,      false,     false,      false],
+            [RX92RobotStatus.Return]:                  [SimpleActivity.Return,     false,     false,      true],
+            [RX92RobotStatus.PausedReturn]:            [SimpleActivity.Pause,      false,     false,      false],
+            [RX92RobotStatus.ReturnForPitstop]:        [SimpleActivity.Pitstop,    false,     false,      true],
+            [RX92RobotStatus.PausedReturnForPitstop]:  [SimpleActivity.Pause,      false,     false,      false],
+            [RX92RobotStatus.Charging]:                [SimpleActivity.Other,      true,      true,       true],
+            [RX92RobotStatus.Sleeping]:                [SimpleActivity.Other,      null,      false,      true],
+            [RX92RobotStatus.Error]:                   [SimpleActivity.Other,      null,      false,      false],
+            [RX92RobotStatus.Pitstop]:                 [SimpleActivity.Pitstop,    true,      true,       true],
+            [RX92RobotStatus.ManualSteering]:          [SimpleActivity.Other,      false,     false,      false],
+            [RX92RobotStatus.FirmwareUpgrade]:         [SimpleActivity.Other,      null,      false,      false]
         };
         const [activity, isDocked, isCharging, isActive] =
             this.status.activity === undefined
@@ -284,30 +266,29 @@ export class AEGRobot extends EventEmitter {
         const isBusy = [SimpleActivity.Clean, SimpleActivity.Pitstop].includes(activity);
 
         // Combine account and appliance errors
-        const isError = this.status.isServerError ?? this.status.isRobotError;
+        const isError = this.status.isRobotError;
 
         // Any identified problem is treated as a fault
         const isFault = isError !== undefined
                      || !this.status.enabled
                      || !this.status.connected
-                     || this.status.activity === Activity.Error
-                     || this.status.battery === Battery.Dead
+                     || this.status.activity === RX92RobotStatus.Error
+                     || this.status.battery === RX92BatteryStatus.Dead
                      || this.status.isDustbinEmpty === false;
 
         // Update the status
         this.updateStatus({
             simpleActivity: activity,
             isBatteryLow:   this.status.battery !== undefined
-                            && this.status.battery <= Battery.Low,
+                            && this.status.battery <= RX92BatteryStatus.Low,
             isCharging,
             isDustbinEmpty: this.status.dustbin !== undefined
-                            && ![Dustbin.Missing, Dustbin.Full].includes(this.status.dustbin),
-            isDocked:       isDocked ?? this.status.battery === Battery.FullyCharged,
+                            && ![RX92Dustbin.Missing, RX92Dustbin.Full].includes(this.status.dustbin),
+            isDocked:       isDocked ?? this.status.battery === RX92BatteryStatus.FullyCharged,
             isActive:       isActive && !isFault,
             isBusy,
             isError,
             isFault,
-            name:           this.status.rawName,
             power:          isBusy ? this.status.rawPower : undefined
         });
     }
@@ -350,7 +331,7 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Emit events for any new messages
-    emitMessages(messages: Message[] = []): void {
+    emitMessages(messages: RX92Message[] = []): void {
         // If there are no current messages then just flush the cache
         if (!messages.length) { this.emittedMessages.clear(); return; }
 
@@ -360,47 +341,6 @@ export class AEGRobot extends EventEmitter {
             if (!(this.emittedMessages.has(id))) {
                 this.emittedMessages.add(id);
                 this.emit('message', message);
-            }
-        });
-    }
-
-    // Update feed items
-    updateFromFeed(feed: FeedItem[]): void {
-        // If there are no current feed items then just flush the cache
-        if (!feed.length) { this.emittedFeed.clear(); return; }
-
-        // Emit events for any new feed items
-        feed.forEach(item => {
-            const { id } = item;
-            if (!this.emittedFeed.has(id)) {
-                this.emittedFeed.add(id);
-                this.emit('feed', item);
-            }
-        });
-    }
-
-    // Periodically check whether there are any new cleaning sessions
-    async pollCleanedAreas(): Promise<void> {
-        const cleanedAreas: CleanedAreaWithMap[] = await this.api.getApplianceCleanedAreas(MAX_CLEANED_AREAS);
-
-        // Retrieve any maps associated with the first (most recent) session
-        const recent = cleanedAreas[0];
-        if (recent !== undefined) {
-            const { sessionId } = recent;
-            recent.map = await this.api.getApplianceSessionMap(sessionId);
-            if (recent.cleaningSession?.persistentMapId !== undefined) {
-                const { persistentMapId, persistentMapSN } = recent.cleaningSession;
-                recent.interactive = await this.api.getApplianceInteractiveMap(persistentMapId);
-                recent.interactiveMap = await this.api.getApplianceInteractiveMapData(persistentMapId, persistentMapSN);
-            }
-        }
-
-        // Emit events for any new cleaned areas
-        cleanedAreas.forEach(cleanedArea => {
-            const {id} = cleanedArea;
-            if (!this.emittedCleanedArea.has(id)) {
-                this.emittedCleanedArea.add(id);
-                this.emit('cleanedArea', cleanedArea);
             }
         });
     }

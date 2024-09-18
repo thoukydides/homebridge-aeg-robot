@@ -4,110 +4,80 @@
 import { Logger } from 'homebridge';
 
 import nodePersist from 'node-persist';
-import { CheckerT, createCheckers } from 'ts-interface-checker';
 import { setTimeout } from 'node:timers/promises';
 
-import { AuthToken, AuthUser, PostAuthTokenClient, PostAuthTokenExchange,
-         PostAuthTokenRefresh, PostAuthTokenRevoke, PostAuthToken, PostAuthUser,
-         AbsoluteAuthToken } from './aegapi-auth-types.js';
+import { AbsoluteTokens, PostTokenRefresh, PostTokenRevoke, Tokens } from './aegapi-auth-types.js';
 import { AEGUserAgent, Headers, Method, Request, UAOptions } from './aegapi-ua.js';
-import { MS, logError, sleep } from './utils.js';
-import { AEG_CLIENT_ID, AEG_CLIENT_SECRET } from './settings.js';
-import { AEGAPIAuthorisationError, AEGAPIError,
-         AEGAPIStatusCodeError } from './aegapi-error.js';
+import { MS, logError } from './utils.js';
+import { AEGAPIAuthorisationError, AEGAPIError } from './aegapi-error.js';
 import { Config } from './config-types.js';
-import aegapiTI from './ti/aegapi-auth-types-ti.js';
+import { checkers } from './ti/aegapi-auth-types.js';
 
-// Checkers for API responses
-const checkers = createCheckers(aegapiTI) as {
-    AbsoluteAuthToken:  CheckerT<AbsoluteAuthToken>;
-    AuthToken:          CheckerT<AuthToken>;
-    AuthUser:           CheckerT<AuthUser>;
-};
+// Time before token expiry to request a refresh
+const REFRESH_WINDOW_MS = 60 * 60 * 1000; // (60 minutes)
 
-// Authorisation for accessing the AEG RX 9 / Electrolux Pure i9 cloud API
+// Delay between retrying failed authorisation operations
+const REFRESH_RETRY_DELAY_MS = 60 * 1000; // (1 minute)
+
+// Delay before refreshing a new token (expiresIn is usually 12 hours)
+const NEW_TOKEN_REFRESH_DELAY_MS = 5 * 60 * 1000; // (5 minutes)
+
+// Authorisation for accessing the Electrolux Group API
 export class AEGAuthoriseUserAgent extends AEGUserAgent {
-
-    // Time before token expiry to request a refresh
-    private readonly refreshWindow  = 60 * 60 * MS;
-
-    // Delay between retrying failed authorisation operations
-    private readonly authRetryDelay =      60 * MS;
 
     // Promise that is resolved by successful (re)authorisation
     private authorised: Promise<void>;
-    private authorisedFn!: { resolve: () => void; reject: (reason: unknown) => void};
-
-    // Abort signal used to abandon token refreshing
-    private reauthorise?: () => void;
+    private authorisedFn!: { resolve: () => void; reject: (reason: unknown) => void };
 
     // The current access and refresh token
-    private token?: AbsoluteAuthToken;
+    private token!: AbsoluteTokens;
 
-    // Name of the key used for persistent storage of the token
-    private readonly persistKey = `${this.config.username}:${this.config.password}`;
+    // Name of the key used for persistent storage of the access token
+    private readonly persistKey: string;
 
     // Create a new authorisation agent
     constructor(log: Logger, config: Config) {
         super(log, config);
-        this.authorised = this.makeAuthPromise();
-        void this.authoriseUserAgent();
-    }
 
-    // Construct a Promise indicating when (re)authorisation is complete
-    makeAuthPromise(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        // Invalidate stored token with any change of configured credentials
+        this.persistKey = [config.apiKey, config.accessToken, config.refreshToken].join(':');
+
+        // Authorise the user agent
+        this.authorised = new Promise((resolve, reject) => {
             this.authorisedFn = { resolve, reject };
         });
-    }
-
-    // Construct a Promise used to abort token refreshing
-    makeAbortRefreshPromise(reason: unknown): Promise<never> {
-        return new Promise((_, reject) => {
-            this.reauthorise = (): void => {
-                this.log.warn('Reauthorisation required...');
-                this.reauthorise = undefined;
-                this.authorised = this.makeAuthPromise();
-                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                reject(reason);
-            };
-        });
+        void this.authoriseUserAgent();
     }
 
     // Attempt to authorise access to the API
     async authoriseUserAgent(): Promise<void> {
-        // Retrieve any saved authorisation
-        try {
-            const token: unknown = await nodePersist.getItem(this.persistKey);
-            if (checkers.AbsoluteAuthToken.test(token)) {
-                this.token = token;
-                if (Date.now() + this.refreshWindow < this.token.expiresAt) {
-                    this.log.info('Using saved access token');
-                    this.authorisedFn.resolve();
-                } else {
-                    this.log.info('Saved access token has expired');
-                }
-            }
-        } catch (err) {
-            logError(this.log, 'Saved authorisation', err);
+        // Retrieve any saved tokens
+        if (!await this.loadTokens()) {
+            this.log.info('No saved access token; using credentials from configuration');
+            await this.saveTokens(this.config.accessToken, this.config.refreshToken, NEW_TOKEN_REFRESH_DELAY_MS);
+            this.authorisedFn.resolve();
+        } else if (Date.now() + REFRESH_WINDOW_MS < this.token.expiresAt) {
+            this.log.info('Using saved access token');
+            this.authorisedFn.resolve();
+        } else {
+            this.log.info('Saved access token has expired');
         }
 
         // Repeat authorisation whenever necessary
+        await this.periodicallyRefreshTokens();
+    }
+
+    // Periodically refresh the tokens
+    async periodicallyRefreshTokens(): Promise<void> {
         for (;;) {
             try {
-                // If there is no current token then (re)authorise
-                while (!this.token?.refreshToken) {
-                    this.log.info('Starting new authorisation');
-                    await this.performAuthorisation();
-                }
-
-                // Periodically refresh the token
-                const abort = this.makeAbortRefreshPromise('reauthorise');
+                // Wait until the access token is nearly due to expire
                 const expiresIn = this.token.expiresAt - Date.now();
-                await sleep(expiresIn - this.refreshWindow, abort);
+                await setTimeout(expiresIn - REFRESH_WINDOW_MS);
 
-                // Refresh the token
-                await this.tokenRefresh(this.token.refreshToken);
+                // Refresh the tokens (updates both access token and refresh token)
+                const token = await this.tokenRefresh(this.token.refreshToken);
+                await this.saveTokens(token.accessToken, token.refreshToken, token.expiresIn);
 
                 // Save the updated token
                 this.log.info('Successfully refreshed access token');
@@ -115,121 +85,42 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
                 this.authorisedFn.resolve();
 
             } catch (cause) {
-                if (cause !== 'reauthorise') {
-                    logError(this.log, 'API authorisation', cause);
-                    if (cause instanceof AEGAPIAuthorisationError) {
-                        return; // Give-up (wrong credentials)
-                    }
+                logError(this.log, 'API authorisation', cause);
+                if (cause instanceof AEGAPIAuthorisationError) {
+                    // HERE - Need to do something to detect this condition
+                    return; // Give-up (wrong credentials)
                 }
 
-                // Try to reauthorise after a short delay
-                this.token = undefined;
-                await setTimeout(this.authRetryDelay);
+                // Try to refresh the tokens after a short delay
+                await setTimeout(REFRESH_RETRY_DELAY_MS);
             }
         }
     }
 
-    // Attempt to authorise access to the API
-    async performAuthorisation(): Promise<void> {
-        let usedCredentials!: string;
+    // Attempt to retrieve saved tokens
+    async loadTokens(): Promise<boolean> {
         try {
-            // Authorise the client
-            usedCredentials = 'client identifier/secret or API key';
-            await this.authenticateClient();
-
-            // Authorise the user
-            usedCredentials = 'username or password';
-            const user = await this.authenticateUser(this.config.username,
-                                                     this.config.password);
-
-            // Swap the user authorisation for access and refresh tokens
-            usedCredentials = 'credentials';
-            await this.tokenExchange(user);
-
-            // Save the new token
-            this.log.info('Successfully obtained access token');
-            await nodePersist.setItem(this.persistKey, this.token);
-            this.authorisedFn.resolve();
-
-        } catch (cause) {
-            if (cause instanceof AEGAPIStatusCodeError && cause.response
-                && [401, 403].includes(cause.response.statusCode)) {
-                const message = `Authorisation failed due to wrong ${usedCredentials}`;
-                const err = new AEGAPIAuthorisationError(cause.request, cause.response, message, { cause });
-                this.authorisedFn.reject(err);
-                throw err;
-            } else {
-                throw cause;
-            }
+            const token: unknown = await nodePersist.getItem(this.persistKey);
+            if (token === undefined) return false;
+            if (!checkers.AbsoluteTokens.test(token)) throw new Error('Unexpected saved token format');
+            this.token = token;
+            return true;
+        } catch (err) {
+            logError(this.log, 'Saved authorisation', err);
+            return false;
         }
     }
 
-    // Authorise the client
-    authenticateClient(): Promise<void> {
-        const body: PostAuthTokenClient = {
-            grantType:      'client_credentials',
-            clientId:       AEG_CLIENT_ID,
-            clientSecret:   AEG_CLIENT_SECRET,
-            scope:          ''
-        };
-        return this.tokenUpgrade(body);
+    // Save new tokens, with an absolute expiry time
+    async saveTokens(accessToken: string, refreshToken: string, expiresIn: number): Promise<void> {
+        const expiresAt = Date.now() + expiresIn * MS;
+        this.token = { accessToken, refreshToken, expiresAt };
+        await nodePersist.setItem(this.persistKey, this.token);
     }
 
-    // Exchange a user token for an access token
-    tokenExchange(user: AuthUser): Promise<void> {
-        const body: PostAuthTokenExchange = {
-            grantType:  'urn:ietf:params:oauth:grant-type:token-exchange',
-            clientId:   AEG_CLIENT_ID,
-            idToken:    user.idToken,
-            scope:      ''
-        };
-        const options = {
-            headers: { 'Origin-Country-Code': user.countryCode }
-        };
-        return this.tokenUpgrade(body, options);
-    }
-
-    // Refresh an access token
-    tokenRefresh(refreshToken: string): Promise<void> {
-        const body: PostAuthTokenRefresh = {
-            grantType:      'refresh_token',
-            clientId:       AEG_CLIENT_ID,
-            refreshToken:   refreshToken,
-            scope:          ''
-        };
-        return this.tokenUpgrade(body);
-    }
-
-    // Obtain a new token and use it to update the Authorization header
-    async tokenUpgrade(body: PostAuthToken, options?: UAOptions): Promise<void> {
-        // Obtain the token
-        const path = '/one-account-authorization/api/v1/token';
-        options = {...{ isAuthRequest: true }, ...options};
-        const token = await this.postJSON<AuthToken>(checkers.AuthToken, path, body, options);
-
-        // Convert to an absolute expiry time
-        this.token = {
-            authorizationHeader:    `${token.tokenType} ${token.accessToken}`,
-            refreshToken:           token.refreshToken,
-            expiresAt:              Date.now() + token.expiresIn * MS
-        };
-    }
-
-    // Revoke an access token
-    tokenRevoke(refreshToken: string): Promise<void> {
-        const body: PostAuthTokenRevoke = {
-            token:      refreshToken,
-            revokeAll:  false
-        };
-        const path = '/one-account-authorization/api/v1/token/revoke';
-        return this.post(path, body, { isAuthRequest: true });
-    }
-
-    // Authenticate the user to obtain a user token
-    authenticateUser(username: string, password: string): Promise<AuthUser> {
-        const body: PostAuthUser = { username, password };
-        const path = '/one-account-authentication/api/v1/authenticate';
-        return this.postJSON(checkers.AuthUser, path, body, { isAuthRequest: true });
+    // Authorization header value for the current access token
+    get authorizationHeader(): string {
+        return `Bearer ${this.token.accessToken}`;
     }
 
     // Add an Authorization header to request options
@@ -249,34 +140,23 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         }
 
         // Set the Authorization header
-        if (this.token?.authorizationHeader) {
-            const headers = request.headers;
-            headers.authorization = this.token.authorizationHeader;
-        }
+        request.headers.authorization = this.authorizationHeader;
 
         // Return the modified request options
         return request;
     }
 
-    // Restart authorisation if a request returned a 403 Forbidden status
-    canRetry(err: unknown, options?: UAOptions): boolean {
-        let retry = super.canRetry(err, options);
-        if (err instanceof AEGAPIStatusCodeError && err.response) {
-            const headers = err.request.headers;
-            switch (err.response.statusCode) {
-            case 401:
-                // Client ID/secret, username/password, or API key are incorrect
-                if (retry) this.log.warn('Request will not be retried (incorrect credentials)');
-                retry = false;
-                break;
-            case 403:
-                // The access token is probably invalid
-                if (headers.authorization === this.token?.authorizationHeader) {
-                    this.reauthorise?.();
-                }
-                break;
-            }
-        }
-        return retry;
+    // HERE - 401 Unauthorized for non token refresh operations indicates a bad Access Token
+
+    // Refresh access token and refresh token
+    async tokenRefresh(refreshToken: string): Promise<Tokens> {
+        const body: PostTokenRefresh = { refreshToken };
+        return this.postJSON(checkers.Tokens, '/api/v1/token/refresh', body);
+    }
+
+    // Revoke refresh token
+    async tokenRevoke(refreshToken: string): Promise<void> {
+        const body: PostTokenRevoke = { refreshToken };
+        await this.post('/api/v1/token/revoke', body);
     }
 }

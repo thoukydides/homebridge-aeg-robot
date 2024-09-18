@@ -5,18 +5,14 @@ import { Logger, LogLevel } from 'homebridge';
 
 import { STATUS_CODES } from 'http';
 import { Client, Dispatcher } from 'undici';
-import { buffer } from 'stream/consumers';
-import { gunzipSync } from 'zlib';
 import { Checker, IErrorDetail } from 'ts-interface-checker';
 import { setTimeout } from 'node:timers/promises';
+import { IncomingHttpHeaders } from 'undici/types/header.js';
 
-import { AEG_API_KEY, AEG_API_URL,
-         PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
-import { AEGAPIError, AEGAPIStatusCodeError,
-         AEGAPIValidationError } from './aegapi-error.js';
+import { PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
+import { AEGAPIError, AEGAPIStatusCodeError, AEGAPIValidationError } from './aegapi-error.js';
 import { columns, getValidationTree, MS } from './utils.js';
 import { Config } from './config-types.js';
-import { IncomingHttpHeaders } from 'undici/types/header.js';
 
 export type Binary     = Dispatcher.ResponseData['body'];
 export type Response   = Dispatcher.ResponseData;
@@ -26,7 +22,6 @@ export type Query      = Dispatcher.DispatchOptions['query'];
 
 // Options that can be specified for requests
 export interface UAOptions {
-    query?:             Query;
     headers?:           Headers;
     [index: string]:    unknown;
 }
@@ -45,7 +40,6 @@ export interface Request {
     method:             Method;
     body?:              string;
     headers:            Headers;
-    query?:             Query;
     idempotent?:        boolean;
 }
 
@@ -55,13 +49,13 @@ export interface RequestResponse {
     response:           Response;
 }
 
+// Base URL for Electrolux Group API
+export const ELECTROLUX_GROUP_API_URL = 'https://api.developer.electrolux.one';
+
 /* eslint-disable max-len */
 
-// User agent for accessing the AEG RX 9 / Electrolux Pure i9 cloud API
+// User agent for accessing the Electrolux Group API
 export class AEGUserAgent {
-    // Cloud server API host
-    private url = AEG_API_URL;
-
     // Timeout applied to all requests
     private readonly timeout = 5000; // milliseconds
 
@@ -73,10 +67,7 @@ export class AEGUserAgent {
     };
 
     // Default headers to include in all requests
-    private readonly defaultHeaders: Headers = {
-        'x-api-key':    AEG_API_KEY,
-        'User-Agent':   `${PLUGIN_NAME}/${PLUGIN_VERSION}`
-    };
+    private readonly defaultHeaders: Headers;
 
     // HTTP client used to issue the requests
     private readonly client: Client;
@@ -90,26 +81,24 @@ export class AEGUserAgent {
         readonly config: Config
     ) {
         // Create an HTTP client
-        this.client = new Client(this.url, {
+        this.client = new Client(ELECTROLUX_GROUP_API_URL, {
             bodyTimeout:    this.timeout,
             headersTimeout: this.timeout,
             connect: {
                 timeout:    this.timeout
             }
         });
-    }
 
-    // Set the API URL for future requests
-    setURL(url: string): void {
-        if (this.url === url) return;
-        this.log.info(`Switching API server from ${this.url} to ${url}`);
-        this.url = url;
+        // Set the default headers
+        this.defaultHeaders = {
+            'x-api-key':    config.apiKey,
+            'User-Agent':   `${PLUGIN_NAME}/${PLUGIN_VERSION}`
+        };
     }
 
     // Requests that expect an empty response
     put   (path: string, body: object, options?: UAOptions): Promise<void> { return this.requestEmpty('PUT',    path, options, body); }
     post  (path: string, body: object, options?: UAOptions): Promise<void> { return this.requestEmpty('POST',   path, options, body); }
-    delete(path: string, body: object, options?: UAOptions): Promise<void> { return this.requestEmpty('DELETE', path, options, body); }
     async requestEmpty(...params: RequestParams): Promise<void> {
         const { request, response } = await this.request(...params);
         const contentLength = Number(response.headers['content-length']);
@@ -121,7 +110,6 @@ export class AEGUserAgent {
     getJSON  <Type>(checker: Checker, path: string,               options?: UAOptions): Promise<Type> { return this.requestJSON(checker, 'GET',   path, options, undefined); }
     putJSON  <Type>(checker: Checker, path: string, body: object, options?: UAOptions): Promise<Type> { return this.requestJSON(checker, 'PUT',   path, options, body     ); }
     postJSON <Type>(checker: Checker, path: string, body: object, options?: UAOptions): Promise<Type> { return this.requestJSON(checker, 'POST',  path, options, body     ); }
-    patchJSON<Type>(checker: Checker, path: string, body: object, options?: UAOptions): Promise<Type> { return this.requestJSON(checker, 'PATCH', path, options, body     ); }
     async requestJSON<Type>(checker: Checker, ...params: RequestParams): Promise<Type> {
         const { request, response } = await this.request(...params, { Accept: 'application/json' });
 
@@ -131,17 +119,8 @@ export class AEGUserAgent {
 
         // Retrieve the response as JSON text
         let text;
-        const contentType       = response.headers['content-type'];
-        const contentEncoding   = response.headers['content-encoding'];
-        const acceptRanges      = response.headers['accept-ranges'];
-        if (contentType === 'application/octet-stream' || contentEncoding === 'gzip' || acceptRanges === 'bytes') {
-            try {
-                const gzipped = await buffer(response.body);
-                text = gunzipSync(gzipped).toString();
-            } catch (cause) {
-                throw new AEGAPIError(request, response, `Failed to gunzip binary response (${String(cause)})`, { cause });
-            }
-        } else if (typeof contentType === 'string' && contentType.startsWith('application/json')) {
+        const contentType = response.headers['content-type'];
+        if (typeof contentType === 'string' && contentType.startsWith('application/json')) {
             text = await response.body.text();
         } else {
             throw new AEGAPIError(request, response, `Unexpected response content-type (${JSON.stringify(contentType)})`);
@@ -160,13 +139,13 @@ export class AEGUserAgent {
         checker.setReportedPath('response');
         const validation = checker.validate(json);
         if (validation) {
-            this.logCheckerValidation(LogLevel.ERROR, 'Unexpected structure of AEG API response',
+            this.logCheckerValidation(LogLevel.ERROR, 'Unexpected structure of Electrolux Group API response',
                                       request, validation, json);
             throw new AEGAPIValidationError(request, response, validation);
         }
         const strictValidation = checker.strictValidate(json);
         if (strictValidation) {
-            this.logCheckerValidation(LogLevel.WARN, 'Unexpected fields in AEG API response',
+            this.logCheckerValidation(LogLevel.WARN, 'Unexpected fields in Electrolux Group API response',
                                       request, strictValidation, json);
         }
 
@@ -188,7 +167,7 @@ export class AEGUserAgent {
                 const request = await this.prepareRequest(method, path, options, body, headers);
                 requestCount ??= ++this.requestCount;
                 const counter = `${requestCount}` + (retryCount ? `.${retryCount}` : '');
-                const response = await this.requestCore(`AEG API #${counter}:`, request);
+                const response = await this.requestCore(`Electrolux Group API #${counter}:`, request);
                 return { request, response };
             } catch (err) {
                 // Request failed, so check whether it can be retried
@@ -208,7 +187,6 @@ export class AEGUserAgent {
         const request: Request = {
             method,
             path,
-            query:      options?.query,
             headers:    {...this.defaultHeaders, ...headers, ...options?.headers},
             idempotent: ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'].includes(method)
         };

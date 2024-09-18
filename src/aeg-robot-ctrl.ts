@@ -5,14 +5,11 @@ import { Logger } from 'homebridge';
 
 import { setTimeout } from 'node:timers/promises';
 
-import { Activity, Appliance, CleaningCommand, PowerMode } from './aegapi-types.js';
-import { AEGApplianceAPI } from './aegapi-appliance.js';
 import { AEGRobot, SimpleActivity } from './aeg-robot.js';
 import { Config } from './config-types.js';
 import { MS, assertIsNotUndefined, logError } from './utils.js';
-
-// Timezone to use when changing name if unable to determine
-const DEFAULT_TIMEZONE = 'London/Europe';
+import { AEGAPIRX92 } from './aegapi-rx92.js';
+import { RX92CleaningCommand, RX92RobotStatus } from './aegapi-rx92-types.js';
 
 // Timeout waiting for status to reflect a requested change
 const TIMEOUT_MIN_MS        = 20 * MS;
@@ -27,8 +24,8 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     // Logger
     readonly log: Logger;
 
-    // AEG appliance API
-    readonly api: AEGApplianceAPI;
+    // Electrolux Group API for an AEG RX9.2 robot vacuum cleaner
+    readonly api: AEGAPIRX92;
 
     // The target value
     private target?: Type;
@@ -147,71 +144,8 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     abstract overrideStatus(target: Type): void;
 }
 
-// Robot controller for changing the name
-export class AEGRobotCtrlName extends AEGRobotCtrl<string> {
-
-    // Create a new robot controller for changing the name
-    constructor(readonly robot: AEGRobot) {
-        super(robot, 'name');
-    }
-
-    // Check whether the robot has the requested name
-    isTargetSet(name: string): boolean {
-        return this.robot.status.rawName === name;
-    }
-
-    // Attempt to set the requested name
-    async setTarget(name: string): Promise<void> {
-        const timezone = this.robot.status.timezone ?? DEFAULT_TIMEZONE;
-        const appliance = await this.api.setApplianceName(name, timezone);
-        this.robot.updateFromDomains(appliance);
-    }
-
-    // Override the status while a requested name change is pending
-    overrideStatus(name: string): void {
-        this.robot.status.name = name;
-    }
-}
-
-// Robot controller for changing the cleaning power mode
-export class AEGRobotCtrlPower extends AEGRobotCtrl<PowerMode> {
-
-    // Mapping of enum target values to text
-    readonly toText = {
-        [PowerMode.Quiet]: 'QUIET',
-        [PowerMode.Smart]: 'SMART',
-        [PowerMode.Power]: 'POWER'
-    };
-
-    // Create a new robot controller for changing the power mode
-    constructor(readonly robot: AEGRobot) {
-        super(robot, 'power mode');
-    }
-
-    // Check whether the robot is set to the requested power mode
-    isTargetSet(target: PowerMode): boolean {
-        return this.robot.status.rawPower === target;
-    }
-
-    // Attempt to set the requested state
-    async setTarget(power: PowerMode): Promise<void> {
-        const appliancePut = await this.api.setPowerMode(power);
-        const appliance: Appliance = {
-            ...appliancePut.twin,
-            applianceData:  appliancePut.applianceData,
-            applianceId:    appliancePut.pncId
-        };
-        this.robot.updateFromAppliances(appliance);
-    }
-
-    // Override the status while a requested change is pending
-    overrideStatus(power: PowerMode): void {
-        this.robot.status.power = power;
-    }
-}
-
 // Robot controller for changing the activity
-export class AEGRobotCtrlActivity extends AEGRobotCtrl<CleaningCommand> {
+export class AEGRobotCtrlActivity extends AEGRobotCtrl<RX92CleaningCommand> {
 
     // Create a new robot controller for changing the name
     constructor(readonly robot: AEGRobot) {
@@ -219,32 +153,28 @@ export class AEGRobotCtrlActivity extends AEGRobotCtrl<CleaningCommand> {
     }
 
     // Check whether the robot is performing the required activity
-    isTargetSet(command: CleaningCommand): boolean | null {
+    isTargetSet(command: RX92CleaningCommand): boolean | null {
         if (this.robot.status.activity === undefined) return null;
-        const commandIndex =                   [CleaningCommand.Play
-            ,                                           CleaningCommand.Pause
-            ,                                                   CleaningCommand.Spot
-            ,                                                           CleaningCommand.Home
-            ,                                                                   CleaningCommand.Stop];
-        const commandSet: Record<Activity, (boolean | null)[]> = {
-            [Activity.Cleaning]:               [true,   false,  false,  false,  false],
-            [Activity.PausedCleaning]:         [false,  true,   false,  false,  false],
-            [Activity.SpotCleaning]:           [true,   false,  true,   false,  false],
-            [Activity.PausedSpotCleaning]:     [false,  true,   false,  false,  false],
-            [Activity.Return]:                 [true,   false,  false,  true,   false],
-            [Activity.PausedReturn]:           [false,  true,   false,  false,  false],
-            [Activity.ReturnForPitstop]:       [true,   false,  false,  true,   false],
-            [Activity.PausedReturnForPitstop]: [false,  true,   false,  false,  false],
-            [Activity.Charging]:               [false,  true,   false,  true,   true],
-            [Activity.Sleeping]:               [false,  true,   false,  null,   true],
-            [Activity.Error]:                  [false,  true,   false,  null,   true],
-            [Activity.Pitstop]:                [true,   true,   false,  true,   false],
-            [Activity.ManualSteering]:         [false,  true,   false,  false,  false],
-            [Activity.FirmwareUpgrade]:        [false,  true,   false,  false,  true]
+        const commandIndex =                           ['play', 'pause', 'home', 'stop'];
+        const commandSet: Record<RX92RobotStatus, (boolean | null)[]> = {
+            [RX92RobotStatus.Cleaning]:                 [true,   false,  false,  false],
+            [RX92RobotStatus.PausedCleaning]:           [false,  true,   false,  false],
+            [RX92RobotStatus.SpotCleaning]:             [true,   false,  false,  false],
+            [RX92RobotStatus.PausedSpotCleaning]:       [false,  true,   false,  false],
+            [RX92RobotStatus.Return]:                   [true,   false,  true,   false],
+            [RX92RobotStatus.PausedReturn]:             [false,  true,   false,  false],
+            [RX92RobotStatus.ReturnForPitstop]:         [true,   false,  true,   false],
+            [RX92RobotStatus.PausedReturnForPitstop]:   [false,  true,   false,  false],
+            [RX92RobotStatus.Charging]:                 [false,  true,   true,   true],
+            [RX92RobotStatus.Sleeping]:                 [false,  true,   null,   true],
+            [RX92RobotStatus.Error]:                    [false,  true,   null,   true],
+            [RX92RobotStatus.Pitstop]:                  [true,   true,   true,   false],
+            [RX92RobotStatus.ManualSteering]:           [false,  true,   false,  false],
+            [RX92RobotStatus.FirmwareUpgrade]:          [false,  true,   false,  true]
         };
         const index = commandIndex.indexOf(command);
         let isSet = commandSet[this.robot.status.activity][index];
-        if (isSet === null && command === CleaningCommand.Home
+        if (isSet === null && command === 'home'
             && this.robot.status.isDocked !== undefined) {
             isSet = this.robot.status.isDocked;
         }
@@ -253,18 +183,17 @@ export class AEGRobotCtrlActivity extends AEGRobotCtrl<CleaningCommand> {
     }
 
     // Attempt to set the requested state
-    async setTarget(command: CleaningCommand): Promise<void> {
-        await this.api.cleaningCommand(command);
+    async setTarget(command: RX92CleaningCommand): Promise<void> {
+        await this.api.sendCleaningCommand(command);
     }
 
     // Override the status while a requested change is pending
-    overrideStatus(command: CleaningCommand): void {
-        const commandToActivity: Record<CleaningCommand, SimpleActivity> = {
-            [CleaningCommand.Play]:     SimpleActivity.Clean,
-            [CleaningCommand.Pause]:    SimpleActivity.Pause,
-            [CleaningCommand.Spot]:     SimpleActivity.Clean,
-            [CleaningCommand.Home]:     SimpleActivity.Return,
-            [CleaningCommand.Stop]:     SimpleActivity.Other
+    overrideStatus(command: RX92CleaningCommand): void {
+        const commandToActivity: Record<RX92CleaningCommand, SimpleActivity> = {
+            play:   SimpleActivity.Clean,
+            pause:  SimpleActivity.Pause,
+            home:   SimpleActivity.Return,
+            stop:   SimpleActivity.Other
         };
         this.robot.status.simpleActivity = commandToActivity[command];
     }

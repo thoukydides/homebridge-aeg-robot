@@ -19,21 +19,36 @@ AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.elect
 
 ## Installation
 
-1. Use the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) app to add the RX series robot vacuum to your AEG/Electrolux/Zanussi account.
+### Step 1 - Create Account and Setup Robot Vacuum
+1. Use the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) app to create an account. *(It may be necessary to logout and login again to complete account creation.)*
+1. Add the RX series robot vacuum to your AEG/Electrolux/Zanussi account.
+
+### Step 2 - Obtain Electrolux Web API Credentials
+1. Login to the [Electrolux Group Developer Portal](https://developer.electrolux.one/login) using the same account as used for the AEG mobile app.
+1. On the [Dashboard](https://developer.electrolux.one/dashboard) page enter an *Api Key Name* and click *CREATE NEW API KEY*. Copy the *Api key*.
+1. Click on *GENERATE TOKEN*. Copy the *Access Token* and *Refresh Token* values.
+
+### Step 3(a) - Homebridge Plugin Installation *(recommended approach using Homebridge UI)*
+
+1. On the [Homebridge UI](https://github.com/homebridge/homebridge-config-ui-x) Plugins page search for and install the **AEG Robot Vacuum** plugin.
+1. Open the **Homebridge AEG Robot Vacuum** plugin settings and set the *API Key*, *Access Token*, and *Refresh Token* to the values obtained from the [Electrolux Group Developer Portal Dashboard](https://developer.electrolux.one/dashboard).
+1. Save the plugin settings and restart Homebridge.
+
+### Step 3(b) - Homebridge Plugin Installation *(alternative method using command line)*
+
 1. Install this plugin using: `npm install -g homebridge-aeg-robot`
 1. Edit `config.json` and add the `Homebridge AEG Robot Vacuum` platform (see example below).
 1. Run [Homebridge](https://github.com/homebridge/homebridge).
 
-Alternatively, use [Homebridge Config UI X](https://github.com/oznu/homebridge-config-ui-x) to install and configure this plugin.
-
-### Example `config.json`
+#### Example `config.json`
 ```JSON
 {
     "platforms":
     [{
-        "platform": "Homebridge AEG Robot Vacuum",
-        "username": "rx@gmail.com",
-        "password": "Passw0rd!"
+        "platform":     "Homebridge AEG Robot Vacuum",
+        "apiKey":       "<API Key>",
+        "accessToken":  "<Authorization Access Token>",
+        "refreshToken": "<Authorization Refresh Token>"
     }]
 }
 ```
@@ -46,22 +61,20 @@ Additional settings can be included in `config.json` to customise the behaviour 
 {
     "platforms":
     [{
-        "platform":       "Homebridge AEG Robot Vacuum",
-        "username":       "rx@gmail.com",
-        "password":       "Passw0rd!",
+        "platform":     "Homebridge AEG Robot Vacuum",
+        "apiKey":       "<API Key>",
+        "accessToken":  "<Authorization Access Token>",
+        "refreshToken": "<Authorization Refresh Token>",
         "pollIntervals": {
-            "statusSeconds":        5,
-            "serverHealthSeconds":  60,
-            "feedSeconds":          300,
-            "cleanedAreaSeconds":   60,
+            "statusSeconds":    20
         },
-        "hideServices":   ["Battery", "Contact Sensor", "Fan", "Filter Maintenance", "Occupancy Sensor", "Switch Clean", "Switch Home"],
-        "debug":          ["Run API Tests", "Run Unsafe API Tests", "Log API Headers", "Log API Bodies", "Log Debug as Info"]
+        "hideServices": ["Battery", "Contact Sensor", "Fan", "Filter Maintenance", "Occupancy Sensor", "Switch Clean", "Switch Home"],
+        "debug":        ["Run API Tests", "Run Unsafe API Tests", "Log API Headers", "Log API Bodies", "Log Debug as Info"]
     }]
 }
 ```
 
-The `pollIntervals` specify the time in seconds between successive polls of the AEG/Electrolux cloud API for appliance status updates (`statusSeconds`, default 5 seconds), the health of the cloud servers (`serverHealthSeconds`, default 60 seconds), the information feed (`feedSeconds`, default 300 seconds), or the history of cleaning sessions (`cleanedAreaSeconds`, default 60 seconds).
+The `pollIntervals` specify the time in seconds between successive polls of the Electrolux Group API. The API has a strict [rate limit](https://developer.electrolux.one/documentation/quotasAndRateLimits) of 5000 calls/day. The default (and minimum) value for `statusSeconds` is 20 seconds, which results in 4320 calls/day.
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 
@@ -69,9 +82,7 @@ Do not set any of the `debug` options unless attempting to investigating a compa
 
 ## Compatibility
 
-This plugin has only been tested with a single AEG RX9.2 robot vacuum (model `RX9-2-4ANM`, PNC `900 277 479`, running firmware `43.23`). The protocol was reverse-engineered from the the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) iPhone app (which replaced the [AEG Wellbeing](https://apps.apple.com/gb/app/aeg-wellbeing/id1494284929) app).
-
-It will probably work with other AEG RX9.2 / Electrolux Pure i9.2 robot vacuums, although some fixes might be required for AEG RX9/RX9.1 / Electrolux Pure i9/i9.1 models. Older AEG RX8 / Electrolux Pure i8 robot vacuums are not supported.
+This plugin has only been tested with a single AEG RX9.2 robot vacuum (model `RX9-2-4ANM`, PNC `900 277 479`, running firmware `43.23`). It will probably work with other AEG RX9.2 / Electrolux Pure i9.2 robot vacuums, although some fixes might be required for AEG RX9/RX9.1 / Electrolux Pure i9/i9.1 models.
 
 ## Functionality
 
@@ -89,7 +100,7 @@ The **Accessory Information** Service provides information about the appliance a
 * **Firmware Revision**: The version of this plugin (set by Homebridge).
 * **Software Revision**: The current firmware version.
 * **Name**: The currently configured name for the appliance.
-* **Configured Name**: The currently configured name for the appliance. Changing this also affects the name used within the AEG iPhone app.
+* **Configured Name**: The currently configured name for the appliance.
 
 ### Battery
 
@@ -121,12 +132,11 @@ The **Contact Sensor** Service is (ab)used to indicate when the robot is on its 
     * Firmware update being applied.
 * **Status Fault**: Indicates when there is any kind of problem with the robot:
     * **No Fault** = Communication with the robot has been established and it is not reporting a fault condition.
-    * **General Fault** = There is a fault either with the robot or communication with it via the AEG/Electrolux cloud API servers. This includes:
-        * Unable to authenticate with the AEG/Electrolux cloud API.
-        * No recent successful response from the AEG/Electrolux cloud API.
-        * AEG/Electrolux cloud API reported problems with one or more servers.
+    * **General Fault** = There is a fault either with the robot or communication with it via the Electrolux Group API servers. This includes:
+        * Unable to authenticate with the Electrolux Group API.
+        * No recent successful response from the Electrolux Group API.
         * Robot has not been enabled in the AEG/Electrolux account.
-        * Robot is not connected to the AEG/Electrolux cloud servers.
+        * Robot is not connected to the Electrolux Group API servers.
         * Robot is reporting an error condition.
         * Battery is dead.
         * Dust collection bin is either missing or full.
@@ -134,7 +144,7 @@ The **Contact Sensor** Service is (ab)used to indicate when the robot is on its 
 
 ### Fan
 
-The **Fan** Service is (ab)used to start/stop cleaning and to adjust the cleaning power mode.
+The **Fan** Service is (ab)used to start/stop cleaning and to indicate the cleaning power mode.
 * **Active**: Starts or pauses/resumes a cleaning operation:
     * *Inactive* = Indicates that the robot is either not performing a cleaning operation or the current operation is paused. Setting this state will attempt to pause the current operation.
     * *Active* = Indicates that the robot is actively cleaning (including charging, or returning to the dock for charging, during a cleaning operation). Setting this state will attempt to resume a paused cleaning operation, or start a new cleaning operation.
@@ -179,7 +189,9 @@ Another **Switch** Service is used to (stop cleaning and) initiate a return to t
 
 This is an early prototype. Functionality, configuration options, and mapping to HomeKit services, may change between releases. It may be necessary to manually delete Homebridge cache files and/or modify the `config.json` file when upgrading.
 
-Only the AEG/Electrolux cloud API is supported. This plugin cannot communicate directly with the robot via a local network connection.
+Earlier versions of this plugin used the same API as the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) iPhone app (which replaced the [AEG Wellbeing](https://apps.apple.com/gb/app/aeg-wellbeing/id1494284929) app), enabling the same functionality as that app, but its authorization mechanism has now been blocked. This plugin now uses the [Electrolux Group API](https://developer.electrolux.one/) that has been documented for use by third-party developers, but its capabilities are far more limited.
+
+This plugin cannot communicate directly with the robot via a local network connection.
 
 ## Changelog
 

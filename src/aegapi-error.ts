@@ -1,26 +1,17 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
-// Copyright © 2022-2023 Alexander Thoukydides
+// Copyright © 2022-2024 Alexander Thoukydides
 
 import { STATUS_CODES } from 'http';
-import { createCheckers, CheckerT, IErrorDetail } from 'ts-interface-checker';
+import { IErrorDetail } from 'ts-interface-checker';
 
-import { ErrorResponseCode, ErrorResponseMessageLC,
-         ErrorResponseMessageUC } from './aegapi-error-types.js';
 import { Request, Response } from './aegapi-ua.js';
-import errorsTI from './ti/aegapi-error-types-ti.js';
 import { assertIsDefined } from './utils.js';
+import { checkers } from './ti/aegapi-types.js';
 
 // Options that can be passed to an error constructor
 interface Options { cause?: unknown }
 
-// Checkers for API error responses
-const checkers = createCheckers(errorsTI) as {
-    ErrorResponseCode:      CheckerT<ErrorResponseCode>;
-    ErrorResponseMessageLC: CheckerT<ErrorResponseMessageLC>;
-    ErrorResponseMessageUC: CheckerT<ErrorResponseMessageUC>;
-};
-
-// Base for reporting all AEG RX 9 / Electrolux Pure i9 cloud API errors
+// Base for reporting all Electrolux Group API errors
 export class AEGAPIError extends Error {
 
     readonly errCause: unknown;
@@ -34,7 +25,7 @@ export class AEGAPIError extends Error {
         // Standard error object initialisation
         super(message);
         Error.captureStackTrace(this, AEGAPIError);
-        this.name = 'AEG API Error';
+        this.name = 'Electrolux Group API Error';
         if (options?.cause) this.errCause = options.cause;
     }
 }
@@ -50,7 +41,7 @@ export class AEGAPIAuthorisationError extends AEGAPIError {
     ) {
         super(request, response, message, options);
         Error.captureStackTrace(this, AEGAPIAuthorisationError);
-        this.name = 'AEG API Authorisation Error';
+        this.name = 'Electrolux Group API Authorisation Error';
     }
 
 }
@@ -66,7 +57,7 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
     ) {
         super(request, response, AEGAPIStatusCodeError.getMessage(response, text), options);
         Error.captureStackTrace(this, AEGAPIStatusCodeError);
-        this.name = 'AEG API Status Code Error';
+        this.name = 'Electrolux Group API Status Code Error';
     }
 
     // Construct an error message from a response
@@ -85,20 +76,9 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
         let message = text;
         try {
             const json = JSON.parse(text) as unknown;
-            if (checkers.ErrorResponseMessageLC.test(json) && json.message) {
-                message = json.message;
-                if (json.error) message += ` (${json.error})`;
-            } else if (checkers.ErrorResponseMessageUC.test(json) && json.Message) {
-                message = json.Message;
-            } else if (checkers.ErrorResponseCode.test(json)) {
-                message = `${json.codeDescription} (${json.code})`;
-                if (json.details) {
-                    Object.entries(json.details).forEach(([key, values]) => {
-                        values.forEach(value => {
-                            message += `\n    ${key}: ${value}`;
-                        });
-                    });
-                }
+            if (checkers.ErrorResponse.test(json)) {
+                message = `${json.message} (${json.error})`;
+                if (json.detail) message += `: ${json.detail}`;
             }
         } catch { /* empty */ }
         return message;
@@ -123,7 +103,7 @@ export class AEGAPIValidationError extends AEGAPIError {
     ) {
         super(request, response, AEGAPIValidationError.getMessage(validation), options);
         Error.captureStackTrace(this, AEGAPIValidationError);
-        this.name = 'AEG API Validation Error';
+        this.name = 'Electrolux Group API Validation Error';
     }
 
     // Construct an error message from a checker validation error

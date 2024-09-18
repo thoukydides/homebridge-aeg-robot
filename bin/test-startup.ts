@@ -10,7 +10,8 @@ const SPAWN_COMMAND = 'homebridge';
 const SPAWN_ARGS = '-D -I -P .. --strict-plugin-resolution'.split(' ');
 
 // Log messages indicating success
-const SUCCESS_OUTPUT_REGEX = /\[Homebridge AEG Robot Vacuum\] (Starting new authorisation|Using saved access token)/;
+// eslint-disable-next-line max-len
+const SUCCESS_OUTPUT_REGEX = /\[Homebridge AEG Robot Vacuum\] (No saved access token; using credentials from configuration|Using saved access token)/;
 
 // Length of time to wait for the message
 const TIMEOUT_MS = 15 * 1000; // (15 seconds)

@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Changed
+* Migrated from a reverse engineered AEG iPhone app API to the documented Electrolux Group API. Create API Key, Access Token, and Refresh Token via the [Electrolux Group Developer Portal](https://developer.electrolux.one/).
 
 ## [v1.0.2] - 2024-09-17
 ### Fixed
