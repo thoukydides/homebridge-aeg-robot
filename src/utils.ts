@@ -58,7 +58,7 @@ export function logError(log: Logger, when: string, err: unknown): void {
 
         // Log any stack backtrace
         if (err instanceof Error && err.stack) log.debug(err.stack);
-    } catch { /*empty */ }
+    } catch { /* empty */ }
 }
 
 // Format a milliseconds duration

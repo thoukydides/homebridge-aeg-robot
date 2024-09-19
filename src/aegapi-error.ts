@@ -65,7 +65,6 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
         const statusCode = response.statusCode;
         const statusCodeName = STATUS_CODES[statusCode];
         const description = AEGAPIStatusCodeError.getBodyDescription(text)
-                            ?? AEGAPIStatusCodeError.getHeaderDescription(response)
                             ?? 'No error message returned';
         return `[${statusCode} ${statusCodeName}] ${description}`;
     }
@@ -82,13 +81,6 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
             }
         } catch { /* empty */ }
         return message;
-    }
-
-    // Attempt to extract a useful description from the response headers
-    static getHeaderDescription(response: Response): string | null {
-        const header = response.headers['www-authenticate']
-                       ?? response.headers['x-amzn-remapped-www-authenticate'];
-        return typeof header === 'string' && header.length ? header : null;
     }
 }
 

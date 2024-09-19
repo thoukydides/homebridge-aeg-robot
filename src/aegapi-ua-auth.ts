@@ -9,7 +9,7 @@ import { setTimeout } from 'node:timers/promises';
 import { AbsoluteTokens, PostTokenRefresh, PostTokenRevoke, Tokens } from './aegapi-auth-types.js';
 import { AEGUserAgent, Headers, Method, Request, UAOptions } from './aegapi-ua.js';
 import { MS, logError } from './utils.js';
-import { AEGAPIAuthorisationError, AEGAPIError } from './aegapi-error.js';
+import { AEGAPIAuthorisationError, AEGAPIError, AEGAPIStatusCodeError } from './aegapi-error.js';
 import { Config } from './config-types.js';
 import { checkers } from './ti/aegapi-auth-types.js';
 
@@ -29,6 +29,9 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
     private authorised: Promise<void>;
     private authorisedFn!: { resolve: () => void; reject: (reason: unknown) => void };
 
+    // Abort signal used to trigger immediate token refresh
+    private refreshAbortController?: AbortController;
+
     // The current access and refresh token
     private token!: AbsoluteTokens;
 
@@ -43,10 +46,15 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         this.persistKey = [config.apiKey, config.accessToken, config.refreshToken].join(':');
 
         // Authorise the user agent
-        this.authorised = new Promise((resolve, reject) => {
+        this.authorised = this.makeAuthPromise();
+        void this.authoriseUserAgent();
+    }
+
+    // Construct a Promise indicating when (re)authorisation is complete
+    makeAuthPromise(): Promise<void> {
+        return new Promise((resolve, reject) => {
             this.authorisedFn = { resolve, reject };
         });
-        void this.authoriseUserAgent();
     }
 
     // Attempt to authorise access to the API
@@ -59,6 +67,7 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         } else if (Date.now() + REFRESH_WINDOW_MS < this.token.expiresAt) {
             this.log.info('Using saved access token');
             this.authorisedFn.resolve();
+            //this.token.expiresAt = 0;
         } else {
             this.log.info('Saved access token has expired');
         }
@@ -72,8 +81,11 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         for (;;) {
             try {
                 // Wait until the access token is nearly due to expire
-                const expiresIn = this.token.expiresAt - Date.now();
-                await setTimeout(expiresIn - REFRESH_WINDOW_MS);
+                this.refreshAbortController = new AbortController();
+                const { signal } = this.refreshAbortController;
+                const refreshIn = this.token.expiresAt - Date.now() - REFRESH_WINDOW_MS;
+                try { await setTimeout(refreshIn, undefined, { signal }); } catch { /* empty */ }
+                this.refreshAbortController = undefined;
 
                 // Refresh the tokens (updates both access token and refresh token)
                 const token = await this.tokenRefresh(this.token.refreshToken);
@@ -85,13 +97,19 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
                 this.authorisedFn.resolve();
 
             } catch (cause) {
-                logError(this.log, 'API authorisation', cause);
-                if (cause instanceof AEGAPIAuthorisationError) {
-                    // HERE - Need to do something to detect this condition
-                    return; // Give-up (wrong credentials)
+                if (cause instanceof AEGAPIStatusCodeError && cause.response
+                    && [401, 403].includes(cause.response.statusCode)) {
+                    // Unable to refresh tokens due to bad credentials
+                    const message = 'Authorisation failed due to bad credentials (API Key or Refresh Token)';
+                    const err = new AEGAPIAuthorisationError(cause.request, cause.response, message, { cause });
+                    // HERE - This crashes if nothing is waiting for the promise...
+                    this.authorisedFn.reject(err);
+                    logError(this.log, 'API authorisation', err);
+                    return;
                 }
 
                 // Try to refresh the tokens after a short delay
+                logError(this.log, 'API authorisation', cause);
                 await setTimeout(REFRESH_RETRY_DELAY_MS);
             }
         }
@@ -123,6 +141,17 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         return `Bearer ${this.token.accessToken}`;
     }
 
+    // Trigger an immediate token refresh
+    triggerRefresh(headers: Headers): void {
+        if (this.refreshAbortController !== undefined
+            && headers.authorization === this.authorizationHeader) {
+            this.log.warn('Token refresh required...');
+            this.refreshAbortController.abort();
+            this.refreshAbortController = undefined;
+            this.authorised = this.makeAuthPromise();
+        }
+    }
+
     // Add an Authorization header to request options
     async prepareRequest(method: Method, path: string, options?: UAOptions,
                          body?: object, headers?: Headers): Promise<Request> {
@@ -146,17 +175,41 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         return request;
     }
 
-    // HERE - 401 Unauthorized for non token refresh operations indicates a bad Access Token
+    // Refresh tokens if a request returned a 403 Forbidden status
+    canRetry(err: unknown, options?: UAOptions): boolean {
+        let retry = super.canRetry(err, options);
+        if (err instanceof AEGAPIStatusCodeError && err.response) {
+            const headers = err.request.headers;
+            switch (err.response.statusCode) {
+            case 400:
+                // Bad Request: Might be due to Access Token not being a JWT
+                if (err.text.includes('JWT could not be decoded properly')) {
+                    if (retry) this.log.warn('Request will no be retried (Access Code is not a JWT)');
+                    retry = false;
+                }
+                break;
+            case 401:
+                // Unauthorised: Access Token (or Refresh Token) is probably invalid
+                this.triggerRefresh(headers);
+                break;
+            case 403:
+                // Forbidden: The API Key is probably invalid
+                if (retry) this.log.warn('Request will not be retried (API Key possibly invalid)');
+                retry = false;
+            }
+        }
+        return retry;
+    }
 
     // Refresh access token and refresh token
     async tokenRefresh(refreshToken: string): Promise<Tokens> {
         const body: PostTokenRefresh = { refreshToken };
-        return this.postJSON(checkers.Tokens, '/api/v1/token/refresh', body);
+        return this.postJSON(checkers.Tokens, '/api/v1/token/refresh', body, { isAuthRequest: true });
     }
 
     // Revoke refresh token
     async tokenRevoke(refreshToken: string): Promise<void> {
         const body: PostTokenRevoke = { refreshToken };
-        await this.post('/api/v1/token/revoke', body);
+        await this.post('/api/v1/token/revoke', body, { isAuthRequest: true });
     }
 }
