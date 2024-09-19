@@ -38,4 +38,4 @@ jobs:
         run: npm run test
         env:
           ELECTROLUX_API_KEY: ${{ secrets.ELECTROLUX_API_KEY }}
-          ELECTROLUX_ACCESS_TOKEN: ${{ secrets.ELECTROLUX_ACCESS_TOKEN }}
+          ELECTROLUX_ACCESS_TOKEN: ${{ env.ELECTROLUX_ACCESS_TOKEN }}
