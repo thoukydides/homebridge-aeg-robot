@@ -66,7 +66,7 @@ Additional settings can be included in `config.json` to customise the behaviour 
         "accessToken":  "<Authorization Access Token>",
         "refreshToken": "<Authorization Refresh Token>",
         "pollIntervals": {
-            "statusSeconds":    20
+            "statusSeconds":    30
         },
         "hideServices": ["Battery", "Contact Sensor", "Fan", "Filter Maintenance", "Occupancy Sensor", "Switch Clean", "Switch Home"],
         "debug":        ["Run API Tests", "Run Unsafe API Tests", "Log API Headers", "Log API Bodies", "Log Debug as Info"]
@@ -74,7 +74,7 @@ Additional settings can be included in `config.json` to customise the behaviour 
 }
 ```
 
-The `pollIntervals` specify the time in seconds between successive polls of the Electrolux Group API. The API has a strict [rate limit](https://developer.electrolux.one/documentation/quotasAndRateLimits) of 5000 calls/day. The default (and minimum) value for `statusSeconds` is 20 seconds, which results in 4320 calls/day.
+The `pollIntervals` specify the time in seconds between successive polls of the Electrolux Group API. The API has a strict [rate limit](https://developer.electrolux.one/documentation/quotasAndRateLimits) of 5000 calls/day. The default value for `statusSeconds` is 30 seconds, which results in 2880 calls/day for polling the appliance state.
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 

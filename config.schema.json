@@ -24,7 +24,7 @@
                 "properties": {
                     "statusSeconds": {
                         "type": "integer",
-                        "placeholder": 20,
+                        "placeholder": 30,
                         "minimum": 20,
                         "maximum": 600
                     }
