@@ -31,7 +31,11 @@ jobs:
       - name: Build the project
         run: npm run build
 
+      - name: Retrieve an Electrolux Group API Access Token
+        run: echo "ELECTROLUX_ACCESS_TOKEN=$(curl -s https://www.thouky.co.uk/api/oauth/electrolux/${{ secrets.ELECTROLUX_API_KEY }})" >> $GITHUB_ENV
+
       - name: Run the tests
         run: npm run test
         env:
-          AEG_API_KEY: ${{ secrets.AEG_API_KEY }}
+          ELECTROLUX_API_KEY: ${{ secrets.ELECTROLUX_API_KEY }}
+          ELECTROLUX_ACCESS_TOKEN: ${{ secrets.ELECTROLUX_ACCESS_TOKEN }}

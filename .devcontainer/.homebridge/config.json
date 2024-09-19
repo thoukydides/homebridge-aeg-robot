@@ -18,7 +18,6 @@
         },
         {
             "platform": "Homebridge AEG Robot Vacuum",
-            "accessToken": "NotAccessToken",
             "refreshToken": "NotRefreshToken",
             "debug": ["Run API Tests"]
         }
