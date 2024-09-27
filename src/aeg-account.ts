@@ -7,7 +7,7 @@ import { AEGAPI } from './aegapi.js';
 import { AEGRobot } from './aeg-robot.js';
 import { formatList, plural } from './utils.js';
 import { Config } from './config-types.js';
-import { AEGAPIRX92 } from './aegapi-rx92.js';
+import { AEGAPIRX9 } from './aegapi-rx9.js';
 
 // An AEG user account manager
 export class AEGAccount {
@@ -33,7 +33,7 @@ export class AEGAccount {
         this.readyPromise = this.init();
     }
 
-    // Return a list of AEG RX9.2 robot vacuum cleaners in the account
+    // Return a list of AEG RX9.1 and RX9.2 robot vacuum cleaners in the account
     async getRobots(): Promise<Promise<AEGRobot>[]> {
         await this.readyPromise;
         return [...this.robots.values()].map(robot => robot.waitUntilReady());
@@ -45,7 +45,7 @@ export class AEGAccount {
         const appliances = await this.api.getAppliances();
         const incompatible: string[] = [];
         appliances.forEach(appliance => {
-            if (AEGAPIRX92.isRX92(appliance)) {
+            if (AEGAPIRX9.isRX9(appliance)) {
                 const robot = new AEGRobot(this.log, this, appliance);
                 this.robots.set(appliance.applianceId, robot);
             } else {

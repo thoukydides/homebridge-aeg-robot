@@ -82,7 +82,7 @@ Do not set any of the `debug` options unless attempting to investigating a compa
 
 ## Compatibility
 
-This plugin has only been tested with a single AEG RX9.2 robot vacuum (model `RX9-2-4ANM`, PNC `900 277 479`, running firmware `43.23`). It will probably work with other AEG RX9.2 / Electrolux Pure i9.2 robot vacuums, although some fixes might be required for AEG RX9/RX9.1 / Electrolux Pure i9/i9.1 models.
+This plugin has only been tested with a single AEG RX9.2 robot vacuum (model `RX9-2-4ANM`, PNC `900 277 479`, running firmware `43.23`). Some support has been added for an AEG RX9.1 (model `RX9-1-IBM`, PNC `900 277 268`, running firmware `43.23`) but this has not been tested by the author. It should work with other AEG RX9/RX9.1/RX9.2 / Electrolux Pure i9/i9.1/i9.2 models.
 
 ## Functionality
 
@@ -106,19 +106,19 @@ The **Accessory Information** Service provides information about the appliance a
 
 The **Battery** Service indicates the battery charge level and charging status.
 * **Status Low Battery**: Indicates when the battery level is low:
-    * *Battery Level Low* = Battery level is Low, Critically low, Dead, or cannot be determined.
-    * *Battery Level Normal* = Battery level is Medium, High, or Fully charged.
+    * **Battery Level Low** = Battery level is Low, Critically low, Dead, or cannot be determined.
+    * **Battery Level Normal** = Battery level is Medium, High, or Fully charged.
 * **Battery Level**: Reports the battery charge level as a percentage:
-    * *0%* = Dead
-    * *20%* = Critically low
-    * *40%* = Low
-    * *60%* = Medium
-    * *80%* = High
-    * *100%* = Fully charged
+    * **0%** = Dead
+    * **20%** = Critically low
+    * **40%** = Low
+    * **60%** = Medium
+    * **80%** = High
+    * **100%** = Fully charged
 * **Charging State**: Indicates the robot's charging status:
-    * *Charging* = Actively charging the battery.
-    * *Not Charging* = Not currently charging. The robot may be on its charging dock, but with a fully charged battery.
-    * *Not Chargeable* = Unable to determine the current status.
+    * **Charging** = Actively charging the battery.
+    * **Not Charging** = Not currently charging. The robot may be on its charging dock, but with a fully charged battery.
+    * **Not Chargeable** = Unable to determine the current status.
 
 ### Contact Sensor
 
@@ -152,18 +152,23 @@ The **Fan** Service is (ab)used to start/stop cleaning and to indicate the clean
     * **Inactive** = Either not performing a cleaning operation or the current cleaning operation is paused.
     * **Idle** = Either returning to the charging dock or charging during a cleaning operation.
     * **Blowing Air** = Currently cleaning.
-* **Rotation Speed**: The current cleaning power mode:
+* **Rotation Speed**: Indicates the current cleaning power mode:
     * **0%** = Not performing a cleaning operation or the current operation is paused.
-    * **25%** = Quiet (lower energy consumption and quieter).
-    * **50%** = Smart (cleans quietly on hard surfaces, uses full power on carpets).
-    * **100%** = Power (optimal cleaning performance, higher energy consumption).
+    * **25%** =
+      * *RX9.2*: Quiet (lower energy consumption and quieter).
+    * **50%** =
+      * *RX9.1*: ECO mode (lower energy consumption and quieter).
+      * *RX9.2*: Smart (cleans quietly on hard surfaces, uses full power on carpets).
+    * **100%** =
+      * *RX9.1*: Not ECO mode (optimal cleaning performance, higher energy consumption).
+      * *RX9.2*: Power (optimal cleaning performance, higher energy consumption).
 
 ### Filter Maintenance
 
 The **Filter Maintenance** Service is (ab)used to indicate the dust collection bin status.
 * **Filter Change Indication**:
-    * *Change Filter* = Dust collection bin is either full or not present.
-    * *Filter OK* = Dust collection bin is fitted and not full (or its status could not be determined).
+    * **Change Filter** = Dust collection bin is either full or not present.
+    * **Filter OK** = Dust collection bin is fitted and not full (or its status could not be determined).
 
 ### Occupancy Sensor
 

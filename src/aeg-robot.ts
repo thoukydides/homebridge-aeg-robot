@@ -11,10 +11,10 @@ import { Config } from './config-types.js';
 import { Heartbeat } from './heartbeat.js';
 import { formatList, logError, MS } from './utils.js';
 import { PrefixLogger } from './logger.js';
-import { RX92ApplianceInfo, RX92ApplianceState, RX92BatteryStatus,
-         RX92Capabilities, RX92CleaningCommand, RX92Dustbin, RX92Message,
-         RX92PowerMode, RX92RobotStatus } from './aegapi-rx92-types.js';
-import { AEGAPIRX92 } from './aegapi-rx92.js';
+import { RX9ApplianceInfo, RX9ApplianceState, RX9BatteryStatus,
+         RX9Capabilities, RX9CleaningCommand, RX9Dustbin, RX9Message,
+         RX92PowerMode, RX9RobotStatus } from './aegapi-rx9-types.js';
+import { AEGAPIRX9 } from './aegapi-rx9.js';
 import { Appliance } from './aegapi-types.js';
 
 // Simplified robot activities
@@ -32,11 +32,12 @@ export interface DynamicStatus {
     name:               string;
     hardware:           string;
     firmware:           string;
-    capabilities:       RX92Capabilities[];
-    battery?:           RX92BatteryStatus;
-    activity?:          RX92RobotStatus;
-    dustbin?:           RX92Dustbin;
+    capabilities:       RX9Capabilities[];
+    battery?:           RX9BatteryStatus;
+    activity?:          RX9RobotStatus;
+    dustbin?:           RX9Dustbin;
     rawPower?:          RX92PowerMode;
+    rawEco?:            boolean;
     enabled:            boolean;
     connected:          boolean;
     // API errors
@@ -53,12 +54,13 @@ export interface DynamicStatus {
     isFault?:           boolean;
     isError?:           unknown;
     power?:             RX92PowerMode;
+    eco?:               boolean;
 }
 export type StatusEvent = keyof DynamicStatus;
 
 // Other event types
 interface DataEventType {
-    message:        RX92Message;
+    message:        RX9Message;
 }
 type DataEvent = keyof DataEventType;
 type VoidEvent = 'info' | 'appliance' | 'preUpdate';
@@ -77,11 +79,11 @@ export class AEGRobot extends EventEmitter {
     // A custom logger
     readonly log: Logger;
 
-    // Electrolux Group API for an AEG RX9.2 robot vacuum cleaner
-    readonly api: AEGAPIRX92;
+    // Electrolux Group API for an AEG RX9.1 or RX9.2 robot vacuum cleaner
+    readonly api: AEGAPIRX9;
 
     // Control the robot
-    readonly setActivity:   (command:   RX92CleaningCommand)    => void;
+    readonly setActivity:   (command:   RX9CleaningCommand)    => void;
 
     // Static information about the robot (mostly initialised asynchronously)
     readonly applianceId:   string; // Product ID
@@ -123,7 +125,7 @@ export class AEGRobot extends EventEmitter {
         // Construct a Logger and API for this robot
         this.config = account.config;
         this.log = new PrefixLogger(log, appliance.applianceName);
-        this.api = account.api.rx92API(appliance.applianceId);
+        this.api = account.api.rx9API(appliance.applianceId);
 
         // Initialise static information that is already known
         this.applianceId    = appliance.applianceId;
@@ -180,7 +182,7 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Set static robot state
-    updateFromApplianceInfo(info: RX92ApplianceInfo): void {
+    updateFromApplianceInfo(info: RX9ApplianceInfo): void {
         const { serialNumber, pnc, brand, model } = info.applianceInfo;
         this.pnc    = pnc;
         this.sn     = serialNumber;
@@ -190,20 +192,21 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Update dynamic robot state
-    updateFromApplianceState(state: RX92ApplianceState): void {
+    updateFromApplianceState(state: RX9ApplianceState): void {
         // Extract the relevant information
         const { reported } = state.properties;
         this.updateStatus({
             name:           reported.applianceName,
             enabled:        state.status === 'enabled',
             connected:      state.connectionState === 'Connected',
-            capabilities:   Object.keys(reported.capabilities) as RX92Capabilities[],
+            capabilities:   Object.keys(reported.capabilities) as RX9Capabilities[],
             hardware:       reported.platform,
             firmware:       reported.firmwareVersion,
             battery:        reported.batteryStatus,
             activity:       reported.robotStatus,
             dustbin:        reported.dustbinStatus,
-            rawPower:       reported.powerMode
+            rawPower:       'powerMode' in reported ? reported.powerMode : undefined,
+            rawEco:         'ecoMode'   in reported ? reported.ecoMode   : undefined
         });
 
         // Extract any new messages
@@ -242,23 +245,23 @@ export class AEGRobot extends EventEmitter {
     // Update derived values
     updateDerived(): void {
         // Mapping of robot activities
-        type ActivityMap =                      [SimpleActivity,       boolean | null, boolean,    boolean];
-        const activityMap: Record<RX92RobotStatus, ActivityMap> = {
+        type ActivityMap =                             [SimpleActivity,       boolean | null, boolean,    boolean];
+        const activityMap: Record<RX9RobotStatus, ActivityMap> = {
             //                                          Activity                   Docked     Charging    Active
-            [RX92RobotStatus.Cleaning]:                [SimpleActivity.Clean,      false,     false,      true],
-            [RX92RobotStatus.PausedCleaning]:          [SimpleActivity.Pause,      false,     false,      false],
-            [RX92RobotStatus.SpotCleaning]:            [SimpleActivity.Clean,      false,     false,      true],
-            [RX92RobotStatus.PausedSpotCleaning]:      [SimpleActivity.Pause,      false,     false,      false],
-            [RX92RobotStatus.Return]:                  [SimpleActivity.Return,     false,     false,      true],
-            [RX92RobotStatus.PausedReturn]:            [SimpleActivity.Pause,      false,     false,      false],
-            [RX92RobotStatus.ReturnForPitstop]:        [SimpleActivity.Pitstop,    false,     false,      true],
-            [RX92RobotStatus.PausedReturnForPitstop]:  [SimpleActivity.Pause,      false,     false,      false],
-            [RX92RobotStatus.Charging]:                [SimpleActivity.Other,      true,      true,       true],
-            [RX92RobotStatus.Sleeping]:                [SimpleActivity.Other,      null,      false,      true],
-            [RX92RobotStatus.Error]:                   [SimpleActivity.Other,      null,      false,      false],
-            [RX92RobotStatus.Pitstop]:                 [SimpleActivity.Pitstop,    true,      true,       true],
-            [RX92RobotStatus.ManualSteering]:          [SimpleActivity.Other,      false,     false,      false],
-            [RX92RobotStatus.FirmwareUpgrade]:         [SimpleActivity.Other,      null,      false,      false]
+            [RX9RobotStatus.Cleaning]:                 [SimpleActivity.Clean,      false,     false,      true],
+            [RX9RobotStatus.PausedCleaning]:           [SimpleActivity.Pause,      false,     false,      false],
+            [RX9RobotStatus.SpotCleaning]:             [SimpleActivity.Clean,      false,     false,      true],
+            [RX9RobotStatus.PausedSpotCleaning]:       [SimpleActivity.Pause,      false,     false,      false],
+            [RX9RobotStatus.Return]:                   [SimpleActivity.Return,     false,     false,      true],
+            [RX9RobotStatus.PausedReturn]:             [SimpleActivity.Pause,      false,     false,      false],
+            [RX9RobotStatus.ReturnForPitstop]:         [SimpleActivity.Pitstop,    false,     false,      true],
+            [RX9RobotStatus.PausedReturnForPitstop]:   [SimpleActivity.Pause,      false,     false,      false],
+            [RX9RobotStatus.Charging]:                 [SimpleActivity.Other,      true,      true,       true],
+            [RX9RobotStatus.Sleeping]:                 [SimpleActivity.Other,      null,      false,      true],
+            [RX9RobotStatus.Error]:                    [SimpleActivity.Other,      null,      false,      false],
+            [RX9RobotStatus.Pitstop]:                  [SimpleActivity.Pitstop,    true,      true,       true],
+            [RX9RobotStatus.ManualSteering]:           [SimpleActivity.Other,      false,     false,      false],
+            [RX9RobotStatus.FirmwareUpgrade]:          [SimpleActivity.Other,      null,      false,      false]
         };
         const [activity, isDocked, isCharging, isActive] =
             this.status.activity === undefined
@@ -272,24 +275,25 @@ export class AEGRobot extends EventEmitter {
         const isFault = isError !== undefined
                      || !this.status.enabled
                      || !this.status.connected
-                     || this.status.activity === RX92RobotStatus.Error
-                     || this.status.battery === RX92BatteryStatus.Dead
+                     || this.status.activity === RX9RobotStatus.Error
+                     || this.status.battery === RX9BatteryStatus.Dead
                      || this.status.isDustbinEmpty === false;
 
         // Update the status
         this.updateStatus({
             simpleActivity: activity,
             isBatteryLow:   this.status.battery !== undefined
-                            && this.status.battery <= RX92BatteryStatus.Low,
+                            && this.status.battery <= RX9BatteryStatus.Low,
             isCharging,
             isDustbinEmpty: this.status.dustbin !== undefined
-                            && ![RX92Dustbin.Missing, RX92Dustbin.Full].includes(this.status.dustbin),
-            isDocked:       isDocked ?? this.status.battery === RX92BatteryStatus.FullyCharged,
+                            && ![RX9Dustbin.Missing, RX9Dustbin.Full].includes(this.status.dustbin),
+            isDocked:       isDocked ?? this.status.battery === RX9BatteryStatus.FullyCharged,
             isActive:       isActive && !isFault,
             isBusy,
             isError,
             isFault,
-            power:          isBusy ? this.status.rawPower : undefined
+            power:          isBusy ? this.status.rawPower : undefined,
+            eco:            isBusy ? this.status.rawEco   : undefined
         });
     }
 
@@ -331,7 +335,7 @@ export class AEGRobot extends EventEmitter {
     }
 
     // Emit events for any new messages
-    emitMessages(messages: RX92Message[] = []): void {
+    emitMessages(messages: RX9Message[] = []): void {
         // If there are no current messages then just flush the cache
         if (!messages.length) { this.emittedMessages.clear(); return; }
 

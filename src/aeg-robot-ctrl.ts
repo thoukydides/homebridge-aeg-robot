@@ -8,8 +8,8 @@ import { setTimeout } from 'node:timers/promises';
 import { AEGRobot, SimpleActivity } from './aeg-robot.js';
 import { Config } from './config-types.js';
 import { MS, assertIsNotUndefined, logError } from './utils.js';
-import { AEGAPIRX92 } from './aegapi-rx92.js';
-import { RX92CleaningCommand, RX92RobotStatus } from './aegapi-rx92-types.js';
+import { AEGAPIRX9 } from './aegapi-rx9.js';
+import { RX9CleaningCommand, RX9RobotStatus } from './aegapi-rx9-types.js';
 
 // Timeout waiting for status to reflect a requested change
 const TIMEOUT_MIN_MS        = 20 * MS;
@@ -24,8 +24,8 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     // Logger
     readonly log: Logger;
 
-    // Electrolux Group API for an AEG RX9.2 robot vacuum cleaner
-    readonly api: AEGAPIRX92;
+    // Electrolux Group API for an AEG RX9.1 or RX9.2 robot vacuum cleaner
+    readonly api: AEGAPIRX9;
 
     // The target value
     private target?: Type;
@@ -145,7 +145,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
 }
 
 // Robot controller for changing the activity
-export class AEGRobotCtrlActivity extends AEGRobotCtrl<RX92CleaningCommand> {
+export class AEGRobotCtrlActivity extends AEGRobotCtrl<RX9CleaningCommand> {
 
     // Create a new robot controller for changing the name
     constructor(readonly robot: AEGRobot) {
@@ -153,24 +153,24 @@ export class AEGRobotCtrlActivity extends AEGRobotCtrl<RX92CleaningCommand> {
     }
 
     // Check whether the robot is performing the required activity
-    isTargetSet(command: RX92CleaningCommand): boolean | null {
+    isTargetSet(command: RX9CleaningCommand): boolean | null {
         if (this.robot.status.activity === undefined) return null;
         const commandIndex =                           ['play', 'pause', 'home', 'stop'];
-        const commandSet: Record<RX92RobotStatus, (boolean | null)[]> = {
-            [RX92RobotStatus.Cleaning]:                 [true,   false,  false,  false],
-            [RX92RobotStatus.PausedCleaning]:           [false,  true,   false,  false],
-            [RX92RobotStatus.SpotCleaning]:             [true,   false,  false,  false],
-            [RX92RobotStatus.PausedSpotCleaning]:       [false,  true,   false,  false],
-            [RX92RobotStatus.Return]:                   [true,   false,  true,   false],
-            [RX92RobotStatus.PausedReturn]:             [false,  true,   false,  false],
-            [RX92RobotStatus.ReturnForPitstop]:         [true,   false,  true,   false],
-            [RX92RobotStatus.PausedReturnForPitstop]:   [false,  true,   false,  false],
-            [RX92RobotStatus.Charging]:                 [false,  true,   true,   true],
-            [RX92RobotStatus.Sleeping]:                 [false,  true,   null,   true],
-            [RX92RobotStatus.Error]:                    [false,  true,   null,   true],
-            [RX92RobotStatus.Pitstop]:                  [true,   true,   true,   false],
-            [RX92RobotStatus.ManualSteering]:           [false,  true,   false,  false],
-            [RX92RobotStatus.FirmwareUpgrade]:          [false,  true,   false,  true]
+        const commandSet: Record<RX9RobotStatus, (boolean | null)[]> = {
+            [RX9RobotStatus.Cleaning]:                  [true,   false,  false,  false],
+            [RX9RobotStatus.PausedCleaning]:            [false,  true,   false,  false],
+            [RX9RobotStatus.SpotCleaning]:              [true,   false,  false,  false],
+            [RX9RobotStatus.PausedSpotCleaning]:        [false,  true,   false,  false],
+            [RX9RobotStatus.Return]:                    [true,   false,  true,   false],
+            [RX9RobotStatus.PausedReturn]:              [false,  true,   false,  false],
+            [RX9RobotStatus.ReturnForPitstop]:          [true,   false,  true,   false],
+            [RX9RobotStatus.PausedReturnForPitstop]:    [false,  true,   false,  false],
+            [RX9RobotStatus.Charging]:                  [false,  true,   true,   true],
+            [RX9RobotStatus.Sleeping]:                  [false,  true,   null,   true],
+            [RX9RobotStatus.Error]:                     [false,  true,   null,   true],
+            [RX9RobotStatus.Pitstop]:                   [true,   true,   true,   false],
+            [RX9RobotStatus.ManualSteering]:            [false,  true,   false,  false],
+            [RX9RobotStatus.FirmwareUpgrade]:           [false,  true,   false,  true]
         };
         const index = commandIndex.indexOf(command);
         let isSet = commandSet[this.robot.status.activity][index];
@@ -183,13 +183,13 @@ export class AEGRobotCtrlActivity extends AEGRobotCtrl<RX92CleaningCommand> {
     }
 
     // Attempt to set the requested state
-    async setTarget(command: RX92CleaningCommand): Promise<void> {
+    async setTarget(command: RX9CleaningCommand): Promise<void> {
         await this.api.sendCleaningCommand(command);
     }
 
     // Override the status while a requested change is pending
-    overrideStatus(command: RX92CleaningCommand): void {
-        const commandToActivity: Record<RX92CleaningCommand, SimpleActivity> = {
+    overrideStatus(command: RX9CleaningCommand): void {
+        const commandToActivity: Record<RX9CleaningCommand, SimpleActivity> = {
             play:   SimpleActivity.Clean,
             pause:  SimpleActivity.Pause,
             home:   SimpleActivity.Return,

@@ -6,7 +6,7 @@ import { Logger } from 'homebridge';
 import { AEGAPI } from './aegapi.js';
 import { ApplianceId, Appliances } from './aegapi-types.js';
 import { logError, plural } from './utils.js';
-import { AEGAPIRX92 } from './aegapi-rx92.js';
+import { AEGAPIRX9 } from './aegapi-rx9.js';
 
 // A test failure
 interface Failure {
@@ -49,13 +49,13 @@ export class AEGAPITest {
             // Generic tests
             const appliances = await this.runSafeGenericTests();
 
-            // AEG RX9.2 robot vacuum cleaner tests
-            const applianceId = this.selectRX92(appliances);
-            if (applianceId !== undefined) {
-                await this.runSafeRX92Tests(applianceId);
-                if (this.unsafe) await this.runUnsafeRX92Tests(applianceId);
-            } else {
-                this.log.warn('No AEG RX9.2 robot vacuum cleaner found for API test');
+            // AEG RX9.1 or RX9.2 robot vacuum cleaner tests
+            const applianceIds = this.selectRX9(appliances);
+            if (applianceIds.length === 0)
+                this.log.warn('No AEG RX9.1 or RX9.2 robot vacuum cleaner found for API test');
+            for (const applianceId of applianceIds) {
+                await this.runSafeRX9Tests(applianceId);
+                if (this.unsafe) await this.runUnsafeRX9Tests(applianceId);
             }
 
             // Log a summary of the results
@@ -76,32 +76,33 @@ export class AEGAPITest {
         return appliances;
     }
 
-    // Run safe AEG RX9.2 robot vacuum cleaner  tests
-    async runSafeRX92Tests(applianceId: ApplianceId): Promise<void> {
+    // Run safe AEG RX9.1 or RX9.2 robot vacuum cleaner  tests
+    async runSafeRX9Tests(applianceId: ApplianceId): Promise<void> {
         const test = this.makeTester(this.api);
-        const rx92test = this.makeTester(this.api.rx92API(applianceId));
+        const rx9test = this.makeTester(this.api.rx9API(applianceId));
 
         // Run most of the tests
         await test('getApplianceInfo', applianceId);
-        await rx92test('getApplianceInfo');
+        await rx9test('getApplianceInfo');
         await test('getApplianceState', applianceId);
-        await rx92test('getApplianceState');
+        await rx9test('getApplianceState');
     }
 
-    // Run unsafe AEG RX9.2 robot vacuum cleaner tests
-    async runUnsafeRX92Tests(applianceId: ApplianceId): Promise<void> {
+    // Run unsafe AEG RX9.1 or RX9.2 robot vacuum cleaner tests
+    async runUnsafeRX9Tests(applianceId: ApplianceId): Promise<void> {
         const test = this.makeTester(this.api);
-        const rx92test = this.makeTester(this.api.rx92API(applianceId));
+        const rx9test = this.makeTester(this.api.rx9API(applianceId));
 
         // Run the tests
         await test('sendCommand', applianceId, { CleaningCommand: 'home' });
-        await rx92test('sendCleaningCommand', 'home');
+        await rx9test('sendCleaningCommand', 'home');
     }
 
-    // Select a single AEG RX9.2 robot vacuum cleaner to run tests against
-    selectRX92(appliances?: Appliances): ApplianceId | undefined {
-        const appliance = appliances?.find(appliance => AEGAPIRX92.isRX92(appliance));
-        return appliance?.applianceId;
+    // Identify AEG RX9.1 or RX9.2 robot vacuum cleaners to run tests against
+    selectRX9(appliances?: Appliances): ApplianceId[] {
+        return (appliances ?? [])
+            .filter(appliance => AEGAPIRX9.isRX9(appliance))
+            .map(a => a.applianceId);
     }
 
     // Bind a tester to a specific API

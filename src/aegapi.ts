@@ -8,7 +8,7 @@ import { ApplianceId, ApplianceInfo, Appliances, ApplianceState,
          Command } from './aegapi-types.js';
 import { Config } from './config-types.js';
 import { AEGAPITest } from './aegapi-test.js';
-import { AEGAPIRX92 } from './aegapi-rx92.js';
+import { AEGAPIRX9 } from './aegapi-rx9.js';
 import { checkers } from './ti/aegapi-types.js';
 
 // Access to the Electrolux Group API
@@ -51,8 +51,8 @@ export class AEGAPI {
         await this.ua.put(`/api/v1/appliances/${applianceId}/command`, command);
     }
 
-    // Create an API for an AEG RX9.2 robot vacuum cleaner
-    rx92API(applianceId: ApplianceId): AEGAPIRX92 {
-        return new AEGAPIRX92(this.ua, applianceId);
+    // Create an API for an AEG RX9.1 or RX9.2 robot vacuum cleaner
+    rx9API(applianceId: ApplianceId): AEGAPIRX9 {
+        return new AEGAPIRX9(this.ua, applianceId);
     }
 }

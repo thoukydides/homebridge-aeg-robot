@@ -9,7 +9,7 @@ import { AEGRobot, DynamicStatus, StatusEvent, SimpleActivity } from './aeg-robo
 import { assertIsBoolean, assertIsNumber, gcd } from './utils.js';
 import { HideService } from './config-types.js';
 import { PLUGIN_VERSION } from './settings.js';
-import { RX92BatteryStatus, RX92CleaningCommand, RX92PowerMode } from './aegapi-rx92-types.js';
+import { RX9BatteryStatus, RX9CleaningCommand, RX92PowerMode } from './aegapi-rx9-types.js';
 
 // A Homebridge AEG RX 9 / Electrolux Pure i9 accessory handler
 export class AEGRobotAccessory extends AEGAccessory {
@@ -72,9 +72,9 @@ export class AEGRobotAccessory extends AEGAccessory {
         const service = this.makeService(this.Service.Battery);
 
         // Update characteristics when there is an update
-        this.onRobot('battery', (battery?: RX92BatteryStatus) => {
-            const percent = Math.round(100 * ((battery ?? RX92BatteryStatus.Dead) - RX92BatteryStatus.Dead)
-                                       / (RX92BatteryStatus.FullyCharged - RX92BatteryStatus.Dead));
+        this.onRobot('battery', (battery?: RX9BatteryStatus) => {
+            const percent = Math.round(100 * ((battery ?? RX9BatteryStatus.Dead) - RX9BatteryStatus.Dead)
+                                       / (RX9BatteryStatus.FullyCharged - RX9BatteryStatus.Dead));
             this.log.debug(`Battery Level <= ${percent}%`);
             service.updateCharacteristic(this.Characteristic.BatteryLevel, percent);
         }).onRobot('isBatteryLow', (isBatteryLow?: boolean) => {
@@ -184,7 +184,13 @@ export class AEGRobotAccessory extends AEGAccessory {
             this.log.debug(`Current Fan State <= ${state}`);
             service.updateCharacteristic(this.Characteristic.CurrentFanState,
                                          this.Characteristic.CurrentFanState[state]);
+        }).onRobot('eco', (eco?: boolean) => {
+            // AEG RX9.1 only supports two power levels
+            const percent = eco === undefined ? 0 : (eco ? 50 : 100);
+            this.log.debug(`Rotation Speed <= ${percent}%`);
+            service.updateCharacteristic(this.Characteristic.RotationSpeed, percent);
         }).onRobot('power', (power?: RX92PowerMode) => {
+            // AEG RX9.2 adds a 'smart' power level
             const percent = power === undefined ? 0 : powerPercent[power];
             this.log.debug(`Rotation Speed <= ${percent}%`);
             service.updateCharacteristic(this.Characteristic.RotationSpeed, percent);
@@ -193,7 +199,7 @@ export class AEGRobotAccessory extends AEGAccessory {
         // Start or pause/resume cleaning
         service.getCharacteristic(this.Characteristic.Active).onSet((value) => {
             assertIsNumber(value);
-            const command: RX92CleaningCommand = value === this.Characteristic.Active.ACTIVE ? 'play' : 'pause';
+            const command: RX9CleaningCommand = value === this.Characteristic.Active.ACTIVE ? 'play' : 'pause';
             this.log.debug(`Active => ${value} => ${command}`);
             this.robot.setActivity(command);
         });
@@ -225,7 +231,7 @@ export class AEGRobotAccessory extends AEGAccessory {
         // Start or pause/resume cleaning
         service.getCharacteristic(this.Characteristic.On).onSet((value) => {
             assertIsBoolean(value);
-            const command: RX92CleaningCommand = value ? 'play' : 'pause';
+            const command: RX9CleaningCommand = value ? 'play' : 'pause';
             this.log.debug(`On (Clean) => ${value} => ${command}`);
             this.robot.setActivity(command);
         });
@@ -245,7 +251,7 @@ export class AEGRobotAccessory extends AEGAccessory {
         // Return to the charging dock or pause returning
         service.getCharacteristic(this.Characteristic.On).onSet((value) => {
             assertIsBoolean(value);
-            const command: RX92CleaningCommand = value ? 'home' : 'pause';
+            const command: RX9CleaningCommand = value ? 'home' : 'pause';
             this.log.debug(`On (Home) => ${value} => ${command}`);
             this.robot.setActivity(command);
         });

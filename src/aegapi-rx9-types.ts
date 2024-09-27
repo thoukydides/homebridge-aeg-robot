@@ -14,7 +14,7 @@ export type WeekdayLC =
   | 'saturday'
   | 'sunday';
 
-// Cleaning power mode
+// RX9.2 cleaning power mode (RX9.1 uses ecoMode instead)
 export enum RX92PowerMode {
     Quiet                   = 1, // Lower energy consumption and quieter
     Smart                   = 2, // Cleans quietly on hard surfaces, uses full power on carpets
@@ -22,7 +22,7 @@ export enum RX92PowerMode {
 }
 
 // Battery charge level
-export enum RX92BatteryStatus {
+export enum RX9BatteryStatus {
     Dead                    = 1,
     CriticalLow             = 2,
     Low                     = 3,
@@ -32,7 +32,7 @@ export enum RX92BatteryStatus {
 }
 
 // Current activity
-export enum RX92RobotStatus {
+export enum RX9RobotStatus {
     Cleaning                = 1,
     PausedCleaning          = 2,
     SpotCleaning            = 3,
@@ -50,59 +50,31 @@ export enum RX92RobotStatus {
 }
 
 // Status of the dust collection bin
-export enum RX92Dustbin {
+export enum RX9Dustbin {
     Unknown                 = 'notConnected',
     Present                 = 'connected',
     Missing                 = 'empty',
     Full                    = 'full'
 }
 
-// Functionality supported by the AEG RX9.2
-export type RX92Capabilities =
-    'PowerLevels'
+// Functionality supported by the AEG RX9.1 and RX9.2
+export type RX9Capabilities =
+    'EcoMode'               // RX9.1 models (2 levels via ecoMode)
+  | 'PowerLevels'           // RX9.2 models (3 levels via powerMode)
   | 'CustomPlay'
   | 'FreezeMapOnDemand'
   | 'InteractiveMap'
   | 'MultipleScheduledCleaningsPerDay'
   | 'PowerZones';
 
-// CleaningCommand values supported by the AEG RX9.2
-export type RX92CleaningCommand =
+// CleaningCommand values supported by the AEG RX9.1 and RX9.2
+export type RX9CleaningCommand =
     'play'
   | 'stop'
   | 'pause'
   | 'home';
 
-// GET /api/v1/appliances/{applianceId}/info
-export interface RX92ApplianceCapabilities {
-    CleaningCommand: {
-        access:         'readwrite';
-        type:           'string';
-        values:         CapabilityValues; // [key in RX92CleaningCommand]
-    };
-    robotStatus: {
-        access:         'read';
-        type:           string;
-        values:         CapabilityValues; // [key in `${RX92RobotStatus}`]
-    };
-}
-export interface RX92ApplianceInfo {
-    applianceInfo:      ApplianceInfoDTO;
-    capabilities:       RX92ApplianceCapabilities;
-}
-
-// GET /api/v1/appliances/{applianceId}/state
-export interface RX92Message {
-    id:                 number;     // e.g. 1
-    timestamp:          number;     // e.g. 1672820985
-    type:               number;     // e.g. 0
-    userErrorID?:       number;     // e.g. 15
-    internalErrorID?:   number;     // e.g. 10005
-    text:               string;     // e.g. 'Please help me get free'
-}
-export interface RX92CapabilitiesObject {
-    [index: string]:    object;     // [key in RX92Capabilities]
-}
+// RX9.2 scheduled tasks (not supported by RX9.1)
 export interface RX92Zone {
     powerMode:          RX92PowerMode;
 }
@@ -119,34 +91,72 @@ export interface RX92Task {
 export interface RX92Tasks {
     [index: string]:    RX92Task;
 }
-export interface RX92ApplianceStateReported {
+
+// GET /api/v1/appliances/{applianceId}/info
+export interface RX9ApplianceCapabilities {
+    CleaningCommand: {
+        access:         'readwrite';
+        type:           'string';
+        values:         CapabilityValues; // [key in RX9CleaningCommand]
+    };
+    robotStatus: {
+        access:         'read';
+        type:           string;
+        values:         CapabilityValues; // [key in `${RX9RobotStatus}`]
+    };
+}
+export interface RX9ApplianceInfo {
+    applianceInfo:      ApplianceInfoDTO;
+    capabilities:       RX9ApplianceCapabilities;
+}
+
+// GET /api/v1/appliances/{applianceId}/state
+export interface RX9Message {
+    id:                 number;     // e.g. 1
+    timestamp:          number;     // e.g. 1672820985
+    type:               number;     // e.g. 0
+    userErrorID?:       number;     // e.g. 15
+    internalErrorID?:   number;     // e.g. 10005
+    text:               string;     // e.g. 'Please help me get free'
+}
+export interface RX9CapabilitiesObject {
+    [index: string]:    object;     // [key in RX9Capabilities]
+}
+export interface RX9ApplianceStateReportedBase {
     availableLanguages: string[];   // e.g. ['deu', 'eng', ...]
-    capabilities:       RX92CapabilitiesObject;
-    batteryStatus:      RX92BatteryStatus;
-    robotStatus:        RX92RobotStatus;
+    capabilities:       RX9CapabilitiesObject;
+    batteryStatus:      RX9BatteryStatus;
+    robotStatus:        RX9RobotStatus;
     messageList: {
-        messages:       RX92Message[];
+        messages:       RX9Message[];
     },
-    dustbinStatus:      RX92Dustbin;
+    dustbinStatus:      RX9Dustbin;
     platform:           string;     // e.g. '1.01'
     applianceName:      string;     // e.g. 'AEG RX9.2 Robot'
     firmwareVersion:    string;     // e.g. '43.23'
     language:           string;     // e.g. 'eng'
     mute:               boolean;
+}
+export interface RX91ApplianceStateReported extends RX9ApplianceStateReportedBase {
+    ecoMode:            boolean;
+}
+export interface RX92ApplianceStateReported extends RX9ApplianceStateReportedBase {
     powerMode:          RX92PowerMode;
     tasks:              RX92Tasks;
 }
-export interface RX92ApplianceStateProperties {
-    reported:           RX92ApplianceStateReported;
+export type RX9ApplianceStateReported =
+    RX91ApplianceStateReported | RX92ApplianceStateReported;
+export interface RX9ApplianceStateProperties {
+    reported:           RX9ApplianceStateReported;
 }
-export interface RX92ApplianceState {
+export interface RX9ApplianceState {
     applianceId:        ApplianceId;
     connectionState:    ConnectionState;
     status:             ApplianceStatus;
-    properties:         RX92ApplianceStateProperties;
+    properties:         RX9ApplianceStateProperties;
 }
 
 // GET /api/v1/appliances/{applianceId}/state
-export interface RX92Command {
-    CleaningCommand:    RX92CleaningCommand;
+export interface RX9Command {
+    CleaningCommand:    RX9CleaningCommand;
 }
