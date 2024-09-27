@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v2.1.0] - 2024-09-27
+### Added
+* Added support for AEG RX9.1 / Electrolux Pure i9.1 models. (#51)
+
 ## [v2.0.0] - 2024-09-19
 ### Changed
 * Migrated from a reverse engineered AEG iPhone app API to the documented Electrolux Group API. It is no longer possible to authorise access using a username and password. Create API Key, Access Token, and Refresh Token via the [Electrolux Group Developer Portal](https://developer.electrolux.one/).
@@ -165,8 +169,9 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.0.0...HEAD
-[v1.0.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.2...v1.0.3
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.1.0...HEAD
+[v2.1.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.0.0...v2.1.0
+[v2.0.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.2...v2.0.0
 [v1.0.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.1...v1.0.2
 [v1.0.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.0...v1.0.1
 [v1.0.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v0.7.0...v1.0.0
