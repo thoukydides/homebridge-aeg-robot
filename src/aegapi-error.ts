@@ -43,7 +43,6 @@ export class AEGAPIAuthorisationError extends AEGAPIError {
         Error.captureStackTrace(this, AEGAPIAuthorisationError);
         this.name = 'Electrolux Group API Authorisation Error';
     }
-
 }
 
 // API returned a non-success status code
@@ -76,7 +75,8 @@ export class AEGAPIStatusCodeError extends AEGAPIError {
         try {
             const json = JSON.parse(text) as unknown;
             if (checkers.ErrorResponse.test(json)) {
-                message = `${json.message} (${json.error})`;
+                message = json.message;
+                if (json.error)  message += ` (${json.error})`;
                 if (json.detail) message += `: ${json.detail}`;
             }
         } catch { /* empty */ }
