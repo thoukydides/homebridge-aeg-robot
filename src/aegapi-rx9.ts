@@ -27,9 +27,9 @@ export class AEGAPIRX9 {
     }
 
     // Send command to appliance
-    async sendCleaningCommand(CleaningCommand: RX9CleaningCommand): Promise<void> {
+    async sendCleaningCommand(CleaningCommand: RX9CleaningCommand, signal?: AbortSignal): Promise<void> {
         const body: RX9Command = { CleaningCommand };
-        await this.ua.put(`/api/v1/appliances/${this.applianceId}/command`, body);
+        await this.ua.put(`/api/v1/appliances/${this.applianceId}/command`, body, { signal });
     }
 
     // Check whether an appliance is an AEG RX9.1 or RX9.2 robot vacuum cleaner

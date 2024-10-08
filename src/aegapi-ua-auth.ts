@@ -5,6 +5,7 @@ import { Logger } from 'homebridge';
 
 import nodePersist from 'node-persist';
 import { setTimeout } from 'node:timers/promises';
+import { once } from 'node:events';
 
 import { AbsoluteTokens, PostTokenRefresh, PostTokenRevoke, Tokens } from './aegapi-auth-types.js';
 import { AEGUserAgent, Headers, Method, Request, UAOptions } from './aegapi-ua.js';
@@ -159,7 +160,13 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         // Wait for client to be authorised, unless this is an authorisation request
         if (!options?.isAuthRequest) {
             try {
-                await this.authorised;
+                const promises = [this.authorised];
+                const signal = options?.signal;
+                if (signal !== undefined) {
+                    if (signal.aborted) throw signal.reason;
+                    promises.push((async (): Promise<never> => { throw await once(signal, 'abort'); })());
+                }
+                await Promise.race(promises);
             } catch (err) {
                 if (!(err instanceof AEGAPIError)) throw err;
                 const cause = err.errCause;

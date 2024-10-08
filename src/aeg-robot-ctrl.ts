@@ -3,17 +3,16 @@
 
 import { Logger } from 'homebridge';
 
-import { setTimeout } from 'node:timers/promises';
-
 import { AEGRobot, SimpleActivity } from './aeg-robot.js';
 import { Config } from './config-types.js';
 import { MS, assertIsNotUndefined, logError } from './utils.js';
 import { AEGAPIRX9 } from './aegapi-rx9.js';
 import { RX9CleaningCommand, RX9RobotStatus } from './aegapi-rx9-types.js';
+import { once } from 'node:events';
 
-// Timeout waiting for status to reflect a requested change
-const TIMEOUT_MIN_MS        = 20 * MS;
-const TIMEOUT_POLL_MULTIPLE = 3;
+// Timeout waiting for changes, as a multiple of the status polling interval
+const TIMEOUT_REQUEST_POLL_MULTIPLE = 1;
+const TIMEOUT_APPLIED_POLL_MULTIPLE = 3;
 
 // An abstract AEG RX 9 / Electrolux Pure i9 robot controller
 abstract class AEGRobotCtrl<Type extends number | string> {
@@ -31,10 +30,11 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     private target?: Type;
 
     // Abort waiting for a previous target to be applied
-    private abort?: () => void;
+    private abortController?: AbortController;
 
-    // Timeout waiting for status to reflect a requested change
-    private readonly timeout: number;
+    // Timeout in milliseconds for requesting and waiting for changes
+    private readonly requestTimeout: number;
+    private readonly appliedTimeout: number;
 
     // Optional mapping of enum target values to text
     readonly toText?: Record<Type, string>;
@@ -44,9 +44,9 @@ abstract class AEGRobotCtrl<Type extends number | string> {
         this.config = robot.account.config;
         this.log = robot.log;
         this.api = robot.api;
-        this.timeout = Math.max(TIMEOUT_MIN_MS,
-                                this.config.pollIntervals.statusSeconds
-                                * MS * TIMEOUT_POLL_MULTIPLE);
+        const pollInterval = this.config.pollIntervals.statusSeconds * MS;
+        this.requestTimeout = pollInterval * TIMEOUT_REQUEST_POLL_MULTIPLE;
+        this.appliedTimeout = pollInterval * TIMEOUT_APPLIED_POLL_MULTIPLE;
         robot.on('preUpdate', () => {
             if (this.target !== undefined) this.overrideStatus(this.target);
         });
@@ -61,33 +61,38 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     async set(target: Type): Promise<void> {
         // No new action required if already setting the requested state
         const description = this.description(target);
-        if (target === this.target) { this.log.debug(`Ignoring duplicate request to ${description}`); return; }
+        if (target === this.target) {
+            this.log.debug(`Ignoring duplicate request to ${description}`);
+            return;
+        }
 
         // No action required if already in the required state
-        let done = this.isTargetSet(target);
-        if (done === true) { this.log.debug(`Ignoring unnecessary request to ${description}`); return; }
+        if (this.isTargetSet(target)) {
+            this.log.debug(`Ignoring unnecessary request to ${description}`);
+            return;
+        }
 
         // Temporarily override the reported status
         this.target = target;
         this.robot.updateDerivedAndEmit();
 
         // Replace any previous unfinished request
-        if (this.abort) {
-            this.abort();
-            this.log.debug(`Changing pending request to ${description}`); return;
+        if (this.abortController) {
+            this.abortController.abort();
+            this.log.debug(`Changing pending request to ${description}`);
+            return;
         }
 
         // Start a new request
         this.log.debug(`New request to ${description}`);
         try {
             do {
-                // Create mechanism to abort waiting for a status update
-                const abort = new Promise<'abort'>(resolve =>
-                    this.abort = (): void => { resolve('abort'); });
+                // Create AbortController to abandon waiting for status update
+                this.abortController = new AbortController();
 
                 // Attempt to apply the requested change
                 target = this.target;
-                done = await this.trySet(target, abort);
+                await this.trySet(target, this.abortController.signal);
 
             } while (target !== this.target);
 
@@ -96,36 +101,36 @@ abstract class AEGRobotCtrl<Type extends number | string> {
             logError(this.log, `Setting ${this.name}`, err);
         } finally {
             // Clear the status override
-            delete this.abort;
+            delete this.abortController;
             delete this.target;
             this.robot.updateDerivedAndEmit();
         }
     }
 
     // Attempt to apply a single change
-    async trySet(target: Type, abort: Promise<'abort'>): Promise<boolean | null> {
-        // Apply the change
+    async trySet(target: Type, signal: AbortSignal): Promise<void> {
         const description = this.description(target);
         this.log.info(`Attempting to ${description}`);
-        await this.setTarget(target);
+        let result = 'Failed to';
+        try {
+            // Apply the change
+            const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(this.requestTimeout)]);
+            await this.setTarget(target, requestSignal);
 
-        // Timeout waiting for status to reflect the requested change
-        const timeout = setTimeout(this.timeout);
-
-        // Wait for status update, change of target state, or timeout
-        let done: boolean | null, reason;
-        do {
-            const status = new Promise(resolve =>
-                this.robot.once('appliance', () => { resolve('status'); }));
-            reason = await Promise.race([status, timeout, abort]) ?? 'timeout';
-            done = this.isTargetSet(target);
-        } while (!done && reason === 'status');
-
-        // Log the result
-        if (done === true)           this.log.info(`Successfully ${description}`);
-        else if (reason === 'abort') this.log.info(`Aborted ${description}`);
-        else if (done === false)     this.log.info(`Failed to ${description}`);
-        return done;
+            // Wait for status update, change of target state, or timeout
+            const appliedSignal = AbortSignal.any([signal, AbortSignal.timeout(this.appliedTimeout)]);
+            do {
+                await once(this.robot, 'appliance', { signal: appliedSignal });
+            } while (!this.isTargetSet(target));
+            result = 'Successfully';
+        } catch (err) {
+            if      (err instanceof DOMException && err.name === 'AbortError')   result = 'Aborted';
+            else if (err instanceof DOMException && err.name === 'TimeoutError') result = 'Timed out';
+            else throw err;
+        } finally {
+            // Log the result
+            this.log.info(`${result} ${description}`);
+        }
     }
 
     // Describe setting the target value
@@ -138,7 +143,7 @@ abstract class AEGRobotCtrl<Type extends number | string> {
     abstract isTargetSet(target: Type): boolean | null;
 
     // Attempt to set the requested state
-    abstract setTarget(target: Type): Promise<void>;
+    abstract setTarget(target: Type, signal?: AbortSignal): Promise<void>;
 
     // Override the status while a requested change is pending
     abstract overrideStatus(target: Type): void;
@@ -183,8 +188,8 @@ export class AEGRobotCtrlActivity extends AEGRobotCtrl<RX9CleaningCommand> {
     }
 
     // Attempt to set the requested state
-    async setTarget(command: RX9CleaningCommand): Promise<void> {
-        await this.api.sendCleaningCommand(command);
+    async setTarget(command: RX9CleaningCommand, signal?: AbortSignal): Promise<void> {
+        await this.api.sendCleaningCommand(command, signal);
     }
 
     // Override the status while a requested change is pending

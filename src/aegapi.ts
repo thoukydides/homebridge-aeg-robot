@@ -47,8 +47,8 @@ export class AEGAPI {
     }
 
     // Send command to appliance
-    async sendCommand(applianceId: ApplianceId, command: Command): Promise<void> {
-        await this.ua.put(`/api/v1/appliances/${applianceId}/command`, command);
+    async sendCommand(applianceId: ApplianceId, command: Command, signal?: AbortSignal): Promise<void> {
+        await this.ua.put(`/api/v1/appliances/${applianceId}/command`, command, { signal });
     }
 
     // Create an API for an AEG RX9.1 or RX9.2 robot vacuum cleaner

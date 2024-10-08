@@ -3,9 +3,9 @@
 
 import { Logger } from 'homebridge';
 
-import { setTimeout as setTimeoutP } from 'node:timers/promises';
+import { setTimeout } from 'node:timers/promises';
 
-import { MS, logError, sleep } from './utils.js';
+import { MS, logError } from './utils.js';
 
 // Multiple of interval to treat as a failure
 const TIMEOUT_MULTIPLE  = 3;
@@ -15,7 +15,7 @@ const TIMEOUT_OFFSET    = 10 * MS;
 export class Heartbeat {
 
     // Abort signal used to stop a watchdog
-    private killWatchdog?: () => void;
+    abortController?: AbortController;
 
     // The result of the last action
     lastError: unknown;
@@ -42,32 +42,31 @@ export class Heartbeat {
                 logError(this.log, this.name, err);
                 this.lastError = err;
             }
-            await setTimeoutP(this.interval);
+            await setTimeout(this.interval);
         }
     }
 
     // Reset the timeout
     async resetWatchdog(): Promise<void> {
         try {
-            // Kill any previous watchdog
-            this.killWatchdog?.();
+            // Kill any previous watchdog, indicating any previous timeout as cleared
+            this.abortController?.abort();
             if (this.lastError) {
                 this.failure();
                 this.lastError = undefined;
             }
 
             // Start a new watchdog
-            const abort = new Promise<never>((_, reject) => {
-                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-                this.killWatchdog = (): void => { reject('kill'); };
-            });
-            await sleep(this.interval * TIMEOUT_MULTIPLE + TIMEOUT_OFFSET, abort);
+            this.abortController = new AbortController();
+            const { signal } = this.abortController;
+            await setTimeout(this.interval * TIMEOUT_MULTIPLE + TIMEOUT_OFFSET, undefined, { signal });
 
-            // Report the timeout
+            // The timeout has occurred, so report the failure
             this.lastError ??= new Error(`${this.name} watchdog timeout`);
             this.failure(this.lastError);
         } catch (cause) {
-            if (cause !== 'kill') logError(this.log, this.name, cause);
+            if (cause instanceof Error && cause.name === 'AbortError') return;
+            logError(this.log, this.name, cause);
         }
     }
 }

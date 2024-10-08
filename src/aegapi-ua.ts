@@ -23,6 +23,7 @@ export type Query      = Dispatcher.DispatchOptions['query'];
 // Options that can be specified for requests
 export interface UAOptions {
     headers?:           Headers;
+    signal?:            AbortSignal;
     [index: string]:    unknown;
 }
 
@@ -41,6 +42,7 @@ export interface Request {
     body?:              string;
     headers:            Headers;
     idempotent?:        boolean;
+    signal?:            AbortSignal;
 }
 
 // Constructed request options and its (successful) response
@@ -175,7 +177,7 @@ export class AEGUserAgent {
                 ++retryCount;
 
                 // Delay before trying again
-                await setTimeout(retryDelay);
+                await setTimeout(retryDelay, undefined, { signal: options?.signal });
                 retryDelay = Math.min(retryDelay * this.retryDelay.factor, this.retryDelay.max);
             }
         }
@@ -188,7 +190,8 @@ export class AEGUserAgent {
             method,
             path,
             headers:    {...this.defaultHeaders, ...headers, ...options?.headers},
-            idempotent: ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'].includes(method)
+            idempotent: ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'].includes(method),
+            signal:     options?.signal
         };
         if (body) request.body = JSON.stringify(body);
         return request;
