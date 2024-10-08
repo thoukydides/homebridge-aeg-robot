@@ -52,8 +52,8 @@ export class Heartbeat {
             // Kill any previous watchdog, indicating any previous timeout as cleared
             this.abortController?.abort();
             if (this.lastError) {
-                this.failure();
                 this.lastError = undefined;
+                this.failure();
             }
 
             // Start a new watchdog

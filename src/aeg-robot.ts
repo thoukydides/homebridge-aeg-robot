@@ -105,10 +105,7 @@ export class AEGRobot extends EventEmitter {
     private emittedStatus: Partial<DynamicStatus> = {};
 
     // Messages about the robot
-    private readonly emittedMessages    = new Set<number>();
-
-    // Periodic polling tasks
-    private heartbeats: Heartbeat[] = [];
+    private readonly emittedMessages = new Set<number>();
 
     // Promise that is resolved by successful initialisation
     private readonly readyPromise: Promise<void>;
@@ -160,11 +157,9 @@ export class AEGRobot extends EventEmitter {
             await pollState();
 
             // Start polling the appliance state periodically
-            this.heartbeats = [
-                new Heartbeat(this.log, 'Appliance state',
-                              this.config.pollIntervals.statusSeconds * MS,
-                              pollState, (err) => { this.heartbeat(err); })
-            ];
+            new Heartbeat(this.log, 'Appliance state',
+                          this.config.pollIntervals.statusSeconds * MS,
+                          pollState, (err) => { this.heartbeat(err); });
         } catch (err) {
             logError(this.log, 'Appliance info', err);
         }
@@ -225,12 +220,6 @@ export class AEGRobot extends EventEmitter {
 
     // Handle a status update for a periodic action
     heartbeat(err?: unknown): void {
-        if (!err && this.heartbeats.some(heartbeat => heartbeat.lastError)) {
-            // This heartbeat indicates success, but there is still a failure
-            return;
-        }
-
-        // Update the robot health
         this.status.isRobotError = err;
         this.updateDerivedAndEmit();
     }
