@@ -32,15 +32,6 @@ export function assertIsBoolean(value: unknown): asserts value is boolean {
     assert.strictEqual(typeof value, 'boolean');
 }
 
-// Sleep for a specified period
-export function sleep(ms: number, abort?: Promise<never>): Promise<void> {
-    return new Promise((resolve, reject) => {
-        setTimeout(resolve, Math.max(ms, 0));
-        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-        if (abort) abort.catch((reason: unknown) => { reject(reason); });
-    });
-}
-
 // Log an error
 export function logError(log: Logger, when: string, err: unknown): void {
     try {
