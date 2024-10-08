@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v2.2.0] - 2024-10-08
+### Fixed
+* Time-limit attempts to control the robot vacuum cleaners instead of retrying indefinitely. (#53)
+* Corrected recovery after problems encountered polling the Electrolux Group API.
+### Changed
+* Enforce minimum polling intervals when there are multiple robot vacuum cleaners in the account to avoid exceeding daily rate limits.
+* Restored Node 20.9.0 compatibility (for use on Synology NAS).
+* Updated dependencies to latest versions.
+
 ## [v2.1.0] - 2024-09-27
 ### Added
 * Added support for AEG RX9.1 / Electrolux Pure i9.1 models. (#51)
@@ -169,7 +178,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.1.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.0...HEAD
+[v2.2.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.1.0...v2.2.0
 [v2.1.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.0.0...v2.1.0
 [v2.0.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.2...v2.0.0
 [v1.0.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v1.0.1...v1.0.2
