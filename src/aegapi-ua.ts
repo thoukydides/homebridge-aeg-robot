@@ -61,8 +61,8 @@ export class AEGUserAgent {
 
     // Delays between retries
     readonly retryDelay = {
-        min:          500,
-        max:      60 * MS,
+        min:       1 * MS, // 1 second
+        max:  5 * 60 * MS, // 5 minutes
         factor:       2.0
     };
 
