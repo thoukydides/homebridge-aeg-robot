@@ -67,7 +67,6 @@ export class AEGAuthoriseUserAgent extends AEGUserAgent {
         } else if (Date.now() + REFRESH_WINDOW_MS < this.token.expiresAt) {
             this.log.info('Using saved access token');
             this.authorisedFn.resolve();
-            //this.token.expiresAt = 0;
         } else {
             this.log.info('Saved access token has expired');
         }
