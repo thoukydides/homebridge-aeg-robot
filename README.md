@@ -74,7 +74,7 @@ Additional settings can be included in `config.json` to customise the behaviour 
 }
 ```
 
-The `pollIntervals` specify the time in seconds between successive polls of the Electrolux Group API. The API has a strict [rate limit](https://developer.electrolux.one/documentation/quotasAndRateLimits) of 5000 calls/day. The default value for `statusSeconds` is 30 seconds, which results in 2880 calls/day for polling the appliance state.
+The `pollIntervals` specify the time in seconds between successive polls of the Electrolux Group API. The API has a strict [rate limit](https://developer.electrolux.one/documentation/quotasAndRateLimits) of 5000 calls/day. The default value for `statusSeconds` is 30 seconds, which results in 2880 calls/day for polling the state of a single appliance. If you have multiple robot vacuum cleaners in your account, or use the same API Key for other purposes, then scale the value appropriately: 60 seconds for two, 90 seconds for three, etc.
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 

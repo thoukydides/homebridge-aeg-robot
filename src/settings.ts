@@ -14,11 +14,15 @@ export const PLUGIN_VERSION :string             = PACKAGE.version;
 // Required Homebridge API version
 export const REQUIRED_HOMEBRIDGE_API = '^2.7';
 
+// Daily API rate limit, and lower value to use for polling
+export const API_DAILY_LIMIT = 5000;
+export const API_DAILY_POLL_LIMIT = API_DAILY_LIMIT * 0.9;
+
 // Default configuration options
 export const DEFAULT_CONFIG: Partial<Config> = {
     pollIntervals: {
         // API limit of 5000 calls/day
-        statusSeconds:          30 // 2880 calls/day
+        statusSeconds:          30 // 2880 calls/day per robot vacuum cleaner
     },
     hideServices:               [],
     debug:                      []

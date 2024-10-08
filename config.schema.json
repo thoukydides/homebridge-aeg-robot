@@ -99,11 +99,14 @@
         "expanded": false,
         "items": [{
             "key": "pollIntervals.statusSeconds",
-            "title": "Interval between polling for appliance status updates",
+            "title": "Interval between polling each appliance for status updates",
             "type": "number",
             "minimum": 20,
             "maximum": 600,
             "fieldAddonRight": "&nbsp;seconds"
+        },{
+            "type": "help",
+            "helpvalue": "<div class='help-block'>If you have multiple robot vacuum cleaner appliances in your account (or use the same API Key for other purposes) increase the poll interval to avoid exceeding the API <a href='https://developer.electrolux.one/documentation/quotasAndRateLimits'>rate limits</a>, e.g. 30 seconds for one, 60 seconds for two, or 90 seconds for three.</div>"
         }]
     },{
         "type": "fieldset",
