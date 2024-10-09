@@ -83,7 +83,7 @@ export class AEGRobot extends EventEmitter {
     readonly api: AEGAPIRX9;
 
     // Control the robot
-    readonly setActivity:   (command:   RX9CleaningCommand)    => void;
+    readonly setActivity: (command: RX9CleaningCommand) => void;
 
     // Static information about the robot (mostly initialised asynchronously)
     readonly applianceId:   string; // Product ID
@@ -114,7 +114,7 @@ export class AEGRobot extends EventEmitter {
     constructor(
         log:                Logger,
         readonly account:   AEGAccount,
-        appliance:          Appliance
+        readonly appliance: Appliance
     ) {
         super({ captureRejections: true });
         super.on('error', err => { logError(this.log, 'Event', err); });
@@ -191,7 +191,7 @@ export class AEGRobot extends EventEmitter {
         // Extract the relevant information
         const { reported } = state.properties;
         this.updateStatus({
-            name:           reported.applianceName,
+            name:           reported.applianceName || this.appliance.applianceName,
             enabled:        state.status === 'enabled',
             connected:      state.connectionState === 'Connected',
             capabilities:   Object.keys(reported.capabilities) as RX9Capabilities[],
