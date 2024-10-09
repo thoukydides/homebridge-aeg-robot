@@ -83,7 +83,7 @@ export class AEGRobotLog {
         this.robot.on('name', (name: string) => {
             this.log.info(`My name is "${name}"`);
         }).on('capabilities', (capabilities: RX9Capabilities[]) => {
-            this.log.info(`Supports ${plural(capabilities.length, 'capability')}: ${formatList(capabilities.toSorted())}`);
+            this.log.info(`Supports ${plural(capabilities.length, 'capability')}: ${formatList(capabilities.sort())}`);
         }).on('hardware', (hardware: string) => {
             this.log.info(`Hardware platform ${hardware}`);
         }).on('firmware', (firmware: string) => {
