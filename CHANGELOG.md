@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v2.2.2] - 2024-10-09
+### Fixed
+* Corrected duplicate logging of robot vacuum cleaner capabilities.
+
 ## [v2.2.1] - 2024-10-09
 ### Fixed
 * Corrected Node.js 18 compatibility when logging robot vacuum cleaner capabilities.
@@ -182,7 +186,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.2...HEAD
+[v2.2.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.1...v2.2.2
 [v2.2.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.0...v2.2.1
 [v2.2.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.1.0...v2.2.0
 [v2.1.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.0.0...v2.1.0
