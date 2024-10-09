@@ -142,7 +142,7 @@ export interface RX91ApplianceStateReported extends RX9ApplianceStateReportedBas
 }
 export interface RX92ApplianceStateReported extends RX9ApplianceStateReportedBase {
     powerMode:          RX92PowerMode;
-    tasks:              RX92Tasks;
+    tasks?:             RX92Tasks;
 }
 export type RX9ApplianceStateReported =
     RX91ApplianceStateReported | RX92ApplianceStateReported;
