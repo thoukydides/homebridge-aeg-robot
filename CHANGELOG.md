@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v2.2.4] - 2024-10-17
+### Fixed
+* Accept `batteryStatus`, `dustbinStatus`, and `powerMode` in appliance capabilities response. (#57)
+
 ## [v2.2.3] - 2024-10-09
 ### Fixed
 * Handle RX9.2 appliances without any schedule configured. (#55)
@@ -191,7 +195,8 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 Copyright © 2022-2024 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.4...HEAD
+[v2.2.4]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.3...v2.2.4
 [v2.2.3]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.2...v2.2.3
 [v2.2.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.1...v2.2.2
 [v2.2.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.0...v2.2.1
