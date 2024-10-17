@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ## [v2.2.4] - 2024-10-17
 ### Fixed
 * Accept `batteryStatus`, `dustbinStatus`, and `powerMode` in appliance capabilities response. (#57)
+### Changed
+* Updated dependencies to latest versions.
 
 ## [v2.2.3] - 2024-10-09
 ### Fixed
