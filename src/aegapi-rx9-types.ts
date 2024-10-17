@@ -1,8 +1,7 @@
 // Homebridge plugin for AEG RX 9 / Electrolux Pure i9 robot vacuum
 // Copyright © 2022-2024 Alexander Thoukydides
 
-import { ApplianceId, ApplianceInfoDTO, ApplianceStatus,
-         CapabilityValues, ConnectionState } from './aegapi-types.js';
+import { ApplianceId, ApplianceInfoDTO, ApplianceStatus, ConnectionState } from './aegapi-types.js';
 
 // Task schedule
 export type WeekdayLC =
@@ -93,17 +92,63 @@ export interface RX92Tasks {
 }
 
 // GET /api/v1/appliances/{applianceId}/info
+export interface RX9NoTriggers { [index: string]: never };
 export interface RX9ApplianceCapabilities {
     CleaningCommand: {
         access:         'readwrite';
         type:           'string';
-        values:         CapabilityValues; // [key in RX9CleaningCommand]
+        values: {
+            // { [key in RX9CleaningCommand]: object; }
+            play:           RX9NoTriggers;
+            stop:           RX9NoTriggers;
+            pause:          RX9NoTriggers;
+            home:           RX9NoTriggers;
+        }
     };
     robotStatus: {
         access:         'read';
         type:           string;
-        values:         CapabilityValues; // [key in `${RX9RobotStatus}`]
+        values: {
+            // { [key in `${RX9RobotStatus}`]: RX9Empty; }
+            1:              RX9NoTriggers;  // Cleaning
+            2:              RX9NoTriggers;  // PausedCleaning
+            3:              RX9NoTriggers;  // SpotCleaning
+            4:              RX9NoTriggers;  // PausedSpotCleaning
+            5:              RX9NoTriggers;  // Return
+            6:              RX9NoTriggers;  // PausedReturn
+            7:              RX9NoTriggers;  // ReturnForPitstop
+            8:              RX9NoTriggers;  // PausedReturnForPitstop
+            9:              RX9NoTriggers;  // Charging
+            10:             RX9NoTriggers;  // Sleeping
+            11:             RX9NoTriggers;  // Error
+            12:             RX9NoTriggers;  // Pitstop
+            13:             RX9NoTriggers;  // ManualSteering
+            14:             RX9NoTriggers;  // FirmwareUpgrade
+        }
     };
+    dustbinStatus?: {
+        access:         'read';
+        type:           'string';
+        values: {
+            // { [key in Capitalize<RX9Dustbin>]: RX9Empty; }
+            NOTCONNECTED:   RX9NoTriggers;
+            CONNECTED:      RX9NoTriggers;
+            EMPTY:          RX9NoTriggers;
+            FULL:           RX9NoTriggers;
+        }
+    },
+    batteryStatus?: {
+        access:         'read';
+        type:           'int';
+        max:            6;
+        min:            1;
+    },
+    powerMode?: {
+        access:         'read';
+        type:           'int';
+        min:            1;
+        max:            3;
+    }
 }
 export interface RX9ApplianceInfo {
     applianceInfo:      ApplianceInfoDTO;
