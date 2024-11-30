@@ -4,6 +4,8 @@ on: [push, workflow_dispatch]
 
 jobs:
   test:
+    if: github.actor != 'dependabot[bot]'
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -32,8 +34,11 @@ jobs:
         run: npm run build
 
       - name: Retrieve an Electrolux Group API Access Token
-        run: echo "ELECTROLUX_ACCESS_TOKEN=$(curl -s https://www.thouky.co.uk/api/oauth/electrolux/${{ secrets.ELECTROLUX_API_KEY }})" >> $GITHUB_ENV
-
+        run: |
+          curl -s https://www.thouky.co.uk/api/oauth/electrolux/${{ secrets.ELECTROLUX_API_KEY }} -o token.txt
+          echo "::add-mask::$(cat token.txt)"
+          echo "ELECTROLUX_ACCESS_TOKEN=$(cat token.txt)" >> $GITHUB_ENV
+      
       - name: Run the tests
         run: npm run test
         env:
