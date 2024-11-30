@@ -247,7 +247,7 @@ export class AEGUserAgent {
                 const text = await response.body.text();
                 this.logBody(`${logPrefix} Response`, text);
                 const err = new AEGAPIStatusCodeError(request, response, text);
-                status += ` ${String(err)}`;
+                status += ` ${err.message}`;
                 throw err;
             }
 

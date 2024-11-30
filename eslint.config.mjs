@@ -1,4 +1,5 @@
 // @ts-check
+/* eslint-disable max-len */
 import globals from 'globals';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
@@ -11,14 +12,13 @@ export default tseslint.config(
     ...tseslint.configs.strictTypeChecked,
     ...tseslint.configs.stylisticTypeChecked,
     {
-        files: ['**/*.ts'],
+        files: ['**/*.ts', 'eslint.config.mjs'],
         languageOptions: {
             globals:        globals.node,
             ecmaVersion:    'latest',
             sourceType:     'module',
             parserOptions: {
-                projectService:         { allowDefaultProject: ['*.mjs', '*.ts'] },
-                allowDefaultProject:    true
+                projectService:         true
             }
         },
         rules: {

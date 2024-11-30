@@ -115,7 +115,7 @@ export class AEGRobotLog {
     // Log changes to cloud server health
     logHealth(err?: unknown): void {
         if (err) {
-            const message = String(err);
+            const message = err instanceof Error ? err.message : JSON.stringify(err);
             if (!this.loggedHealthErrors.has(message)) {
                 this.loggedHealthErrors.add(message);
                 this.log.error(`Lost connection to cloud servers: ${message}`);

@@ -4,7 +4,7 @@
     ],
     "ext": "ts",
     "ignore": [],
-    "exec": "npm run checkers && tsc && homebridge -D -I -P .. --strict-plugin-resolution",
+    "exec": "npm run build && homebridge -D -I -P .. --strict-plugin-resolution",
     "signal": "SIGTERM",
     "env": {
         "NODE_OPTIONS": "--trace-warnings"

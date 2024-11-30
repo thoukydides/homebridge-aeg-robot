@@ -58,35 +58,37 @@
         "node-persist": "^4.0.3",
         "semver": "^7.6.3",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^6.20.1"
+        "undici": "^6.21.0"
     },
     "devDependencies": {
-        "@eslint/eslintrc": "^3.1.0",
-        "@eslint/js": "^9.12.0",
+        "@eslint/eslintrc": "^3.2.0",
+        "@eslint/js": "^9.16.0",
         "@tsconfig/node18": "^18.2.4",
         "@types/eslint__js": "^8.42.3",
-        "@types/node": "^18.19.56",
         "@types/node-persist": "^3.1.8",
+        "@types/node": "^18.19.67",
         "@types/semver": "^7.5.8",
-        "eslint": "^9.12.0",
-        "globals": "^15.11.0",
+        "eslint": "^9.16.0",
+        "globals": "^15.12.0",
+        "homebridge-config-ui-x": "^4.63.0",
         "homebridge": "^2.0.0-beta.21",
-        "homebridge-config-ui-x": "^4.61.0",
         "nodemon": "^3.1.7",
         "rimraf": "^5.0.10",
         "ts-interface-builder": "^0.3.3",
-        "tsx": "^4.19.1",
-        "typescript": "^5.6.3",
-        "typescript-eslint": "^8.9.0"
+        "tsx": "^4.19.2",
+        "typescript-eslint": "^8.16.0",
+        "typescript": "^5.7.2"
     },
     "scripts": {
-        "lint": "npm run checkers && eslint 'src/**.ts' --max-warnings=0",
-        "watch": "npm run build && nodemon",
-        "checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts && tsx bin/ts-interface-post.ts ./src/ti",
-        "build": "rimraf ./dist && npm run checkers && tsc",
+        "build-checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts && tsx bin/ts-interface-post.ts ./src/ti",
+        "build-tsc": "tsc -p ./src",
+        "build": "npm run build-checkers && npm run build-tsc",
+        "clean": "rimraf ./dist",
+        "lint": "eslint eslint.config.mjs 'bin/**/*.ts' 'src/**/*.ts' --max-warnings=0",
+        "watch": "nodemon",
+        "test": "tsx bin/test-startup.ts",
         "postversion": "git push && git push --tags",
-        "prepublishOnly": "npm run lint && npm run build",
-        "test": "tsx bin/test-startup.ts"
+        "prepublishOnly": "npm run build && npm run lint"
     },
     "optionalDependencies": {
         "fsevents": "^2.3.3"

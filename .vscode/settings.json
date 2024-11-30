@@ -29,10 +29,12 @@
         "Fanv",
         "fieldset",
         "helpvalue",
+        "homebridge",
         "legaldocument",
         "legaldocuments",
         "Liter",
         "nbsp",
+        "nodenext",
         "NOTCONNECTED",
         "notitle",
         "Passw",
@@ -56,5 +58,8 @@
         "Wyne",
         "Zanussi"
     ],
+    "files.exclude": {
+        "node_modules/": true
+    },
     "typescript.tsdk": "node_modules/typescript/lib"
 }
