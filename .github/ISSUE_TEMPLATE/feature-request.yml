@@ -1,26 +1,49 @@
 name: 🚧 Feature request
 description: Suggest a new feature or other enhancement.
 labels: ["enhancement"]
+
 body:
-- type: textarea
-  id: description
-  attributes:
-    label: Description of Enhancement
-    description: "Please provide a clear and concise description of your proposed improvement."
-  validations:
-    required: true
-- type: textarea
-  id: hapmap
-  attributes:
-    label: HomeKit Mapping
-    description: "Please suggest how the requested functionality can be supported using the Apple-defined services and characteristics listed in the [HomeKit Accessory Protocol Specification (Non-Commercial Version)](https://developer.apple.com/apple-home/)."
-  validations:
-    required: false   
-- type: input
-  id: appliance
-  attributes:
-    label: AEG/Electrolux Appliance(s)
-    description: "If this issue relates to a specific appliance then please provide the manufacturer, model, and product number (PNC). These details can be found on the ratings label underneath the robot."
-    placeholder: "e.g. AEG RX9-2-4ANM 900 277 479"
-  validations:
-    required: false
+  - type: markdown
+    attributes:
+      value: "Please check [closed/rejected issues](https://github.com/thoukydides/homebridge-aeg-robot/issues?q=is%3Aissue) for any previous requests to implement similar functionality. Requests for additional configuration options to disable functionality, or inappropriate use of HomeKit services/characteristics, will be rejected."
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of Enhancement
+      description: "Please provide a clear and concise description of your proposed improvement. Include specific use cases or examples where this enhancement would be beneficial."
+    validations:
+      required: true
+
+  - type: textarea
+    id: egmap
+    attributes:
+      label: Electrolux Group API
+      description: "Please suggest how the requested functionality can be supported using the functionality of the [Electrolux Group API](https://developer.electrolux.one/documentation/reference)."
+    validations:
+      required: false
+
+  - type: textarea
+    id: hapmap
+    attributes:
+      label: HomeKit Mapping
+      description: "Please suggest how the requested functionality can be supported using the Apple-defined services and characteristics listed in the [HomeKit Accessory Protocol Specification (Non-Commercial Version)](https://developer.apple.com/apple-home/)."
+    validations:
+      required: false
+
+  - type: input
+    id: appliance
+    attributes:
+      label: AEG/Electrolux Appliance(s)
+      description: "If this enhancement relates to a specific appliance then please provide the manufacturer, model, and product number (PNC). These details can be found on the ratings label underneath the robot."
+      placeholder: "e.g. AEG RX9-2-4ANM 900 277 479"
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Important Notes:**
+        - Feature requests must align with HomeKit's intended functionality and Electrolux Group API capabilities.
+        - Features outside the scope of HomeKit or Electrolux Group API are unlikely to be implemented.
+        - Detailed, actionable suggestions, are more likely to be considered.
