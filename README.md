@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/wiki/thoukydides/homebridge-aeg-robot/homebridge-aeg-robot.png" height="200"></a>
 </p>
-<span align=center>
+<div align=center>
 
 # homebridge-aeg-robot
 
@@ -13,7 +13,7 @@
 
 AEG RX 9 / Electrolux Pure i9 robot vacuum plugin for [Homebridge](https://github.com/homebridge/homebridge).
 
-</span>
+</div>
 
 AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.electroluxgroup.com/).
 
@@ -28,13 +28,16 @@ AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.elect
 1. On the [Dashboard](https://developer.electrolux.one/dashboard) page enter an *Api Key Name* and click *CREATE NEW API KEY*. Copy the *Api key*.
 1. Click on *GENERATE TOKEN*. Copy the *Access Token* and *Refresh Token* values.
 
-### Step 3(a) - Homebridge Plugin Installation *(recommended approach using Homebridge UI)*
+### Step 3 - Homebridge Plugin Installation
+
+#### Recommended approach using Homebridge UI
 
 1. On the [Homebridge UI](https://github.com/homebridge/homebridge-config-ui-x) Plugins page search for and install the **AEG Robot Vacuum** plugin.
 1. Open the **Homebridge AEG Robot Vacuum** plugin settings and set the *API Key*, *Access Token*, and *Refresh Token* to the values obtained from the [Electrolux Group Developer Portal Dashboard](https://developer.electrolux.one/dashboard).
 1. Save the plugin settings and restart Homebridge.
 
-### Step 3(b) - Homebridge Plugin Installation *(alternative method using command line)*
+<details>
+<summary><h4>Alternative method using command line (and advanced configuration)</h4></summary>
 
 1. Install this plugin using: `npm install -g homebridge-aeg-robot`
 1. Edit `config.json` and add the `Homebridge AEG Robot Vacuum` platform (see example below).
@@ -54,9 +57,9 @@ AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.elect
 ```
 The `username` and `password` should match those used to login to your account in the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) iPhone app. All suitable robot vacuums associated with the account will be added to HomeKit (those reporting a model name of `PUREi9`). Unsupported appliances, such as air purifiers or RX8 robot vacuums, will be ignored.
 
-### Advanced Configuration
+#### Advanced Configuration
 
-Additional settings can be included in `config.json` to customise the behaviour or enable special debug features:
+You can include additional settings in `config.json` to customise the behaviour or enable special debug features:
 ```JSON
 {
     "platforms":
@@ -78,17 +81,18 @@ The `pollIntervals` specify the time in seconds between successive polls of the 
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 
-Do not set any of the `debug` options unless attempting to investigating a compatibility issue or other problem.
+Do not set any of the `debug` options unless attempting to investigate a compatibility issue or other problem.
 
-## Compatibility
-
-This plugin has only been tested with a single AEG RX9.2 robot vacuum (model `RX9-2-4ANM`, PNC `900 277 479`, running firmware `43.23`). Some support has been added for an AEG RX9.1 (model `RX9-1-IBM`, PNC `900 277 268`, running firmware `43.23`) but this has not been tested by the author. It should work with other AEG RX9/RX9.1/RX9.2 / Electrolux Pure i9/i9.1/i9.2 models.
+</details>
 
 ## Functionality
 
 This plugin allows cleaning to be started and paused, selection of cleaning power mode, and requesting return to the charging dock. It also indicates whether the robot vacuum is cleaning, on its dock, the battery charge status, and whether the dust collection bin requires emptying.
 
-Unfortunately, HomeKit does not support robot vacuum cleaners, so the mapping of functionality to HomeKit Services and Characteristics is slightly odd as described below.
+Unfortunately, HomeKit does not support robot vacuum cleaners, so the mapping of functionality is slightly odd as described below.
+
+<details>
+<summary>HomeKit Services and Characteristics</summary>
 
 ### Accessory Information
 
@@ -190,22 +194,34 @@ One **Switch** Service is used to start or pause/resume cleaning.
 Another **Switch** Service is used to (stop cleaning and) initiate a return to the charging dock.
 * **On**: Indicates that the robot is returning to the charging dock (or its starting position) and will not resume cleaning after charging. Switching this on will attempt to stop any cleaning operation in progress and initiate a return to the charging dock. Switching it off will attempt to pause the current operation.
 
-## Limitations
+</details>
 
-This is an early prototype. Functionality, configuration options, and mapping to HomeKit services, may change between releases. It may be necessary to manually delete Homebridge cache files and/or modify the `config.json` file when upgrading.
+### Compatibility
 
-Earlier versions of this plugin used the same API as the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) iPhone app (which replaced the [AEG Wellbeing](https://apps.apple.com/gb/app/aeg-wellbeing/id1494284929) app), enabling the same functionality as that app, but its authorization mechanism has now been blocked. This plugin now uses the [Electrolux Group API](https://developer.electrolux.one/) that has been documented for use by third-party developers, but its capabilities are far more limited.
-
-This plugin cannot communicate directly with the robot via a local network connection.
+This plugin has only been tested with a single AEG RX9.2 robot vacuum (model `RX9-2-4ANM`, PNC `900 277 479`, running firmware `43.23`). Some support has been added for an AEG RX9.1 (model `RX9-1-IBM`, PNC `900 277 268`, running firmware `43.23`) but this has not been tested by the author. It should work with other AEG RX9/RX9.1/RX9.2 or Electrolux Pure i9/i9.1/i9.2 models.
 
 ## Changelog
 
 All notable changes to this project are documented in the [CHANGELOG.md](CHANGELOG.md) file.
 
-## License
+Earlier versions of this plugin used the same API as the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) iPhone app (which replaced the [AEG Wellbeing](https://apps.apple.com/gb/app/aeg-wellbeing/id1494284929) app), enabling the same functionality as that app, but its authorization mechanism has now been blocked. This plugin now uses the [Electrolux Group API](https://developer.electrolux.one/) that has been documented for use by third-party developers, but its capabilities are far more limited.
 
-> ISC License (ISC)<br>Copyright © 2022-2024 Alexander Thoukydides
->
+## Reporting Issues
+          
+If you have discovered an issue or have an idea for how to improve this project, please [open a new issue](https://github.com/thoukydides/homebridge-aeg-robot/issues/new/choose) using the appropriate issue template.
+
+### Pull Requests
+
+This project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion.
+
+For more details refer to the [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md) file.
+
+## ISC License (ISC)
+
+<details>
+<summary>Copyright © 2019-2024 Alexander Thoukydides</summary>
+
 > Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 >
 > THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+</details>
