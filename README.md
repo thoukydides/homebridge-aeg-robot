@@ -214,9 +214,7 @@ If you have discovered an issue or have an idea for how to improve this project,
 
 ### Pull Requests
 
-This project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion.
-
-For more details refer to the [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md) file.
+This project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion. For more details refer to the [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md) file.
 
 ## ISC License (ISC)
 
