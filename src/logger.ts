@@ -11,7 +11,7 @@ const applianceIds = new Map<string, string>();
 const LENGTH = { pnc: 9, sn: 8, ai: 24 } as const;
 
 // Regular expressions for different types of sensitive data
-const FILTERS: [(value: string) => string, RegExp][] = [
+const filters: [(value: string) => string, RegExp][] = [
     [maskAPIKey,        /\w_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/],
     [maskAccessToken,   /\b[\w-]+\.[\w-]+\.[\w-]+\b/g],
     [maskRefreshToken,  /(?<="refreshToken":\s*")[^"]+(?=")/gi] // (within JSON)
@@ -54,7 +54,7 @@ export class PrefixLogger {
 
     // Attempt to filter sensitive data within the log message
     static filterSensitive(message: string): string {
-        return FILTERS.reduce((message, [filter, regex]) =>
+        return filters.reduce((message, [filter, regex]) =>
             message.replace(regex, filter), message);
     }
 
@@ -64,9 +64,9 @@ export class PrefixLogger {
         name ??= `SN${applianceIds.size + 1}`;
         const serialNumber = applianceId.slice(LENGTH.pnc, LENGTH.pnc + LENGTH.sn);
         applianceIds.set(applianceId, name);
-        FILTERS.push(
-            [maskSerialNumber.bind(null, name), new RegExp(`\\b${serialNumber}\\b`)],
-            [maskApplianceId .bind(null, name), new RegExp(`\\b${applianceId}\\b`)]
+        filters.push(
+            [maskSerialNumber.bind(null, name), new RegExp(`\\b${serialNumber}\\b`, 'g')],
+            [maskApplianceId .bind(null, name), new RegExp(`\\b${applianceId}\\b`, 'g')]
         );
     }
 }
