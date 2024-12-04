@@ -14,7 +14,7 @@ export type HideService = 'Battery' | 'Contact Sensor' | 'Fan'
 // Debugging features
 export type DebugFeatures = 'Run API Tests' | 'Run Unsafe API Tests'
                           | 'Log API Headers' | 'Log API Bodies'
-                          | 'Log Debug as Info';
+                          | 'Log Appliance IDs' | 'Log Debug as Info';
 
 // The user plugin configuration
 export interface Config {

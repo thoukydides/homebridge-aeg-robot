@@ -50,7 +50,7 @@ export class AEGAccount {
         // Ensure that the polling interval is under the daily API limit
         this.checkPollingInterval(robots.length);
 
-        // Initial all robot appliances
+        // Initialise all robot appliances
         robots.forEach(appliance => {
             const robot = new AEGRobot(this.log, this, appliance);
             this.robots.set(appliance.applianceId, robot);

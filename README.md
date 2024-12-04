@@ -72,7 +72,7 @@ You can include additional settings in `config.json` to customise the behaviour 
             "statusSeconds":    30
         },
         "hideServices": ["Battery", "Contact Sensor", "Fan", "Filter Maintenance", "Occupancy Sensor", "Switch Clean", "Switch Home"],
-        "debug":        ["Run API Tests", "Run Unsafe API Tests", "Log API Headers", "Log API Bodies", "Log Debug as Info"]
+        "debug":        ["Run API Tests", "Run Unsafe API Tests", "Log API Headers", "Log API Bodies", "Log Appliance IDs", "Log Debug as Info"]
     }]
 }
 ```
@@ -81,7 +81,7 @@ The `pollIntervals` specify the time in seconds between successive polls of the 
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 
-Do not set any of the `debug` options unless attempting to investigate a compatibility issue or other problem.
+The `"Log Appliance IDs"` option prevents redactions of appliance Product ID and Serial Number values in the log. Do not set any of the other `debug` options unless attempting to investigate a compatibility issue or other problem.
 
 </details>
 

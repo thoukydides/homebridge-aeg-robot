@@ -56,6 +56,7 @@
                         "Run Unsafe API Tests",
                         "Log API Headers",
                         "Log API Bodies",
+                        "Log Appliance IDs",
                         "Log Debug as Info"
                     ]
                 }

@@ -6,6 +6,17 @@ import { Logger, LogLevel } from 'homebridge';
 import { assertIsDefined, formatList, MS } from './utils.js';
 import { checkers } from './ti/token-types.js';
 
+// Mapping of applianceId values to their names
+const applianceIds = new Map<string, string>();
+const LENGTH = { pnc: 9, sn: 8, ai: 24 } as const;
+
+// Regular expressions for different types of sensitive data
+const FILTERS: [(value: string) => string, RegExp][] = [
+    [maskAPIKey,        /\w_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/],
+    [maskAccessToken,   /\b[\w-]+\.[\w-]+\.[\w-]+\b/g],
+    [maskRefreshToken,  /(?<="refreshToken":\s*")[^"]+(?=")/gi] // (within JSON)
+];
+
 // A logger with filtering and support for an additional prefix
 export class PrefixLogger {
 
@@ -43,12 +54,20 @@ export class PrefixLogger {
 
     // Attempt to filter sensitive data within the log message
     static filterSensitive(message: string): string {
-        return message
-            .replace(/\w_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/, maskAPIKey)
-            .replace(/\b[\w-]+\.[\w-]+\.[\w-]+\b/g,                                     maskAccessToken)
-            .replace(/\b[a-zA-Z0-9]{128}\b/g,                                           maskRefreshToken)
-            // Refresh tokens (within JSON encoded strings)
-            .replace(/(?<="refreshToken":\s*")[^"]+(?=")/gi,                            maskRefreshToken);
+        return FILTERS.reduce((message, [filter, regex]) =>
+            message.replace(regex, filter), message);
+    }
+
+    // Add an applianceId to filter
+    static addApplianceId(applianceId: string, name?: string): void {
+        if (applianceIds.has(applianceId)) return;
+        name ??= `SN${applianceIds.size + 1}`;
+        const serialNumber = applianceId.slice(LENGTH.pnc, LENGTH.pnc + LENGTH.sn);
+        applianceIds.set(applianceId, name);
+        FILTERS.push(
+            [maskSerialNumber.bind(null, name), new RegExp(`\\b${serialNumber}\\b`)],
+            [maskApplianceId .bind(null, name), new RegExp(`\\b${applianceId}\\b`)]
+        );
     }
 }
 
@@ -58,8 +77,8 @@ function maskAPIKey(apiKey: string): string {
 }
 
 // Mask an Electrolux Group API refresh token
-function maskRefreshToken(apiKey: string): string {
-    return maskToken('REFRESH_TOKEN', apiKey);
+function maskRefreshToken(token: string): string {
+    return maskToken('REFRESH_TOKEN', token);
 }
 
 // Mask a Home Connect access token
@@ -82,6 +101,17 @@ function maskAccessToken(token: string): string {
     } catch {
         return token;
     }
+}
+
+// Mask a serial number
+function maskSerialNumber(name: string, _serialNumber: string): string {
+    return `<SERIAL_NUMBER: "${name}">`;
+}
+
+// Mask an applianceId
+function maskApplianceId(name: string, applianceId: string): string {
+    const pnc = applianceId.slice(0, LENGTH.pnc);
+    return `<PRODUCT_ID: ${pnc}... "${name}">`;
 }
 
 // Mask a token, leaving just the first and final few characters

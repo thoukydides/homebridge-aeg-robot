@@ -10,6 +10,7 @@ import { Config } from './config-types.js';
 import { AEGAPITest } from './aegapi-test.js';
 import { AEGAPIRX9 } from './aegapi-rx9.js';
 import { checkers } from './ti/aegapi-types.js';
+import { PrefixLogger } from './logger.js';
 
 // Access to the Electrolux Group API
 export class AEGAPI {
@@ -33,7 +34,13 @@ export class AEGAPI {
 
     // Get user appliances
     async getAppliances(): Promise<Appliances> {
-        return this.ua.getJSON(checkers.Appliances, '/api/v1/appliances');
+        const appliances = await this.ua.getJSON<Appliances>(checkers.Appliances, '/api/v1/appliances');
+        if (!this.config.debug.includes('Log Appliance IDs')) {
+            appliances.forEach(({ applianceId, applianceName }) => {
+                PrefixLogger.addApplianceId(applianceId, applianceName);
+            });
+        }
+        return appliances;
     }
 
     // Get appliance info
