@@ -30,14 +30,16 @@ AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.elect
 
 ### Step 3 - Homebridge Plugin Installation
 
-#### Recommended approach using Homebridge UI
+#### Recommended Approach using Homebridge UI
 
 1. On the [Homebridge UI](https://github.com/homebridge/homebridge-config-ui-x) Plugins page search for and install the **AEG Robot Vacuum** plugin.
 1. Open the **Homebridge AEG Robot Vacuum** plugin settings and set the *API Key*, *Access Token*, and *Refresh Token* to the values obtained from the [Electrolux Group Developer Portal Dashboard](https://developer.electrolux.one/dashboard).
 1. Save the plugin settings and restart Homebridge.
 
 <details>
-<summary><h4>Alternative method using command line (and advanced configuration)</h4></summary>
+<summary>Alternative method using command line (and advanced configuration)</summary>
+
+#### Installation using Command Line
 
 1. Install this plugin using: `npm install -g homebridge-aeg-robot`
 1. Edit `config.json` and add the `Homebridge AEG Robot Vacuum` platform (see example below).
