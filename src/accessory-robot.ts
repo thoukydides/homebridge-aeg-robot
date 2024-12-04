@@ -22,7 +22,7 @@ export class AEGRobotAccessory extends AEGAccessory {
         platform: AEGPlatform, accessory: PlatformAccessory,
         readonly robot: AEGRobot
     ) {
-        super(platform, accessory, robot.status.name);
+        super(platform, accessory, robot.name);
         this.log = robot.log;
 
         // Add all of the required services (first to be added is the primary)
@@ -48,10 +48,11 @@ export class AEGRobotAccessory extends AEGAccessory {
     addAccessoryInformation(): void {
         // Set static values
         const service = this.makeService(this.Service.AccessoryInformation)
-            .updateCharacteristic(this.Characteristic.Manufacturer,        this.robot.brand)
-            .updateCharacteristic(this.Characteristic.Model,               this.robot.model)
-            .updateCharacteristic(this.Characteristic.SerialNumber,        this.robot.sn)
-            .updateCharacteristic(this.Characteristic.FirmwareRevision,    PLUGIN_VERSION);
+            .updateCharacteristic(this.Characteristic.Manufacturer,     this.robot.brand)
+            .updateCharacteristic(this.Characteristic.Model,            this.robot.model)
+            .updateCharacteristic(this.Characteristic.SerialNumber,     this.robot.sn)
+            .updateCharacteristic(this.Characteristic.Name,             this.robot.name)
+            .updateCharacteristic(this.Characteristic.FirmwareRevision, PLUGIN_VERSION);
 
         // Update other characteristics when there is an update
         this.onRobot('hardware', (hardware: string) => {
@@ -60,10 +61,6 @@ export class AEGRobotAccessory extends AEGAccessory {
         }).onRobot('firmware', (firmware: string) => {
             this.log.debug(`Software Revision <= ${firmware}`);
             service.updateCharacteristic(this.Characteristic.SoftwareRevision, firmware);
-        }).onRobot('name', (name: string) => {
-            this.log.debug(`Name <= "${name}"`);
-            service.updateCharacteristic(this.Characteristic.Name, name);
-            service.updateCharacteristic(this.Characteristic.ConfiguredName, name);
         });
     }
 

@@ -141,8 +141,8 @@ export class AEGPlatform implements DynamicPlatformPlugin {
             existingAccessory.implementation = implementation;
         } else {
             // Create a new accessory for this robot
-            this.log.info(`Creating new accessory "${robot.status.name}" for ${robot.toString()}`);
-            const accessory = new this.hb.platformAccessory(robot.status.name, uuid);
+            this.log.info(`Creating new accessory "${robot.name}" for ${robot.toString()}`);
+            const accessory = new this.hb.platformAccessory(robot.name, uuid);
             const implementation = new AEGRobotAccessory(this, accessory, robot);
             this.accessories.set(uuid, { accessory, implementation });
             this.hb.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

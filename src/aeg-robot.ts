@@ -29,7 +29,6 @@ export enum SimpleActivity {
 // Dynamic information about a robot
 export interface DynamicStatus {
     // Raw values provided by the Electrolux Group API
-    name:               string;
     hardware:           string;
     firmware:           string;
     capabilities:       RX9Capabilities[];
@@ -91,10 +90,10 @@ export class AEGRobot extends EventEmitter {
     sn          = '';               // Serial Number
     brand       = '';
     model       = '';
+    name        = '';
 
     // Dynamic information about the robot
     readonly status: DynamicStatus = {
-        name:           '',
         hardware:       '',
         firmware:       '',
         capabilities:   [],
@@ -127,6 +126,7 @@ export class AEGRobot extends EventEmitter {
         // Initialise static information that is already known
         this.applianceId    = appliance.applianceId;
         this.model          = appliance.applianceType;
+        this.name           = appliance.applianceName;
 
         // Allow the robot to be controlled
         this.setActivity    = new AEGRobotCtrlActivity(this).makeSetter();
@@ -170,7 +170,7 @@ export class AEGRobot extends EventEmitter {
         const bits = [
             this.brand,
             this.model,
-            this.status.name && `"${this.status.name}"`,
+            this.name && `"${this.name}"`,
             `(Product ID ${this.applianceId})`
         ];
         return bits.filter(bit => bit.length).join(' ');
@@ -191,7 +191,6 @@ export class AEGRobot extends EventEmitter {
         // Extract the relevant information
         const { reported } = state.properties;
         this.updateStatus({
-            name:           reported.applianceName || this.appliance.applianceName,
             enabled:        state.status === 'enabled',
             connected:      state.connectionState === 'Connected',
             capabilities:   Object.keys(reported.capabilities) as RX9Capabilities[],

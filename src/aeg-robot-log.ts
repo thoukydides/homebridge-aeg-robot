@@ -75,14 +75,13 @@ export class AEGRobotLog {
             this.log.info(`${this.robot.brand} ${this.robot.model}`);
             this.log.info(`Product number code ${this.robot.pnc}`);
             this.log.info(`Serial number ${this.robot.sn}`);
+            this.log.info(`My name is "${this.robot.name}"`);
         });
     }
 
     // Log initial values and changes for other status
     logStatus(): void {
-        this.robot.on('name', (name: string) => {
-            this.log.info(`My name is "${name}"`);
-        }).on('capabilities', (capabilities: RX9Capabilities[]) => {
+        this.robot.on('capabilities', (capabilities: RX9Capabilities[]) => {
             this.log.info(`Supports ${plural(capabilities.length, 'capability')}: ${formatList([...capabilities].sort())}`);
         }).on('hardware', (hardware: string) => {
             this.log.info(`Hardware platform ${hardware}`);
