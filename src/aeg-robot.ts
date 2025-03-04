@@ -307,9 +307,13 @@ export class AEGRobot extends EventEmitter {
 
         // Log a summary of the changes
         const toText = (value: unknown): string => {
-            if (value === undefined) return '?';
-            if (typeof(value) === 'string' && /[- <>:,]/.test(value)) return `"${value}"`;
-            return String(value);
+            switch (typeof(value)) {
+            case 'undefined':   return '?';
+            case 'string':      return /[- <>:,]/.test(value) ? `"${value}"` : value;
+            case 'number':      return value.toString();
+            case 'boolean':     return value.toString();
+            default:            return JSON.stringify(value);
+            }
         };
         const summary = changed.map(key =>
             `${key}: ${toText(this.emittedStatus[key])}->${toText(this.status[key])}`);
