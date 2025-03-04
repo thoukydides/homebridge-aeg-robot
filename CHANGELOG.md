@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v2.3.2] - 2025-03-04
+### Changed
+* Updated dependencies to latest versions.
+
 ## [v2.3.1] - 2024-12-04
 ### Fixed
 * Correctly redact multiple Product ID (applianceId) or Serial Number values on same log line.
@@ -213,9 +217,10 @@ Bumped undici version to remove SIMD requirement. (#259)
 
 ---
 
-Copyright © 2022-2024 Alexander Thoukydides
+Copyright © 2022-2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.3.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.3.2...HEAD
+[v2.3.2]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.3.1...v2.3.2
 [v2.3.1]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.3.0...v2.3.1
 [v2.3.0]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.5...v2.3.0
 [v2.2.5]:           https://github.com/thoukydides/homebridge-aeg-robot/compare/v2.2.4...v2.2.5
