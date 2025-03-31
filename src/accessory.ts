@@ -197,10 +197,8 @@ export class AEGAccessory {
             }
         } else {
             // Set the accessory state on the first error
-            if (!this.errorCharacteristic) {
-                this.errorCharacteristic =
-                    AEGAccessory.setError(this.platform, this.accessory, cause);
-            }
+            this.errorCharacteristic ??=
+                AEGAccessory.setError(this.platform, this.accessory, cause);
         }
     }
 
