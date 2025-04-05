@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/wiki/thoukydides/homebridge-aeg-robot/homebridge-aeg-robot.png" height="200"></a>
+  <a href="https://github.com/homebridge/homebridge/wiki/Verified-Plugins"><img src="https://raw.githubusercontent.com/wiki/thoukydides/homebridge-aeg-robot/homebridge-aeg-robot.png" height="200"></a>
 </p>
 <div align=center>
 
