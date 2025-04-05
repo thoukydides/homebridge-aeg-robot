@@ -57,7 +57,7 @@ AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.elect
     }]
 }
 ```
-The `username` and `password` should match those used to login to your account in the [AEG](https://apps.apple.com/gb/app/aeg/id1599494494) iPhone app. All suitable robot vacuums associated with the account will be added to HomeKit (those reporting a model name of `PUREi9`). Unsupported appliances, such as air purifiers or RX8 robot vacuums, will be ignored.
+The `apiKey`, `accessToken`, and `refreshToken` should be obtained from the [Electrolux Group Developer Portal Dashboard](https://developer.electrolux.one/dashboard). All suitable robot vacuums associated with the account will be added to HomeKit (those reporting a model name of `PUREi9`). Unsupported appliances, such as air purifiers or RX8 robot vacuums, will be ignored.
 
 #### Advanced Configuration
 
@@ -83,7 +83,7 @@ The `pollIntervals` specify the time in seconds between successive polls of the 
 
 Any unwanted HomeKit Services (except for the **Accessory Information**) created by this plugin can be disabled by listing them in the `hideServices` array.
 
-The `"Log Appliance IDs"` option prevents redactions of appliance Product ID and Serial Number values in the log. Do not set any of the other `debug` options unless attempting to investigate a compatibility issue or other problem.
+The `"Log Appliance IDs"` option prevents redaction of appliance Product ID and Serial Number values in the log. Do not set any of the other `debug` options unless attempting to investigate a compatibility issue or other problem.
 
 </details>
 
