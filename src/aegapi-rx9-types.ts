@@ -201,7 +201,7 @@ export interface RX9ApplianceState {
     properties:         RX9ApplianceStateProperties;
 }
 
-// GET /api/v1/appliances/{applianceId}/state
+// PUT /api/v1/appliances/{applianceId}/command
 export interface RX9Command {
     CleaningCommand:    RX9CleaningCommand;
 }
