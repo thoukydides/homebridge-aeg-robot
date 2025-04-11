@@ -70,7 +70,7 @@ export class AEGRobotLog {
 
     // Log static information about the robot once at startup
     logOnce(): void {
-        const redacted = this.robot.config.debug.includes('Log Appliance IDs');
+        const redacted = !this.robot.config.debug.includes('Log Appliance IDs');
         if (!redacted) this.log.info(`Product ID ${this.robot.applianceId}`);
         this.robot.once('info', () => {
             this.log.info(`${this.robot.brand} ${this.robot.model}`);
