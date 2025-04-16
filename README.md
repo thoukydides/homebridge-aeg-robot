@@ -89,7 +89,7 @@ The `"Log Appliance IDs"` option prevents redaction of appliance Product ID and 
 
 ## Functionality
 
-This plugin allows cleaning to be started and paused, selection of cleaning power mode, and requesting return to the charging dock. It also indicates whether the robot vacuum is cleaning, on its dock, the battery charge status, and whether the dust collection bin requires emptying.
+This plugin allows cleaning to be started, stopped, and paused, and requesting return to the charging dock. It also indicates whether the robot vacuum is cleaning, on its dock, the battery charge status, and whether the dust collection bin requires emptying.
 
 Unfortunately, HomeKit does not support robot vacuum cleaners, so the mapping of functionality is slightly odd as described below.
 
