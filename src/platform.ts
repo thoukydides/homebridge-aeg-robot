@@ -19,6 +19,13 @@ import { deepMerge, getValidationTree, logError, plural } from './utils.js';
 import { PrefixLogger } from './logger.js';
 import { checkers } from './ti/config-types.js';
 
+// Deprecation notice for the log file
+const DEPRECATION_NOTICE =
+`DEPRECATION NOTICE
+> The homebridge-aeg-robot plugin will soon be archived and no longer maintained.
+> For Matter-based native vacuum cleaner support in iOS 18.4+, please migrate to:
+> https://github.com/thoukydides/matterbridge-aeg-robot`;
+
 // Accessory information
 interface AccessoryLinkage {
     accessory:          PlatformAccessory;
@@ -61,6 +68,9 @@ export class AEGPlatform implements DynamicPlatformPlugin {
     // Update list of robots after cache has been restored
     async finishedLaunching(): Promise<void> {
         try {
+            // Log a deprecation notice
+            this.log.warn(DEPRECATION_NOTICE);
+
             // Check that the dependencies and configuration
             checkDependencyVersions(this);
             this.checkConfig();
