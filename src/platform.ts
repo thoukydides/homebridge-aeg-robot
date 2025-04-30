@@ -22,8 +22,8 @@ import { checkers } from './ti/config-types.js';
 // Deprecation notice for the log file
 const DEPRECATION_NOTICE =
 `DEPRECATION NOTICE
-> The homebridge-aeg-robot plugin will soon be archived and no longer maintained.
-> For Matter-based native vacuum cleaner support in iOS 18.4+, please migrate to:
+> The homebridge-aeg-robot plugin has been archived and is no longer maintained.
+> For Matter-based native vacuum cleaner support in iOS 18.4 and later, please migrate to:
 > https://github.com/thoukydides/matterbridge-aeg-robot`;
 
 // Accessory information

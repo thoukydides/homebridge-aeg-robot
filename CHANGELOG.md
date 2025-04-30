@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v2.5.0] - 2025-04-30
+### Added
+* Updated deprecation notice: this project has been archived and is no longer maintained.  
+  Please migrate to [matterbridge-aeg-robot](https://github.com/thoukydides/matterbridge-aeg-robot).
+
 ## [v2.4.0] - 2025-04-19
 ### Added
 * Added deprecation notice. Please migrate to [matterbridge-aeg-robot](https://github.com/thoukydides/matterbridge-aeg-robot).
